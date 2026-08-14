@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { 
   Users, 
   Award, 
@@ -10,51 +11,67 @@ import {
   Trophy, 
   Radio, 
   CheckCheck, 
-  Shield, 
-  UserCheck, 
-  MapPin, 
+  Trash2, 
+  Users2,
   ArrowRight,
   Clock
 } from 'lucide-react';
 
 export default async function AdminDashboardPage() {
   const supabase = createClient();
+  let db: any = supabase;
+  try {
+    db = createAdminClient();
+  } catch {
+    db = supabase;
+  }
 
-  // Fetch metrics in parallel without unused stats queries
+  // Fetch metrics in parallel using admin client to ensure complete database visibility
   const [
     usersResult,
     pendingAppsResult,
     approvedAppsResult,
     rejectedAppsResult,
-    totalMatchesResult,
+    activeMatchesResult,
     liveMatchesResult,
     completedMatchesResult,
-    totalTeamsResult,
+    deletedMatchesResult,
+    communityResult,
     pendingApplicationsResult,
     recentMatchesResult,
   ] = await Promise.all([
-    supabase.from('profiles').select('*', { count: 'exact', head: true }),
-    supabase.from('master_applications').select('*', { count: 'exact', head: true }).eq('status', 'PENDING'),
-    supabase.from('master_applications').select('*', { count: 'exact', head: true }).eq('status', 'APPROVED'),
-    supabase.from('master_applications').select('*', { count: 'exact', head: true }).eq('status', 'REJECTED'),
-    supabase.from('matches').select('*', { count: 'exact', head: true }),
-    supabase.from('matches').select('*', { count: 'exact', head: true }).eq('status', 'LIVE'),
-    supabase.from('matches').select('*', { count: 'exact', head: true }).eq('status', 'COMPLETED'),
-    supabase.from('teams').select('*', { count: 'exact', head: true }),
-    supabase.from('master_applications').select('id, full_name, city, state, organization, created_at').eq('status', 'PENDING').order('created_at', { ascending: false }).limit(5),
-    supabase.from('matches').select('id, title, status, team1:teams!matches_team1_id_fkey(name), team2:teams!matches_team2_id_fkey(name)').order('created_at', { ascending: false }).limit(5),
+    db.from('profiles').select('*', { count: 'exact', head: true }),
+    db.from('master_applications').select('*', { count: 'exact', head: true }).eq('status', 'PENDING'),
+    db.from('master_applications').select('*', { count: 'exact', head: true }).eq('status', 'APPROVED'),
+    db.from('master_applications').select('*', { count: 'exact', head: true }).eq('status', 'REJECTED'),
+    db.from('matches').select('*', { count: 'exact', head: true }).neq('status', 'DELETED'),
+    db.from('matches').select('*', { count: 'exact', head: true }).eq('status', 'LIVE'),
+    db.from('matches').select('*', { count: 'exact', head: true }).eq('status', 'COMPLETED'),
+    db.from('matches').select('*', { count: 'exact', head: true }).eq('status', 'DELETED'),
+    db.from('profiles').select('*', { count: 'exact', head: true }),
+    db.from('master_applications').select('id, full_name, city, state, organization, created_at').eq('status', 'PENDING').order('created_at', { ascending: false }).limit(5),
+    db.from('matches').select('id, title, status, team1:teams!matches_team1_id_fkey(name), team2:teams!matches_team2_id_fkey(name)').neq('status', 'DELETED').order('created_at', { ascending: false }).limit(5),
   ]);
 
-  const totalUsers = usersResult.count;
-  const pendingApps = pendingAppsResult.count;
-  const approvedApps = approvedAppsResult.count;
-  const rejectedApps = rejectedAppsResult.count;
-  const totalMatches = totalMatchesResult.count;
-  const liveMatches = liveMatchesResult.count;
-  const completedMatches = completedMatchesResult.count;
-  const totalTeams = totalTeamsResult.count;
-  const pendingApplications = pendingApplicationsResult.data;
-  const recentMatches = recentMatchesResult.data;
+  const totalUsers = usersResult.count || 0;
+  const pendingApps = pendingAppsResult.count || 0;
+  const approvedApps = approvedAppsResult.count || 0;
+  const rejectedApps = rejectedAppsResult.count || 0;
+
+  // STRICT REQUIREMENT 7: Total Masters = Approved Masters + Rejected Apps (Pending applications EXCLUDED)
+  const totalMasters = approvedApps + rejectedApps;
+
+  // STRICT REQUIREMENT 8: Total Matches excludes deleted matches
+  const totalMatches = activeMatchesResult.count || 0;
+  const liveMatches = liveMatchesResult.count || 0;
+  const completedMatches = completedMatchesResult.count || 0;
+  const deletedMatches = deletedMatchesResult.count || 0;
+
+  // STRICT REQUIREMENT 1: Total Community registered members/users
+  const totalCommunity = communityResult.count || 0;
+
+  const pendingApplications = pendingApplicationsResult.data || [];
+  const recentMatches = recentMatchesResult.data || [];
 
   return (
     <div className="space-y-8">
@@ -80,79 +97,97 @@ export default async function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* REAL-DATA METRIC CARDS */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 gap-4">
+      {/* REAL-DATA OVERVIEW METRIC CARDS (SYNCHRONIZED WITH DATABASE STATUSES) */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
         
+        {/* 1. TOTAL COMMUNITY (REPLACED TOTAL TEAMS) */}
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-2">
-          <div className="flex items-center justify-between text-slate-400">
+          <div className="flex items-center justify-between text-indigo-400">
+            <span className="text-[11px] font-bold uppercase tracking-wider">Total Community</span>
+            <Users2 className="w-4 h-4 text-indigo-400" />
+          </div>
+          <div className="text-2xl font-black text-white font-mono">{totalCommunity}</div>
+        </div>
+
+        {/* 2. TOTAL USERS */}
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-2">
+          <div className="flex items-center justify-between text-emerald-400">
             <span className="text-[11px] font-bold uppercase tracking-wider">Total Users</span>
             <Users className="w-4 h-4 text-emerald-400" />
           </div>
-          <div className="text-2xl font-black text-white font-mono">{totalUsers || 0}</div>
+          <div className="text-2xl font-black text-white font-mono">{totalUsers}</div>
         </div>
 
+        {/* 3. PENDING APPS */}
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-2">
           <div className="flex items-center justify-between text-amber-400">
             <span className="text-[11px] font-bold uppercase tracking-wider">Pending Apps</span>
             <Clock className="w-4 h-4 text-amber-400" />
           </div>
-          <div className="text-2xl font-black text-amber-400 font-mono">{pendingApps || 0}</div>
+          <div className="text-2xl font-black text-amber-400 font-mono">{pendingApps}</div>
         </div>
 
+        {/* 4. APPROVED MASTERS */}
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-2">
           <div className="flex items-center justify-between text-emerald-400">
             <span className="text-[11px] font-bold uppercase tracking-wider">Approved Masters</span>
             <CheckCircle2 className="w-4 h-4 text-emerald-400" />
           </div>
-          <div className="text-2xl font-black text-emerald-400 font-mono">{approvedApps || 0}</div>
+          <div className="text-2xl font-black text-emerald-400 font-mono">{approvedApps}</div>
         </div>
 
+        {/* 5. REJECTED APPS */}
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-2">
           <div className="flex items-center justify-between text-red-400">
             <span className="text-[11px] font-bold uppercase tracking-wider">Rejected Apps</span>
             <XCircle className="w-4 h-4 text-red-400" />
           </div>
-          <div className="text-2xl font-black text-red-400 font-mono">{rejectedApps || 0}</div>
+          <div className="text-2xl font-black text-red-400 font-mono">{rejectedApps}</div>
         </div>
 
+        {/* 6. TOTAL MASTERS = APPROVED MASTERS + REJECTED APPS */}
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-2">
           <div className="flex items-center justify-between text-purple-400">
             <span className="text-[11px] font-bold uppercase tracking-wider">Total Masters</span>
             <Award className="w-4 h-4 text-purple-400" />
           </div>
-          <div className="text-2xl font-black text-purple-400 font-mono">{approvedApps || 0}</div>
+          <div className="text-2xl font-black text-purple-400 font-mono">{totalMasters}</div>
         </div>
 
+        {/* 7. TOTAL MATCHES (EXCLUDING DELETED MATCHES) */}
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-2">
           <div className="flex items-center justify-between text-cyan-400">
             <span className="text-[11px] font-bold uppercase tracking-wider">Total Matches</span>
             <Trophy className="w-4 h-4 text-cyan-400" />
           </div>
-          <div className="text-2xl font-black text-white font-mono">{totalMatches || 0}</div>
+          <div className="text-2xl font-black text-white font-mono">{totalMatches}</div>
         </div>
 
+        {/* 8. DELETED MATCHES (ISOLATED COUNT OF DELETED MATCHES) */}
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-2">
+          <div className="flex items-center justify-between text-rose-400">
+            <span className="text-[11px] font-bold uppercase tracking-wider">Deleted Matches</span>
+            <Trash2 className="w-4 h-4 text-rose-400" />
+          </div>
+          <div className="text-2xl font-black text-rose-400 font-mono">{deletedMatches}</div>
+        </div>
+
+        {/* 9. LIVE MATCHES */}
         <div className="bg-slate-900 border border-red-500/30 rounded-2xl p-4 space-y-2">
           <div className="flex items-center justify-between text-red-400">
             <span className="text-[11px] font-bold uppercase tracking-wider">Live Matches</span>
             <Radio className="w-4 h-4 text-red-500 animate-pulse" />
           </div>
-          <div className="text-2xl font-black text-red-400 font-mono">{liveMatches || 0}</div>
+          <div className="text-2xl font-black text-red-400 font-mono">{liveMatches}</div>
         </div>
 
+        {/* 10. COMPLETED MATCHES */}
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-2">
           <div className="flex items-center justify-between text-teal-400">
             <span className="text-[11px] font-bold uppercase tracking-wider">Completed</span>
             <CheckCheck className="w-4 h-4 text-teal-400" />
           </div>
-          <div className="text-2xl font-black text-teal-400 font-mono">{completedMatches || 0}</div>
-        </div>
-
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-2">
-          <div className="flex items-center justify-between text-indigo-400">
-            <span className="text-[11px] font-bold uppercase tracking-wider">Total Teams</span>
-            <Shield className="w-4 h-4 text-indigo-400" />
-          </div>
-          <div className="text-2xl font-black text-white font-mono">{totalTeams || 0}</div>
+          <div className="text-2xl font-black text-teal-400 font-mono">{completedMatches}</div>
         </div>
 
       </div>

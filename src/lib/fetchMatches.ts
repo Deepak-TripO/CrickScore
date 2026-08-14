@@ -45,6 +45,9 @@ export async function fetchMatchesSafely(options?: {
       rawMatches = data || [];
     }
 
+    // Always exclude DELETED matches from active application views
+    rawMatches = rawMatches.filter((m: any) => m && m.status !== 'DELETED');
+
     if (options?.status && options?.masterId) {
       rawMatches = rawMatches.filter((m: any) => m.status === options.status);
     }

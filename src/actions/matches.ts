@@ -891,12 +891,15 @@ export async function deleteMatch(matchId: string) {
   try { await db.from('ball_by_ball').delete().eq('match_id', matchId); } catch {}
   try { await db.from('innings').delete().eq('match_id', matchId); } catch {}
 
-  // 2. Delete the match row directly
-  const { error: deleteErr } = await db.from('matches').delete().eq('id', matchId);
-  
+  // Mark match status as DELETED so it is tracked under Deleted Matches in Product Admin Overview
+  let { error: deleteErr } = await db.from('matches').update({ status: 'DELETED', updated_at: new Date().toISOString() }).eq('id', matchId);
+
   if (deleteErr) {
-    console.error('[DELETE MATCH ERROR]', deleteErr);
-    return { error: deleteErr.message || 'Failed to delete match.' };
+    const { error: hardDeleteErr } = await db.from('matches').delete().eq('id', matchId);
+    if (hardDeleteErr) {
+      console.error('[DELETE MATCH ERROR]', hardDeleteErr);
+      return { error: hardDeleteErr.message || 'Failed to delete match.' };
+    }
   }
 
   revalidatePath('/master/dashboard');
