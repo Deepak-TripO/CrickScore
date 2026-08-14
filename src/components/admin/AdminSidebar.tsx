@@ -10,9 +10,6 @@ import {
   Award, 
   Radio, 
   Trophy, 
-  Shield, 
-  UserCheck, 
-  MapPin, 
   BarChart3, 
   Settings, 
   LogOut,
@@ -62,6 +59,38 @@ export default function AdminSidebar({ user }: AdminSidebarProps) {
     }
   ];
 
+  // 4 Main Mobile Bottom Navigation Items
+  const mobileBottomNavItems = [
+    {
+      label: 'Overview',
+      shortLabel: 'Overview',
+      href: '/admin/dashboard',
+      icon: LayoutDashboard,
+      checkActive: (p: string) => p === '/admin/dashboard' || p === '/admin'
+    },
+    {
+      label: 'Match Management',
+      shortLabel: 'Matches',
+      href: '/admin/matches',
+      icon: Trophy,
+      checkActive: (p: string) => p.startsWith('/admin/matches') || p.startsWith('/admin/live-matches')
+    },
+    {
+      label: 'User & Team Management',
+      shortLabel: 'Users & Teams',
+      href: '/admin/users',
+      icon: Users,
+      checkActive: (p: string) => p.startsWith('/admin/users') || p.startsWith('/admin/masters')
+    },
+    {
+      label: 'Analytics & Settings',
+      shortLabel: 'Analytics',
+      href: '/admin/reports',
+      icon: BarChart3,
+      checkActive: (p: string) => p.startsWith('/admin/reports') || p.startsWith('/admin/settings')
+    }
+  ];
+
   const isActive = (href: string) => {
     if (href === '/admin/dashboard') return pathname === '/admin/dashboard' || pathname === '/admin';
     return pathname.startsWith(href);
@@ -69,8 +98,8 @@ export default function AdminSidebar({ user }: AdminSidebarProps) {
 
   return (
     <>
-      {/* MOBILE TOP BAR WITH HAMBURGER TOGGLE */}
-      <div className="lg:hidden sticky top-0 z-40 bg-slate-950 border-b border-slate-800 px-4 py-3 flex items-center justify-between">
+      {/* MOBILE TOP BAR WITH 3-LINE HAMBURGER TOGGLE (☰) */}
+      <div className="lg:hidden sticky top-0 z-40 bg-slate-950 border-b border-slate-800 px-4 py-3 flex items-center justify-between shadow-md">
         <Link href="/admin/dashboard" className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-purple-600 to-indigo-400 p-0.5 shadow-md">
             <div className="w-full h-full bg-slate-950 rounded-[6px] flex items-center justify-center">
@@ -82,10 +111,11 @@ export default function AdminSidebar({ user }: AdminSidebarProps) {
           </span>
         </Link>
 
+        {/* ☰ 3-LINE HAMBURGER MENU */}
         <button 
           onClick={() => setMobileOpen(!mobileOpen)}
           className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-900 transition-colors"
-          aria-label="Toggle Admin Sidebar"
+          aria-label="Toggle Admin Navigation Menu"
         >
           {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
         </button>
@@ -99,7 +129,7 @@ export default function AdminSidebar({ user }: AdminSidebarProps) {
         />
       )}
 
-      {/* SIDEBAR CONTAINER */}
+      {/* DESKTOP SIDEBAR / MOBILE SLIDE-OVER SIDEBAR */}
       <aside className={`
         fixed lg:sticky top-0 left-0 z-50 lg:z-30 h-screen w-64 bg-slate-950 border-r border-slate-800 flex flex-col justify-between transition-transform duration-200 ease-in-out shrink-0
         ${mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
@@ -203,6 +233,38 @@ export default function AdminSidebar({ user }: AdminSidebarProps) {
         </div>
 
       </aside>
+
+      {/* MOBILE FIXED BOTTOM NAVIGATION BAR (ONLY VISIBLE ON MOBILE) */}
+      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-slate-950/95 backdrop-blur-md border-t border-slate-800/90 lg:hidden px-2 py-2 shadow-2xl">
+        <div className="grid grid-cols-4 items-center justify-between gap-1 max-w-md mx-auto">
+          {mobileBottomNavItems.map((navItem) => {
+            const Icon = navItem.icon;
+            const active = navItem.checkActive(pathname);
+
+            return (
+              <Link
+                key={navItem.href}
+                href={navItem.href}
+                onClick={() => setMobileOpen(false)}
+                className={`flex flex-col items-center justify-center py-1.5 px-1 rounded-xl transition-all ${
+                  active
+                    ? 'text-purple-400 font-extrabold'
+                    : 'text-slate-400 hover:text-slate-200 font-medium'
+                }`}
+              >
+                <div className={`p-1.5 rounded-xl transition-all ${
+                  active ? 'bg-purple-600/20 text-purple-400 border border-purple-500/30 shadow-md' : 'bg-transparent'
+                }`}>
+                  <Icon className="w-4 h-4" />
+                </div>
+                <span className="text-[10px] tracking-tight text-center leading-tight mt-1 max-w-[76px] truncate">
+                  {navItem.shortLabel}
+                </span>
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
     </>
   );
 }
