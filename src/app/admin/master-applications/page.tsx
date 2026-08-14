@@ -1,7 +1,7 @@
 import React from 'react';
 import { createClient } from '@/lib/supabase/server';
 import MasterAppReviewCard from './MasterAppReviewCard';
-import { FileCheck, LayoutDashboard } from 'lucide-react';
+import { FileCheck } from 'lucide-react';
 import Link from 'next/link';
 
 export default async function MasterApplicationsAdminPage({
@@ -31,34 +31,6 @@ export default async function MasterApplicationsAdminPage({
 
   return (
     <div className="space-y-6">
-      {/* PAGE HEADER WITH SECTION TOGGLE NAVIGATION CONTROL */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-800/80 pb-6">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white flex items-center gap-2">
-            <FileCheck className="w-7 h-7 text-purple-400" />
-            Master Applications
-          </h1>
-        </div>
-
-        {/* SECTION TOGGLE BUTTON / NAVIGATION CONTROL */}
-        <div className="flex items-center gap-1.5 bg-slate-900 p-1.5 border border-slate-800 rounded-2xl w-full sm:w-auto">
-          <Link
-            href="/admin/dashboard"
-            className="flex-1 sm:flex-initial px-4 py-2 text-slate-400 hover:text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 hover:bg-slate-800/60 transition-all"
-          >
-            <LayoutDashboard className="w-4 h-4" />
-            Overview
-          </Link>
-          <Link
-            href="/admin/master-applications"
-            className="flex-1 sm:flex-initial px-4 py-2 bg-purple-600 text-white font-black text-xs rounded-xl flex items-center justify-center gap-2 shadow-md shadow-purple-600/30 transition-all"
-          >
-            <FileCheck className="w-4 h-4 text-amber-400" />
-            Master Applications
-          </Link>
-        </div>
-      </div>
-
       {/* FILTER TABS */}
       <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-slate-800/60">
         <Link

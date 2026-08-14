@@ -13,7 +13,6 @@ import {
   BarChart3, 
   Settings, 
   LogOut,
-  User,
   ShieldCheck,
   ChevronRight
 } from 'lucide-react';
@@ -65,41 +64,6 @@ export default function AdminSidebar({ user }: AdminSidebarProps) {
 
   return (
     <>
-      {/* MOBILE TOP BAR (3-LINE HAMBURGER MENU REMOVED COMPLETELY; REPLACED WITH ADMIN PROFILE | SIGN OUT) */}
-      <div className="lg:hidden sticky top-0 z-40 bg-slate-950/95 backdrop-blur-md border-b border-slate-800 px-4 py-3 flex items-center justify-between">
-        <Link href="/admin/dashboard" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-purple-600 to-indigo-400 p-0.5 shadow-md">
-            <div className="w-full h-full bg-slate-950 rounded-[6px] flex items-center justify-center">
-              <ShieldCheck className="w-4 h-4 text-purple-400" />
-            </div>
-          </div>
-          <span className="font-black text-base tracking-tight bg-gradient-to-r from-white via-slate-200 to-purple-400 bg-clip-text text-transparent">
-            BatScore Admin
-          </span>
-        </Link>
-
-        {/* TOP RIGHT: ADMIN PROFILE | SIGN OUT */}
-        <div className="flex items-center gap-2">
-          <Link
-            href="/profile"
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-xl text-xs font-bold text-slate-200 hover:text-white transition-colors"
-          >
-            <User className="w-3.5 h-3.5 text-purple-400" />
-            <span>Profile</span>
-          </Link>
-
-          <form action={logoutUser}>
-            <button
-              type="submit"
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 border border-slate-800 hover:border-red-500/40 text-slate-300 hover:text-red-400 rounded-xl text-xs font-bold transition-colors"
-            >
-              <LogOut className="w-3.5 h-3.5" />
-              <span>Sign Out</span>
-            </button>
-          </form>
-        </div>
-      </div>
-
       {/* DESKTOP SIDEBAR CONTAINER (UNCHANGED DESKTOP VIEW) */}
       <aside className="hidden lg:flex sticky top-0 left-0 z-30 h-screen w-64 bg-slate-950 border-r border-slate-800 flex-col justify-between shrink-0">
         

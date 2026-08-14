@@ -1,7 +1,6 @@
 import React from 'react';
 import { getCurrentUser, getCurrentUserProfile } from '@/lib/auth';
-import { Settings, ShieldCheck, BarChart3, Server } from 'lucide-react';
-import Link from 'next/link';
+import { ShieldCheck, Server } from 'lucide-react';
 
 export default async function AdminSettingsPage() {
   const user = await getCurrentUser();
@@ -9,34 +8,6 @@ export default async function AdminSettingsPage() {
 
   return (
     <div className="space-y-8">
-      {/* PAGE HEADER WITH SECTION TOGGLE NAVIGATION CONTROL */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-800/80 pb-6">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white flex items-center gap-2">
-            <Settings className="w-7 h-7 text-purple-400" />
-            Analytics & Settings
-          </h1>
-        </div>
-
-        {/* SECTION TOGGLE BUTTON / NAVIGATION CONTROL */}
-        <div className="flex items-center gap-1.5 bg-slate-900 p-1.5 border border-slate-800 rounded-2xl w-full sm:w-auto">
-          <Link
-            href="/admin/reports"
-            className="flex-1 sm:flex-initial px-4 py-2 text-slate-400 hover:text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 hover:bg-slate-800/60 transition-all"
-          >
-            <BarChart3 className="w-4 h-4" />
-            Analytics
-          </Link>
-          <Link
-            href="/admin/settings"
-            className="flex-1 sm:flex-initial px-4 py-2 bg-purple-600 text-white font-black text-xs rounded-xl flex items-center justify-center gap-2 shadow-md shadow-purple-600/30 transition-all"
-          >
-            <Settings className="w-4 h-4" />
-            Settings
-          </Link>
-        </div>
-      </div>
-
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         
         {/* ADMIN PROFILE CARD */}

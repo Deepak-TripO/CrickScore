@@ -1,7 +1,6 @@
 import React from 'react';
 import { createClient } from '@/lib/supabase/server';
-import { BarChart3, Settings, Award } from 'lucide-react';
-import Link from 'next/link';
+import { BarChart3, Award } from 'lucide-react';
 
 export default async function AdminReportsPage() {
   const supabase = createClient();
@@ -18,42 +17,10 @@ export default async function AdminReportsPage() {
   const { count: upcomingMatches } = await supabase.from('matches').select('*', { count: 'exact', head: true }).eq('status', 'UPCOMING');
   const { count: completedMatches } = await supabase.from('matches').select('*', { count: 'exact', head: true }).eq('status', 'COMPLETED');
 
-  const { count: totalTeams } = await supabase.from('teams').select('*', { count: 'exact', head: true });
-  const { count: totalPlayers } = await supabase.from('players').select('*', { count: 'exact', head: true });
-  const { count: totalPlaygrounds } = await supabase.from('playgrounds').select('*', { count: 'exact', head: true });
-
   const approvalRate = totalApps && totalApps > 0 ? Math.round((approvedApps || 0) / totalApps * 100) : 0;
 
   return (
     <div className="space-y-8">
-      {/* PAGE HEADER WITH SECTION TOGGLE NAVIGATION CONTROL */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-800/80 pb-6">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white flex items-center gap-2">
-            <BarChart3 className="w-7 h-7 text-purple-400" />
-            Analytics & Settings
-          </h1>
-        </div>
-
-        {/* SECTION TOGGLE BUTTON / NAVIGATION CONTROL */}
-        <div className="flex items-center gap-1.5 bg-slate-900 p-1.5 border border-slate-800 rounded-2xl w-full sm:w-auto">
-          <Link
-            href="/admin/reports"
-            className="flex-1 sm:flex-initial px-4 py-2 bg-purple-600 text-white font-black text-xs rounded-xl flex items-center justify-center gap-2 shadow-md shadow-purple-600/30 transition-all"
-          >
-            <BarChart3 className="w-4 h-4" />
-            Analytics
-          </Link>
-          <Link
-            href="/admin/settings"
-            className="flex-1 sm:flex-initial px-4 py-2 text-slate-400 hover:text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 hover:bg-slate-800/60 transition-all"
-          >
-            <Settings className="w-4 h-4" />
-            Settings
-          </Link>
-        </div>
-      </div>
-
       {/* METRIC HIGHLIGHTS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4 shadow-xl">
