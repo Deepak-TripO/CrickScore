@@ -53,6 +53,39 @@ async function insertMatchSafely(db: any, initialPayload: Record<string, any>) {
   return { data: null, error: new Error('Failed to insert match.') };
 }
 
+// Helper for Updating Match safely by dynamically stripping missing schema columns if PostgREST errors
+async function updateMatchSafely(db: any, matchId: string, initialPayload: Record<string, any>) {
+  let currentPayload = { ...initialPayload };
+
+  for (let attempt = 0; attempt < 20; attempt++) {
+    const { data, error } = await db.from('matches').update(currentPayload).eq('id', matchId).select();
+
+    if (!error) {
+      return { data, error: null };
+    }
+
+    if (error && error.message) {
+      console.warn(`[UPDATE MATCH ATTEMPT ${attempt} ERROR]`, error.message);
+
+      const match1 = error.message.match(/Could not find the '([^']+)' column/);
+      const match2 = error.message.match(/column "([^"]+)" of relation/i);
+      const match3 = error.message.match(/column "([^"]+)" does not exist/i);
+      const match4 = error.message.match(/column '([^']+)' does not exist/i);
+
+      const colToRemove = match1?.[1] || match2?.[1] || match3?.[1] || match4?.[1];
+
+      if (colToRemove && currentPayload.hasOwnProperty(colToRemove)) {
+        delete currentPayload[colToRemove];
+        continue;
+      }
+    }
+
+    return { data: null, error };
+  }
+
+  return { data: null, error: new Error('Failed to update match.') };
+}
+
 export async function createMatch(payload: {
   title: string;
   description?: string;
@@ -616,7 +649,7 @@ export async function updateFullMatch(payload: {
   if (payload.yourTeamLogoUrl) updateMatchData.your_team_logo_url = payload.yourTeamLogoUrl;
   if (payload.oppositeTeamLogoUrl) updateMatchData.opposite_team_logo_url = payload.oppositeTeamLogoUrl;
 
-  const { error: matchUpdateErr } = await db.from('matches').update(updateMatchData).eq('id', payload.matchId);
+  const { error: matchUpdateErr } = await updateMatchSafely(db, payload.matchId, updateMatchData);
   if (matchUpdateErr) return { error: matchUpdateErr.message };
 
   if (match.team1_id) {
@@ -810,7 +843,7 @@ export async function updateMatch(payload: {
     updateData.overs = payload.overs;
   }
 
-  const { error } = await db.from('matches').update(updateData).eq('id', payload.matchId);
+  const { error } = await updateMatchSafely(db, payload.matchId, updateData);
 
   if (error) return { error: error.message };
 
