@@ -10,6 +10,8 @@ export async function signupUser(formData: FormData) {
   const email = formData.get('email') as string;
   const password = formData.get('password') as string;
   const confirmPassword = formData.get('confirmPassword') as string;
+  const roleInput = (formData.get('role') as string) || 'USER';
+  const roleName = roleInput.toUpperCase() === 'MASTER' ? 'MASTER' : 'USER';
 
   if (!email || !password) {
     return { error: 'Please fill in all required fields.' };
@@ -22,20 +24,20 @@ export async function signupUser(formData: FormData) {
   const supabase = createClient();
   let user: any = null;
 
-  // Try standard signup first
+  // 1. Try standard Supabase Auth signup first
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
       data: {
         username: username || email.split('@')[0],
-        role: 'USER'
+        role: roleName
       }
     }
   });
 
   if (error) {
-    // Fallback: create user via admin client if email rate limit or schema error occurs
+    // Fallback: create user via admin client if rate-limited or schema trigger issues occur
     try {
       const adminClient = createAdminClient();
       const { data: adminCreatedUser, error: adminErr } = await adminClient.auth.admin.createUser({
@@ -44,7 +46,7 @@ export async function signupUser(formData: FormData) {
         email_confirm: true,
         user_metadata: {
           username: username || email.split('@')[0],
-          role: 'USER'
+          role: roleName
         }
       });
 
@@ -59,27 +61,35 @@ export async function signupUser(formData: FormData) {
     user = data.user;
   }
 
-  // Ensure profile & role
+  // 2. Ensure profile & user_roles are created in database for instant admin sync
   if (user) {
     try {
       const adminClient = createAdminClient();
+
+      // Upsert profile record using unique user ID
       await adminClient.from('profiles').upsert({
         id: user.id,
         username: username || email.split('@')[0],
+        full_name: username || email.split('@')[0],
         email
       });
 
-      const { data: userRole } = await adminClient.from('roles').select('id').eq('name', 'USER').maybeSingle();
-      if (userRole) {
+      // Upsert role record (USER or MASTER)
+      const { data: roleObj } = await adminClient.from('roles').select('id').eq('name', roleName).maybeSingle();
+      if (roleObj) {
         await adminClient.from('user_roles').upsert({
           user_id: user.id,
-          role_id: userRole.id
+          role_id: roleObj.id
         });
       }
     } catch (e) {
-      // ignore
+      console.warn('[SIGNUP PROFILE/ROLE UPSERT ERROR]', e);
     }
   }
+
+  // Revalidate Admin Dashboard & Users pages
+  revalidatePath('/admin/users');
+  revalidatePath('/admin/dashboard');
 
   return { success: true };
 }
@@ -102,6 +112,8 @@ export async function loginUser(formData: FormData) {
 
   if (!error) {
     revalidatePath('/');
+    revalidatePath('/admin/users');
+    revalidatePath('/admin/dashboard');
     return { success: true };
   }
 
@@ -114,9 +126,20 @@ export async function loginUser(formData: FormData) {
     if (existingUser) {
       // Update password for existing user dynamically
       await adminClient.auth.admin.updateUserById(existingUser.id, { password, email_confirm: true });
+
+      // Ensure profile exists in database
+      await adminClient.from('profiles').upsert({
+        id: existingUser.id,
+        email: existingUser.email,
+        username: existingUser.user_metadata?.username || email.split('@')[0],
+        full_name: existingUser.user_metadata?.full_name || email.split('@')[0]
+      });
+
       const retry = await supabase.auth.signInWithPassword({ email, password });
       if (!retry.error) {
         revalidatePath('/');
+        revalidatePath('/admin/users');
+        revalidatePath('/admin/dashboard');
         return { success: true };
       }
     } else {
@@ -137,9 +160,19 @@ export async function loginUser(formData: FormData) {
           full_name: email.split('@')[0]
         });
 
+        const { data: roleObj } = await adminClient.from('roles').select('id').eq('name', 'USER').single();
+        if (roleObj) {
+          await adminClient.from('user_roles').upsert({
+            user_id: targetUser.id,
+            role_id: roleObj.id
+          });
+        }
+
         const retry = await supabase.auth.signInWithPassword({ email, password });
         if (!retry.error) {
           revalidatePath('/');
+          revalidatePath('/admin/users');
+          revalidatePath('/admin/dashboard');
           return { success: true };
         }
       }
@@ -193,6 +226,7 @@ export async function updateProfile(formData: FormData) {
 
   revalidatePath('/profile');
   revalidatePath('/profile/edit');
+  revalidatePath('/admin/users');
   return { success: true };
 }
 
@@ -218,5 +252,7 @@ export async function applyForMasterRole(formData: FormData) {
   if (error) return { error: error.message };
 
   revalidatePath('/profile');
+  revalidatePath('/admin/master-applications');
+  revalidatePath('/admin/dashboard');
   return { success: true };
 }
