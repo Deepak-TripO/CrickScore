@@ -51,15 +51,12 @@ export default function AdminSidebar({ user }: AdminSidebarProps) {
       items: [
         { name: 'Users', href: '/admin/users', icon: Users },
         { name: 'Approved Masters', href: '/admin/masters', icon: Award },
-        { name: 'Teams', href: '/admin/teams', icon: Shield },
-        { name: 'Players', href: '/admin/players', icon: UserCheck },
       ]
     },
     {
-      title: 'GROUNDS & ANALYTICS',
+      title: 'ANALYTICS & SETTINGS',
       items: [
-        { name: 'Playgrounds', href: '/admin/playgrounds', icon: MapPin },
-        { name: 'Reports & Analytics', href: '/admin/reports', icon: BarChart3 },
+        { name: 'Analytics', href: '/admin/reports', icon: BarChart3 },
         { name: 'Settings', href: '/admin/settings', icon: Settings },
       ]
     }
