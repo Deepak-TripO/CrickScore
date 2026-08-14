@@ -65,8 +65,8 @@ export default function AdminHeaderNav({ user }: AdminHeaderNavProps) {
   return (
     <header className="sticky top-0 z-40 bg-slate-950/95 backdrop-blur-md border-b border-slate-800/90 shadow-xl shrink-0">
       
-      {/* 1. TOP LOGO & CONTROLS ROW: [ Admin Logo ] ........ [ Admin Profile ] [ Sign Out ] */}
-      <div className="px-4 sm:px-6 py-3 flex items-center justify-between border-b border-slate-850/60">
+      {/* 1. TOP LOGO & CONTROLS ROW: [ Admin Logo ] ........ [ Profile Icon ] [ Sign Out Icon ] */}
+      <div className="px-4 sm:px-6 py-3 flex items-center justify-between">
         
         {/* LEFT: ADMIN LOGO */}
         <Link href="/admin/dashboard" className="flex items-center gap-2.5 group shrink-0">
@@ -82,31 +82,32 @@ export default function AdminHeaderNav({ user }: AdminHeaderNavProps) {
           </div>
         </Link>
 
-        {/* RIGHT: ADMIN PROFILE | SIGN OUT (STABLE & FIXED POSITION) */}
+        {/* RIGHT: ADMIN PROFILE ICON | SIGN OUT ICON (STABLE & FIXED POSITION) */}
         <div className="flex items-center gap-2 shrink-0">
           <Link
             href="/profile"
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 border border-slate-800 hover:border-purple-500/40 rounded-xl text-xs font-bold text-slate-200 hover:text-white transition-all shadow-sm"
+            title="Admin Profile"
+            aria-label="Admin Profile"
+            className="p-2 bg-slate-900 border border-slate-800 hover:border-purple-500/50 hover:bg-purple-950/30 rounded-xl text-slate-200 hover:text-purple-300 transition-all shadow-sm group"
           >
-            <User className="w-3.5 h-3.5 text-purple-400" />
-            <span>Admin Profile</span>
+            <User className="w-4 h-4 text-purple-400 group-hover:scale-110 transition-transform" />
           </Link>
 
-          <form action={logoutUser}>
+          <form action={logoutUser} title="Sign Out">
             <button
               type="submit"
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 border border-slate-800 hover:border-red-500/40 text-slate-300 hover:text-red-400 rounded-xl text-xs font-bold transition-all shadow-sm"
+              aria-label="Sign Out"
+              className="p-2 bg-slate-900 border border-slate-800 hover:border-red-500/50 hover:bg-red-950/30 rounded-xl text-slate-300 hover:text-red-400 transition-all shadow-sm group"
             >
-              <LogOut className="w-3.5 h-3.5" />
-              <span>Sign Out</span>
+              <LogOut className="w-4 h-4 text-slate-400 group-hover:text-red-400 group-hover:scale-110 transition-transform" />
             </button>
           </form>
         </div>
       </div>
 
-      {/* 2. SECTION TOGGLE CONTROL ROW (FIXED POSITION, ZERO LAYOUT SHIFT ACROSS NAVIGATION) */}
-      <div className="px-4 sm:px-6 py-2 bg-slate-950/80 flex items-center justify-between gap-4 h-12">
-        <div className="flex items-center gap-1.5 bg-slate-900 p-1 border border-slate-800 rounded-2xl w-full sm:w-auto max-w-md shadow-inner">
+      {/* 2. CLEAN VERTICAL SPACING & ANCHORED SECTION TOGGLE CONTROL ROW */}
+      <div className="px-4 sm:px-6 py-2.5 bg-slate-950/90 flex items-center justify-between gap-4 h-14 border-t border-slate-850/60">
+        <div className="flex items-center gap-1.5 bg-slate-900 p-1.5 border border-slate-800 rounded-2xl w-full sm:w-auto max-w-md shadow-inner">
           {activeConfig.options.map((opt) => {
             const OptIcon = opt.icon;
             const isOptActive = opt.href === '/admin/dashboard'
