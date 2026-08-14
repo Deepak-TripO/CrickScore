@@ -241,3 +241,12 @@ CREATE POLICY "Scorers update assigned matches and balls" ON public.balls FOR AL
     SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('SCORER', 'ORGANIZER', 'SUPER_ADMIN')
   )
 );
+
+-- INITIAL SEED SERVICES
+INSERT INTO public.services (name, description, image_url, price, location, availability, provider_name, provider_contact)
+VALUES
+  ('Turf Ground Booking - Turf A', 'Standard floodlit synthetic turf ground for day/night T20 and T10 matches. Includes pavilion & commentary box.', 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=600&auto=format&fit=crop&q=80', 1500.00, 'Koramangala, Bangalore', 'Available Today', 'Bangalore Turf Arena', '+91 98765 43210'),
+  ('Certified Digital Live Scorer Service', 'Professional certified scorer equipped with tablet for live ball-by-ball scoring & real-time updates.', 'https://images.unsplash.com/photo-1512716676800-4700e1fc70a1?w=600&auto=format&fit=crop&q=80', 800.00, 'Citywide Bangalore', 'Instant Booking', 'CrickScore Scorer Network', '+91 98765 00000'),
+  ('Official Umpiring Panel (2 Umpires)', 'Pair of experienced state-level umpires with neutral officiating for tournament & club matches.', 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=600&auto=format&fit=crop&q=80', 2000.00, 'Bangalore & Surrounds', 'Available Weekends', 'Karnataka Umpire Guild', '+91 98111 22233'),
+  ('Full Match Live Stream & Drone Coverage', 'HD multi-camera live stream setup to YouTube/Facebook with dynamic score overlays.', 'https://images.unsplash.com/photo-1587280501635-68a0e82cd5ff?w=600&auto=format&fit=crop&q=80', 4500.00, 'Karnataka', 'Advance Booking', 'StreamCricket Pro', '+91 99887 76655')
+ON CONFLICT DO NOTHING;

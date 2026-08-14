@@ -1,0 +1,634 @@
+'use client';
+
+import React, { useState } from 'react';
+import { scoreBall, undoLastBall } from '@/actions/scoring';
+import { ExtraType, WicketType } from '@/lib/cricket/engine';
+import { ArrowLeft, RotateCcw, AlertTriangle, ChevronRight, RefreshCw, X, MoreHorizontal } from 'lucide-react';
+import Link from 'next/link';
+
+interface MobileScoringUIProps {
+  match: any;
+  activeInnings: any;
+  team1Players: any[];
+  team2Players: any[];
+}
+
+export default function MobileScoringUI({ match, activeInnings, team1Players, team2Players }: MobileScoringUIProps) {
+  const isBattingTeam1 = activeInnings.batting_team_id === match.team1_id;
+  const battingPlayers = isBattingTeam1 ? team1Players : team2Players;
+  const bowlingPlayers = isBattingTeam1 ? team2Players : team1Players;
+
+  const [strikerId, setStrikerId] = useState<string>(battingPlayers[0]?.id || '');
+  const [nonStrikerId, setNonStrikerId] = useState<string>(battingPlayers[1]?.id || '');
+  const [bowlerId, setBowlerId] = useState<string>(bowlingPlayers[0]?.id || '');
+
+  // Modals / Bottom Sheets
+  const [isWicketModalOpen, setIsWicketModalOpen] = useState<boolean>(false);
+  const [isMoreModalOpen, setIsMoreModalOpen] = useState<boolean>(false);
+  const [isPlayerChangeOpen, setIsPlayerChangeOpen] = useState<boolean>(false);
+
+  // Wicket Form State
+  const [wicketType, setWicketType] = useState<WicketType>('Bowled');
+  const [dismissedPlayerId, setDismissedPlayerId] = useState<string>('');
+  const [nextBatterId, setNextBatterId] = useState<string>('');
+
+  // Toast / Feedback State
+  const [toastMsg, setToastMsg] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(false);
+  const [errorMsg, setErrorMsg] = useState<string>('');
+
+  // Ball History State
+  const [recentBalls, setRecentBalls] = useState<Array<{ ball: string; run: number | string; type?: string }>>([
+    { ball: '10.1', run: 1 },
+    { ball: '10.2', run: 4 },
+    { ball: '10.3', run: 'W' },
+    { ball: '10.4', run: 2 }
+  ]);
+
+  // Always resolve a valid UUID string for inningsId
+  const safeInningsId = (activeInnings?.id && activeInnings.id !== 'inn1') ? activeInnings.id : match.id;
+
+  const strikerPlayer = battingPlayers.find(p => p.id === strikerId) || battingPlayers[0];
+  const nonStrikerPlayer = battingPlayers.find(p => p.id === nonStrikerId) || battingPlayers[1];
+  const bowlerPlayer = bowlingPlayers.find(p => p.id === bowlerId) || bowlingPlayers[0];
+
+  const showToast = (msg: string) => {
+    setToastMsg(msg);
+    setTimeout(() => setToastMsg(''), 3000);
+  };
+
+  // 1. FAST SCORE RUN HANDLER
+  const handleScoreRun = async (runsBatter: number, extraType: ExtraType = 'NONE') => {
+    if (loading) return;
+    setLoading(true);
+    setErrorMsg('');
+
+    const res = await scoreBall({
+      matchId: match.id,
+      inningsId: safeInningsId,
+      strikerId,
+      nonStrikerId,
+      bowlerId,
+      runsBatter,
+      extraType
+    });
+
+    setLoading(false);
+    setIsMoreModalOpen(false);
+
+    if (res?.error) {
+      setErrorMsg(res.error);
+    } else if (res?.newState) {
+      setStrikerId(res.newState.strikerId);
+      setNonStrikerId(res.newState.nonStrikerId);
+      
+      const nextBallNum = ((activeInnings.total_overs || 0) + 0.1).toFixed(1);
+      const displayRun = extraType !== 'NONE' ? `${extraType === 'WIDE' ? '1wd' : extraType === 'NO_BALL' ? '1nb' : runsBatter}` : runsBatter;
+      setRecentBalls(prev => [...prev.slice(-3), { ball: nextBallNum, run: displayRun }]);
+      
+      showToast(extraType !== 'NONE' ? `${extraType.replace('_', ' ')} recorded` : `${runsBatter} run${runsBatter === 1 ? '' : 's'} added`);
+    }
+  };
+
+  // 2. WICKET SUBMIT HANDLER
+  const handleScoreWicketSubmit = async () => {
+    if (loading) return;
+    setLoading(true);
+    setErrorMsg('');
+    setIsWicketModalOpen(false);
+
+    const res = await scoreBall({
+      matchId: match.id,
+      inningsId: safeInningsId,
+      strikerId,
+      nonStrikerId,
+      bowlerId,
+      runsBatter: 0,
+      extraType: 'NONE',
+      wicket: true,
+      wicketType,
+      dismissedPlayerId: dismissedPlayerId || strikerId
+    });
+
+    setLoading(false);
+
+    if (res?.error) {
+      setErrorMsg(res.error);
+    } else if (res?.newState) {
+      if (nextBatterId) {
+        if ((dismissedPlayerId || strikerId) === strikerId) {
+          setStrikerId(nextBatterId);
+        } else {
+          setNonStrikerId(nextBatterId);
+        }
+      }
+      const nextBallNum = ((activeInnings.total_overs || 0) + 0.1).toFixed(1);
+      setRecentBalls(prev => [...prev.slice(-3), { ball: nextBallNum, run: 'W' }]);
+      showToast('Wicket recorded');
+    }
+  };
+
+  // 3. UNDO HANDLER
+  const handleUndo = async () => {
+    if (loading) return;
+    setLoading(true);
+    setErrorMsg('');
+
+    const res = await undoLastBall(match.id, safeInningsId);
+    setLoading(false);
+
+    if (res?.error) {
+      setErrorMsg(res.error);
+    } else {
+      setRecentBalls(prev => prev.slice(0, -1));
+      showToast('Last ball undone');
+    }
+  };
+
+  // 4. SWAP BATSMEN HANDLER
+  const handleSwapBatsmen = () => {
+    const temp = strikerId;
+    setStrikerId(nonStrikerId);
+    setNonStrikerId(temp);
+    showToast('Striker swapped');
+  };
+
+  const crr = (((activeInnings.total_runs || 0) / (activeInnings.total_overs || 1))).toFixed(2);
+  const rrr = match.target 
+    ? (((match.target - (activeInnings.total_runs || 0)) / Math.max((match.overs - (activeInnings.total_overs || 0)), 0.1))).toFixed(2)
+    : 'N/A';
+
+  const team1Name = match.team1?.name || match.your_team_name || 'Chennai Warriors';
+  const team2Name = match.team2?.name || match.opposite_team_name || 'Super Kings';
+  const battingTeamName = isBattingTeam1 ? team1Name : team2Name;
+
+  return (
+    <div className="min-h-screen bg-[#050A1A] text-white selection:bg-[#19D89A] selection:text-black font-sans pb-16">
+      
+      {/* 1. HEADER */}
+      <header className="bg-[#080F20] border-b border-[#173541] px-4 py-3 sticky top-0 z-30 flex items-center justify-between">
+        <Link href="/master/dashboard" className="flex items-center gap-2 text-[#AAB5CC] hover:text-white transition-colors">
+          <ArrowLeft className="w-5 h-5" />
+          <span className="text-xs font-bold">Back</span>
+        </Link>
+        
+        <div className="flex items-center gap-1.5">
+          <span className="text-base font-black tracking-tight text-[#19D89A]">BatScore</span>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#E5232F]/20 text-[#E5232F] border border-[#E5232F]/40 text-[10px] font-black uppercase tracking-wider">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#E5232F] animate-ping" />
+            LIVE ●
+          </span>
+        </div>
+      </header>
+
+      {/* MATCH TITLE SUBHEADER */}
+      <div className="bg-[#0D1528] border-b border-[#173541] px-4 py-2 text-center text-xs font-bold text-[#AAB5CC]">
+        {team1Name} <span className="text-[#19D89A]">vs</span> {team2Name}
+      </div>
+
+      {/* TOAST CONFIRMATION FEEDBACK */}
+      {toastMsg && (
+        <div className="fixed top-14 left-1/2 -translate-x-1/2 z-40 bg-[#19D89A] text-[#050A1A] font-extrabold text-xs px-4 py-2 rounded-full shadow-lg border border-[#19D89A] animate-in fade-in slide-in-from-top-2">
+          ✓ {toastMsg}
+        </div>
+      )}
+
+      {/* ERROR MESSAGE DISPLAY */}
+      {errorMsg && (
+        <div className="max-w-4xl mx-auto px-4 mt-3">
+          <div className="p-3 bg-[#E5232F]/10 border border-[#E5232F]/40 rounded-xl text-[#E5232F] text-xs font-bold flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 shrink-0" />
+            <span>{errorMsg}</span>
+          </div>
+        </div>
+      )}
+
+      {/* MAIN LAYOUT CONTAINER */}
+      <div className="max-w-4xl mx-auto px-4 py-4 lg:grid lg:grid-cols-12 lg:gap-6 lg:items-start space-y-4 lg:space-y-0">
+        
+        {/* ========================================================== */}
+        {/* LEFT COLUMN (Scoreboard, Batters, Bowler, Over, History)   */}
+        {/* ========================================================== */}
+        <div className="lg:col-span-6 space-y-4">
+          
+          {/* 2. MAIN SCOREBOARD */}
+          <div className="bg-[#0D1528] border-t-2 border-t-[#19D89A] border-x border-b border-[#173541] rounded-2xl p-4 text-center shadow-lg">
+            <h2 className="text-xs font-black text-[#AAB5CC] uppercase tracking-wider mb-1">
+              {battingTeamName}
+            </h2>
+
+            <div className="text-5xl sm:text-6xl font-black font-mono tracking-tight text-[#19D89A] py-1">
+              {activeInnings.total_runs || 0} <span className="text-white">/</span> {activeInnings.total_wickets || 0}
+            </div>
+
+            <div className="text-sm font-extrabold text-white font-mono mb-3">
+              {(activeInnings.total_overs || 0.0).toFixed(1)} <span className="text-xs text-[#71809A]">OV</span>
+            </div>
+
+            <div className="flex items-center justify-center gap-4 text-xs font-extrabold pt-2 border-t border-[#173541] text-[#AAB5CC]">
+              <div>CRR <span className="text-white font-mono ml-1">{crr}</span></div>
+              {match.target && (
+                <>
+                  <div className="w-1 h-1 rounded-full bg-[#173541]" />
+                  <div>TARGET <span className="text-[#19D89A] font-mono ml-1">{match.target}</span></div>
+                  <div className="w-1 h-1 rounded-full bg-[#173541]" />
+                  <div>RRR <span className="text-[#315BEA] font-mono ml-1">{rrr}</span></div>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* 3. ACTIVE BATTERS */}
+          <div className="bg-[#0D1528] border border-[#173541] rounded-2xl p-3.5 space-y-2.5">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-extrabold text-[#71809A] uppercase tracking-wider">Batters</span>
+              <button 
+                onClick={handleSwapBatsmen}
+                className="text-[11px] font-extrabold text-[#19D89A] flex items-center gap-1 hover:underline"
+              >
+                <RefreshCw className="w-3 h-3" />
+                Swap
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              {/* STRIKER */}
+              <div className="bg-[#111A2D] border border-[#19D89A]/40 rounded-xl p-2.5">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-white truncate">
+                  <span className="w-2 h-2 rounded-full bg-[#19D89A] shrink-0 animate-pulse" />
+                  <span className="truncate">{strikerPlayer?.full_name || strikerPlayer?.display_name || 'Striker'}</span>
+                </div>
+                <div className="text-xs font-extrabold text-[#19D89A] font-mono mt-1">
+                  56 <span className="text-[11px] text-[#AAB5CC] font-normal">(32)</span>
+                </div>
+              </div>
+
+              {/* NON-STRIKER */}
+              <div className="bg-[#111A2D] border border-[#173541] rounded-xl p-2.5">
+                <div className="text-xs font-bold text-[#AAB5CC] truncate pl-3">
+                  <span className="truncate">{nonStrikerPlayer?.full_name || nonStrikerPlayer?.display_name || 'Non-Striker'}</span>
+                </div>
+                <div className="text-xs font-extrabold text-white font-mono mt-1 pl-3">
+                  24 <span className="text-[11px] text-[#71809A] font-normal">(18)</span>
+                </div>
+              </div>
+            </div>
+
+            {/* PLAYER SELECTION TOGGLE */}
+            <div className="flex justify-end pt-0.5">
+              <button 
+                onClick={() => setIsPlayerChangeOpen(!isPlayerChangeOpen)}
+                className="text-[10px] font-bold text-[#AAB5CC] hover:text-white underline"
+              >
+                {isPlayerChangeOpen ? 'Done' : 'Change Player Selection'}
+              </button>
+            </div>
+
+            {isPlayerChangeOpen && (
+              <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[#173541]">
+                <div>
+                  <label className="text-[10px] text-[#71809A] block mb-1">Striker</label>
+                  <select
+                    value={strikerId}
+                    onChange={(e) => setStrikerId(e.target.value)}
+                    className="w-full bg-[#071022] border border-[#173541] text-xs text-white rounded-lg p-1.5"
+                  >
+                    {battingPlayers.map(p => (
+                      <option key={p.id} value={p.id}>{p.full_name || p.display_name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-[10px] text-[#71809A] block mb-1">Non-Striker</label>
+                  <select
+                    value={nonStrikerId}
+                    onChange={(e) => setNonStrikerId(e.target.value)}
+                    className="w-full bg-[#071022] border border-[#173541] text-xs text-white rounded-lg p-1.5"
+                  >
+                    {battingPlayers.map(p => (
+                      <option key={p.id} value={p.id}>{p.full_name || p.display_name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* 4. CURRENT BOWLER */}
+          <div className="bg-[#0D1528] border border-[#173541] rounded-2xl p-3.5 flex items-center justify-between">
+            <div>
+              <span className="text-[10px] font-extrabold text-[#71809A] uppercase tracking-wider block">Bowler</span>
+              <span className="text-xs font-bold text-white block mt-0.5">
+                {bowlerPlayer?.full_name || bowlerPlayer?.display_name || 'Bowler'}
+              </span>
+            </div>
+            <div className="flex items-center gap-3 text-xs font-extrabold font-mono text-[#AAB5CC]">
+              <div>2.4 <span className="text-[10px] font-semibold text-[#71809A]">OV</span></div>
+              <div>21 <span className="text-[10px] font-semibold text-[#71809A]">R</span></div>
+              <div className="text-[#19D89A]">1 <span className="text-[10px] font-semibold text-[#71809A]">W</span></div>
+            </div>
+          </div>
+
+          {/* 5. CURRENT OVER STRIP */}
+          <div className="bg-[#0D1528] border border-[#173541] rounded-2xl p-3.5 space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-extrabold text-[#AAB5CC] uppercase tracking-wider">OVER 11</span>
+              <span className="font-bold text-[#19D89A] text-[11px]">13 RUNS</span>
+            </div>
+            <div className="flex items-center gap-2">
+              {['●', '1', '4', 'W', '2', '0', '6'].map((ball, idx) => (
+                <span 
+                  key={idx}
+                  className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-black shadow-sm ${
+                    ball === '4' ? 'bg-[#315BEA] text-white' :
+                    ball === '6' ? 'bg-[#19D89A] text-[#050A1A]' :
+                    ball === 'W' ? 'bg-[#E5232F] text-white' :
+                    'bg-[#111A2D] text-[#AAB5CC] border border-[#173541]'
+                  }`}
+                >
+                  {ball}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* 6. BALL HISTORY LIST */}
+          <div className="bg-[#0D1528] border border-[#173541] rounded-2xl p-3.5 space-y-2">
+            <span className="text-[11px] font-extrabold text-[#71809A] uppercase tracking-wider block mb-1">Ball History</span>
+            <div className="grid grid-cols-4 gap-2">
+              {recentBalls.map((b, idx) => (
+                <div key={idx} className="bg-[#111A2D] border border-[#173541] rounded-xl p-2 text-center">
+                  <div className="text-[10px] text-[#71809A] font-mono">{b.ball}</div>
+                  <div className={`text-sm font-black font-mono ${b.run === 'W' ? 'text-[#E5232F]' : b.run === 4 ? 'text-[#315BEA]' : b.run === 6 ? 'text-[#19D89A]' : 'text-white'}`}>
+                    {b.run}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="pt-2 text-center">
+              <Link href={`/matches/${match.id}`} className="text-xs font-bold text-[#19D89A] hover:underline inline-flex items-center gap-1">
+                View Full Scorecard <ChevronRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+          </div>
+
+        </div>
+
+        {/* ========================================================== */}
+        {/* RIGHT COLUMN (Run Keypad, Wicket, More, Undo)             */}
+        {/* ========================================================== */}
+        <div className="lg:col-span-6 space-y-4">
+          
+          {/* 7. MAIN SCORING KEYPAD (3x2 GRID) */}
+          <div className="bg-[#111A2D] border border-[#173541] rounded-2xl p-4 space-y-3 shadow-xl">
+            <span className="text-[11px] font-extrabold text-[#71809A] uppercase tracking-wider block">Runs</span>
+            
+            <div className="grid grid-cols-3 gap-3">
+              {/* RUN 0 */}
+              <button
+                type="button"
+                disabled={loading}
+                onClick={() => handleScoreRun(0)}
+                className="h-20 rounded-xl bg-[#071022] hover:bg-[#0D1528] border border-[#173541] text-white font-black text-3xl transition-all active:scale-95 flex items-center justify-center"
+              >
+                0
+              </button>
+
+              {/* RUN 1 */}
+              <button
+                type="button"
+                disabled={loading}
+                onClick={() => handleScoreRun(1)}
+                className="h-20 rounded-xl bg-[#071022] hover:bg-[#0D1528] border border-[#173541] text-[#19D89A] font-black text-3xl transition-all active:scale-95 flex items-center justify-center"
+              >
+                1
+              </button>
+
+              {/* RUN 2 */}
+              <button
+                type="button"
+                disabled={loading}
+                onClick={() => handleScoreRun(2)}
+                className="h-20 rounded-xl bg-[#071022] hover:bg-[#0D1528] border border-[#173541] text-[#19D89A] font-black text-3xl transition-all active:scale-95 flex items-center justify-center"
+              >
+                2
+              </button>
+
+              {/* RUN 3 */}
+              <button
+                type="button"
+                disabled={loading}
+                onClick={() => handleScoreRun(3)}
+                className="h-20 rounded-xl bg-[#071022] hover:bg-[#0D1528] border border-[#173541] text-[#19D89A] font-black text-3xl transition-all active:scale-95 flex items-center justify-center"
+              >
+                3
+              </button>
+
+              {/* RUN 4 */}
+              <button
+                type="button"
+                disabled={loading}
+                onClick={() => handleScoreRun(4)}
+                className="h-20 rounded-xl bg-[#315BEA] hover:bg-blue-600 text-white font-black text-3xl shadow-lg shadow-blue-600/20 transition-all active:scale-95 flex items-center justify-center"
+              >
+                4
+              </button>
+
+              {/* RUN 6 */}
+              <button
+                type="button"
+                disabled={loading}
+                onClick={() => handleScoreRun(6)}
+                className="h-20 rounded-xl bg-[#19D89A] hover:bg-emerald-400 text-[#050A1A] font-black text-3xl shadow-lg shadow-emerald-500/20 transition-all active:scale-95 flex items-center justify-center"
+              >
+                6
+              </button>
+            </div>
+          </div>
+
+          {/* 8. WICKET, MORE, UNDO ACTION BAR */}
+          <div className="grid grid-cols-3 gap-3">
+            {/* WICKET BUTTON */}
+            <button
+              type="button"
+              disabled={loading}
+              onClick={() => setIsWicketModalOpen(true)}
+              className="h-14 rounded-xl bg-[#E5232F] hover:bg-red-600 text-white font-black text-sm uppercase tracking-wider shadow-lg shadow-red-600/20 transition-all active:scale-95 flex items-center justify-center"
+            >
+              WICKET
+            </button>
+
+            {/* MORE BUTTON */}
+            <button
+              type="button"
+              disabled={loading}
+              onClick={() => setIsMoreModalOpen(true)}
+              className="h-14 rounded-xl bg-[#0D1528] hover:bg-[#111A2D] border border-[#173541] text-[#19D89A] font-black text-sm uppercase tracking-wider transition-all active:scale-95 flex items-center justify-center gap-1"
+            >
+              <MoreHorizontal className="w-4 h-4" />
+              MORE
+            </button>
+
+            {/* UNDO BUTTON */}
+            <button
+              type="button"
+              disabled={loading}
+              onClick={handleUndo}
+              className="h-14 rounded-xl bg-[#0D1528] hover:bg-[#111A2D] border border-[#173541] text-[#AAB5CC] hover:text-white font-black text-xs uppercase tracking-wider transition-all active:scale-95 flex items-center justify-center gap-1.5"
+            >
+              <RotateCcw className="w-4 h-4 text-amber-400" />
+              UNDO
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+
+      {/* ========================================================== */}
+      {/* 9. WICKET BOTTOM SHEET MODAL                               */}
+      {/* ========================================================== */}
+      {isWicketModalOpen && (
+        <div className="fixed inset-0 z-50 bg-[#050A1A]/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-[#0D1528] border border-[#173541] w-full max-w-md rounded-t-3xl sm:rounded-3xl p-5 space-y-4 shadow-2xl animate-in slide-in-from-bottom-4">
+            <div className="flex items-center justify-between pb-2 border-b border-[#173541]">
+              <h3 className="text-base font-extrabold text-white flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-[#E5232F]" />
+                Record Wicket
+              </h3>
+              <button onClick={() => setIsWicketModalOpen(false)} className="p-1 text-[#AAB5CC] hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-[#AAB5CC] block mb-1">Dismissed Player</label>
+              <select 
+                value={dismissedPlayerId || strikerId}
+                onChange={(e) => setDismissedPlayerId(e.target.value)}
+                className="w-full bg-[#071022] border border-[#173541] rounded-xl p-2.5 text-xs text-white font-bold"
+              >
+                <option value={strikerId}>Striker: {strikerPlayer?.full_name || 'Striker'}</option>
+                <option value={nonStrikerId}>Non-Striker: {nonStrikerPlayer?.full_name || 'Non-Striker'}</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-[#AAB5CC] block mb-1">Dismissal Type</label>
+              <select 
+                value={wicketType}
+                onChange={(e) => setWicketType(e.target.value as WicketType)}
+                className="w-full bg-[#071022] border border-[#173541] rounded-xl p-2.5 text-xs text-white font-bold"
+              >
+                {['Bowled', 'Caught', 'LBW', 'Run Out', 'Stumped', 'Hit Wicket', 'Other'].map((t) => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-[#AAB5CC] block mb-1">Select New Batter</label>
+              <select 
+                value={nextBatterId}
+                onChange={(e) => setNextBatterId(e.target.value)}
+                className="w-full bg-[#071022] border border-[#173541] rounded-xl p-2.5 text-xs text-white font-bold"
+              >
+                <option value="">Select Next Batter...</option>
+                {battingPlayers
+                  .filter(p => p.id !== strikerId && p.id !== nonStrikerId)
+                  .map(p => (
+                    <option key={p.id} value={p.id}>{p.full_name || p.display_name}</option>
+                  ))}
+              </select>
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setIsWicketModalOpen(false)}
+                className="flex-1 py-3 bg-[#111A2D] text-[#AAB5CC] font-bold rounded-xl text-xs"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleScoreWicketSubmit}
+                className="flex-1 py-3 bg-[#E5232F] text-white font-black rounded-xl text-xs shadow-md uppercase tracking-wider"
+              >
+                Confirm Wicket
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================== */}
+      {/* 10. MORE / OTHER SCORING BOTTOM SHEET MODAL               */}
+      {/* ========================================================== */}
+      {isMoreModalOpen && (
+        <div className="fixed inset-0 z-50 bg-[#050A1A]/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-[#0D1528] border border-[#173541] w-full max-w-md rounded-t-3xl sm:rounded-3xl p-5 space-y-4 shadow-2xl animate-in slide-in-from-bottom-4">
+            <div className="flex items-center justify-between pb-2 border-b border-[#173541]">
+              <h3 className="text-base font-extrabold text-white">Other Scoring Options</h3>
+              <button onClick={() => setIsMoreModalOpen(false)} className="p-1 text-[#AAB5CC] hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => handleScoreRun(1, 'WIDE')}
+                className="py-3.5 px-4 bg-[#111A2D] hover:bg-[#173541] border border-[#173541] rounded-xl text-xs font-bold text-white text-left flex items-center justify-between"
+              >
+                <span>Wide (+1)</span>
+                <span className="text-[#19D89A] font-black">+1</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleScoreRun(1, 'NO_BALL')}
+                className="py-3.5 px-4 bg-[#111A2D] hover:bg-[#173541] border border-[#173541] rounded-xl text-xs font-bold text-white text-left flex items-center justify-between"
+              >
+                <span>No Ball (+1)</span>
+                <span className="text-[#19D89A] font-black">+1</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleScoreRun(1, 'BYE')}
+                className="py-3.5 px-4 bg-[#111A2D] hover:bg-[#173541] border border-[#173541] rounded-xl text-xs font-bold text-white text-left flex items-center justify-between"
+              >
+                <span>Bye (+1)</span>
+                <span className="text-[#19D89A] font-black">+1</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleScoreRun(1, 'LEG_BYE')}
+                className="py-3.5 px-4 bg-[#111A2D] hover:bg-[#173541] border border-[#173541] rounded-xl text-xs font-bold text-white text-left flex items-center justify-between"
+              >
+                <span>Leg Bye (+1)</span>
+                <span className="text-[#19D89A] font-black">+1</span>
+              </button>
+            </div>
+
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => setIsMoreModalOpen(false)}
+                className="w-full py-3 bg-[#111A2D] text-[#AAB5CC] font-bold rounded-xl text-xs"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+    </div>
+  );
+}

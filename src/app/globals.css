@@ -3,15 +3,33 @@
 @tailwind utilities;
 
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
+  --bg-main: #050A1A;
+  --bg-surface: #0D1528;
+  --bg-card: #111A2D;
+  --border-subtle: #123E42;
+  --accent-green: #19D89A;
+  --accent-blue: #315BEA;
+  --accent-pink: #D927A8;
+  --accent-red: #E5232F;
+  --text-primary: #FFFFFF;
+  --text-secondary: #AAB5CC;
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
+  color: var(--text-primary);
+  background-color: var(--bg-main);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Eliminate 300ms tap delay on mobile devices */
+a, button, input, select, textarea, [role="button"] {
+  touch-action: manipulation;
+}
+
+/* Optimize scroll performance */
+.overflow-x-auto, .overflow-y-auto {
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Custom scrollbars */
@@ -21,27 +39,27 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: #050A1A;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #123E42;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #19D89A;
 }
 
 /* Ball pill styles */
 .ball-dot {
-  @apply inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold transition-all shadow-sm;
+  @apply inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-black transition-all shadow-sm;
 }
-.ball-0 { @apply bg-slate-100 text-slate-700 border border-slate-300; }
-.ball-1 { @apply bg-blue-50 text-blue-700 border border-blue-200; }
-.ball-2 { @apply bg-indigo-50 text-indigo-700 border border-indigo-200; }
-.ball-3 { @apply bg-purple-50 text-purple-700 border border-purple-200; }
-.ball-4 { @apply bg-emerald-500 text-white font-black shadow-emerald-200; }
-.ball-6 { @apply bg-amber-500 text-white font-black shadow-amber-200; }
-.ball-w { @apply bg-rose-600 text-white font-black animate-pulse; }
-.ball-extra { @apply bg-orange-100 text-orange-800 border border-orange-300 font-semibold; }
+.ball-0 { @apply bg-[#0D1528] text-[#AAB5CC] border border-[#123E42]; }
+.ball-1 { @apply bg-[#111A2D] text-[#19D89A] border border-[#123E42]; }
+.ball-2 { @apply bg-[#111A2D] text-[#315BEA] border border-[#123E42]; }
+.ball-3 { @apply bg-[#111A2D] text-[#D927A8] border border-[#123E42]; }
+.ball-4 { @apply bg-[#315BEA] text-white font-black; }
+.ball-6 { @apply bg-[#D927A8] text-white font-black; }
+.ball-w { @apply bg-[#E5232F] text-white font-black animate-pulse; }
+.ball-extra { @apply bg-amber-500/20 text-amber-400 border border-amber-500/40 font-bold; }

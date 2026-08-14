@@ -59,8 +59,8 @@ export const Footer = () => {
             <h4 className="font-bold text-white mb-4 uppercase text-xs tracking-wider">Platform Roles</h4>
             <ul className="space-y-2.5 text-sm font-medium">
               <li>
-                <Link href="/admin" className="hover:text-emerald-400 transition-colors">
-                  Organizer Dashboard
+                <Link href="/apply-master" className="hover:text-emerald-400 transition-colors">
+                  Master Applications
                 </Link>
               </li>
               <li>

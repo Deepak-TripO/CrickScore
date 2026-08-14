@@ -1,132 +1,232 @@
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
-import { Match } from '@/lib/cricket/types';
-import { MapPin, Calendar, ArrowRight, Radio } from 'lucide-react';
-import { format } from 'date-fns';
+import { useRouter } from 'next/navigation';
+import { Calendar, Play, Pencil, Trash2 } from 'lucide-react';
 
 interface MatchCardProps {
-  match: Match;
+  match: {
+    id: string;
+    title: string;
+    format?: string;
+    category?: string;
+    status: string;
+    overs?: number;
+    current_score?: string;
+    current_wickets?: number;
+    current_over?: number;
+    result_summary?: string;
+    scheduled_start?: string;
+    scheduled_at?: string;
+    scheduled_date?: string;
+    created_at?: string;
+    team1?: any;
+    team2?: any;
+    playground?: any;
+    master?: any;
+    viewer_count?: number;
+    your_team_name?: string;
+    opposite_team_name?: string;
+    your_team_logo_url?: string;
+    opposite_team_logo_url?: string;
+  };
+  isHistoryView?: boolean;
+  onEdit?: () => void;
+  onDelete?: () => void;
 }
 
-export const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
+export default function MatchCard({ match, isHistoryView = false, onEdit, onDelete }: MatchCardProps) {
+  const router = useRouter();
+
   const isLive = match.status === 'LIVE';
-  const isUpcoming = match.status === 'UPCOMING';
   const isCompleted = match.status === 'COMPLETED';
 
-  const inn1 = match.all_innings?.find((i) => i.innings_number === 1);
-  const inn2 = match.all_innings?.find((i) => i.innings_number === 2);
+  const t1 = Array.isArray(match.team1) ? match.team1[0] : match.team1;
+  const t2 = Array.isArray(match.team2) ? match.team2[0] : match.team2;
+
+  // Resolve Team 1 Name & Logo strictly from database fields
+  const team1Name = t1?.name || match.your_team_name || (match.title ? match.title.split(' vs ')[0] : '') || 'Team 1';
+  const team1Short = t1?.short_name || (team1Name ? team1Name.replace(/[^a-zA-Z0-9]/g, '').slice(0, 4).toUpperCase() : 'T1');
+  const team1Logo = t1?.logo_url || match.your_team_logo_url;
+
+  // Resolve Team 2 Name & Logo strictly from database fields
+  const team2Name = t2?.name || match.opposite_team_name || (match.title ? match.title.split(' vs ')[1] : '') || 'Team 2';
+  const team2Short = t2?.short_name || (team2Name ? team2Name.replace(/[^a-zA-Z0-9]/g, '').slice(0, 4).toUpperCase() : 'T2');
+  const team2Logo = t2?.logo_url || match.opposite_team_logo_url;
+
+  // Format Scheduled Date cleanly
+  const rawDate = match.scheduled_start || match.scheduled_at || match.scheduled_date || match.created_at;
+  const formattedDate = rawDate && !isNaN(new Date(rawDate).getTime())
+    ? new Date(rawDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
+    : 'Today';
+
+  // Handle clicking anywhere on the card to open Scorecard (Home Page / History)
+  const handleCardClick = () => {
+    if (isHistoryView && match.id) {
+      router.push(`/matches/${match.id}`);
+    }
+  };
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden flex flex-col justify-between group">
-      {/* Card Header Status */}
-      <div className="bg-slate-50 px-5 py-3 border-b border-slate-100 flex items-center justify-between">
-        <span className="text-xs font-bold text-slate-500 uppercase tracking-wider truncate max-w-[200px]">
-          {match.tournament_name || 'Friendly T20 Match'}
-        </span>
-        {isLive && (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-rose-500 text-white animate-pulse">
-            <Radio className="w-3 h-3" /> LIVE
-          </span>
-        )}
-        {isUpcoming && (
-          <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-700">
-            UPCOMING
-          </span>
-        )}
-        {isCompleted && (
-          <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-200 text-slate-700">
-            FINISHED
-          </span>
-        )}
+    <div 
+      onClick={handleCardClick}
+      role={isHistoryView ? 'button' : undefined}
+      tabIndex={isHistoryView ? 0 : undefined}
+      onKeyDown={(e) => {
+        if (isHistoryView && (e.key === 'Enter' || e.key === ' ')) {
+          e.preventDefault();
+          handleCardClick();
+        }
+      }}
+      className={`relative rounded-2xl bg-[#0D1528] border transition-all duration-300 overflow-hidden shadow-md flex flex-col justify-between select-none ${
+        isHistoryView 
+          ? 'cursor-pointer hover:border-[#19D89A] hover:scale-[1.01] active:scale-[0.99]' 
+          : ''
+      } ${
+        isLive 
+          ? 'border-[#19D89A]/50 hover:border-[#19D89A]' 
+          : 'border-[#173541] hover:border-[#19D89A]/40'
+      }`}
+    >
+      
+      {/* 1. HEADER BAR: Status / Category & Date */}
+      <div className="flex items-center justify-between px-4 py-2.5 bg-[#050A1A]/80 border-b border-[#173541] text-xs">
+        <div className="flex items-center gap-2">
+          {isLive ? (
+            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-[#E5232F]/20 text-[#E5232F] border border-[#E5232F]/40 font-black text-[10px] uppercase tracking-wider">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#E5232F] animate-ping" />
+              LIVE
+            </span>
+          ) : isCompleted ? (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#111A2D] text-[#AAB5CC] font-bold text-[10px]">
+              COMPLETED
+            </span>
+          ) : match.category ? (
+            <span className="text-[#19D89A] font-bold text-[11px]">{match.category}</span>
+          ) : null}
+        </div>
+
+        <div className="flex items-center gap-1 text-[#AAB5CC] text-[11px] font-medium">
+          <Calendar className="w-3.5 h-3.5 text-[#19D89A]" />
+          <span>{formattedDate}</span>
+        </div>
       </div>
 
-      {/* Main Teams & Score Section */}
-      <div className="p-5 space-y-4">
-        {/* Team A */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center font-bold text-slate-700 overflow-hidden shrink-0">
-              {match.team_a.logo_url ? (
-                <img src={match.team_a.logo_url} alt={match.team_a.name} className="w-full h-full object-cover" />
+      {/* 2. BODY: TEAMS, LOGOS & SCORES */}
+      <div className="p-4 sm:p-5 space-y-3">
+        <div className="grid grid-cols-7 items-center gap-2">
+          
+          {/* TEAM 1 */}
+          <div className="col-span-3 flex flex-col items-center text-center">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-[#050A1A] border border-[#173541] p-1 flex items-center justify-center shadow-inner overflow-hidden shrink-0">
+              {team1Logo ? (
+                <img 
+                  src={team1Logo.includes('/storage/v1/object/') && !team1Logo.includes('/storage/v1/object/public/') ? team1Logo.replace('/storage/v1/object/', '/storage/v1/object/public/') : team1Logo} 
+                  alt={team1Name} 
+                  className="w-full h-full object-cover rounded-xl"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLElement).style.display = 'none';
+                  }} 
+                />
               ) : (
-                match.team_a.name.slice(0, 2).toUpperCase()
+                <span className="font-black text-lg text-[#19D89A]">{team1Short}</span>
               )}
             </div>
-            <span className="font-extrabold text-slate-900 text-base">{match.team_a.name}</span>
+            <h4 className="mt-2 font-bold text-xs sm:text-sm text-white line-clamp-1">{team1Name}</h4>
+            <p className="text-[11px] text-[#19D89A] font-extrabold mt-0.5 font-mono">
+              {isLive || isCompleted ? match.current_score || '0/0' : 'Yet to bat'}
+            </p>
           </div>
 
-          <div className="text-right">
-            {inn1 && inn1.batting_team_id === match.team_a.id ? (
-              <div className="font-black text-slate-900 text-lg">
-                {inn1.runs}/{inn1.wickets} <span className="text-xs font-semibold text-slate-500">({inn1.overs} ov)</span>
-              </div>
-            ) : inn2 && inn2.batting_team_id === match.team_a.id ? (
-              <div className="font-black text-slate-900 text-lg">
-                {inn2.runs}/{inn2.wickets} <span className="text-xs font-semibold text-slate-500">({inn2.overs} ov)</span>
-              </div>
-            ) : (
-              <span className="text-xs font-medium text-slate-400">Yet to Bat</span>
-            )}
+          {/* VS BADGE */}
+          <div className="col-span-1 flex flex-col items-center justify-center">
+            <span className="w-7 h-7 rounded-full bg-[#050A1A] border border-[#173541] flex items-center justify-center text-[#AAB5CC] font-black text-[10px] shadow-sm">
+              VS
+            </span>
           </div>
-        </div>
 
-        {/* Team B */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center font-bold text-slate-700 overflow-hidden shrink-0">
-              {match.team_b.logo_url ? (
-                <img src={match.team_b.logo_url} alt={match.team_b.name} className="w-full h-full object-cover" />
+          {/* TEAM 2 */}
+          <div className="col-span-3 flex flex-col items-center text-center">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-[#050A1A] border border-[#173541] p-1 flex items-center justify-center shadow-inner overflow-hidden shrink-0">
+              {team2Logo ? (
+                <img 
+                  src={team2Logo.includes('/storage/v1/object/') && !team2Logo.includes('/storage/v1/object/public/') ? team2Logo.replace('/storage/v1/object/', '/storage/v1/object/public/') : team2Logo} 
+                  alt={team2Name} 
+                  className="w-full h-full object-cover rounded-xl" 
+                  onError={(e) => {
+                    (e.currentTarget as HTMLElement).style.display = 'none';
+                  }}
+                />
               ) : (
-                match.team_b.name.slice(0, 2).toUpperCase()
+                <span className="font-black text-lg text-[#19D89A]">{team2Short}</span>
               )}
             </div>
-            <span className="font-extrabold text-slate-900 text-base">{match.team_b.name}</span>
+            <h4 className="mt-2 font-bold text-xs sm:text-sm text-white line-clamp-1">{team2Name}</h4>
+            <p className="text-[11px] text-[#19D89A] font-extrabold mt-0.5 font-mono">
+              {isLive || isCompleted ? 'Innings' : 'Yet to bat'}
+            </p>
           </div>
 
-          <div className="text-right">
-            {inn1 && inn1.batting_team_id === match.team_b.id ? (
-              <div className="font-black text-slate-900 text-lg">
-                {inn1.runs}/{inn1.wickets} <span className="text-xs font-semibold text-slate-500">({inn1.overs} ov)</span>
-              </div>
-            ) : inn2 && inn2.batting_team_id === match.team_b.id ? (
-              <div className="font-black text-slate-900 text-lg">
-                {inn2.runs}/{inn2.wickets} <span className="text-xs font-semibold text-slate-500">({inn2.overs} ov)</span>
-              </div>
-            ) : (
-              <span className="text-xs font-medium text-slate-400">Yet to Bat</span>
-            )}
-          </div>
         </div>
 
-        {/* Result summary or target status */}
-        {isCompleted && match.result_summary && (
-          <div className="text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200/60">
-            🏆 {match.result_summary}
-          </div>
-        )}
-
-        {isLive && match.current_innings && match.current_innings.target && (
-          <div className="text-xs font-bold text-amber-700 bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-200/60 flex justify-between">
-            <span>Target: {match.current_innings.target}</span>
-            <span>Need {Math.max(0, match.current_innings.target - match.current_innings.runs)} runs</span>
+        {/* RESULT SUMMARY IF COMPLETED */}
+        {match.result_summary && (
+          <div className="pt-2 border-t border-[#173541] text-center">
+            <p className="text-xs font-bold text-[#19D89A] bg-[#19D89A]/10 py-1 px-3 rounded-lg border border-[#19D89A]/20 inline-block">
+              🏆 {match.result_summary}
+            </p>
           </div>
         )}
       </div>
 
-      {/* Footer Info & Action */}
-      <div className="px-5 py-3 bg-slate-50/70 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 font-medium">
-        <div className="flex items-center gap-1 truncate max-w-[220px]">
-          <MapPin className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-          <span className="truncate">{match.venue?.name || 'Local Sports Complex'}</span>
-        </div>
+      {/* 3. ACTION BAR (RENDERED IF LIVE SCORING OR EDIT/DELETE BUTTONS ARE PRESENT) */}
+      {(!isHistoryView || onEdit || onDelete) && (
+        <div className="p-2.5 bg-[#050A1A]/50 border-t border-[#173541] flex items-center gap-2">
+          {!isHistoryView && (
+            /* OVERVIEW LATEST MATCH ACTION: LIVE SCORING PANEL */
+            <Link 
+              href={`/master/matches/${match.id}/score`}
+              onClick={(e) => e.stopPropagation()}
+              className="flex-1 py-2 px-3 bg-[#19D89A] hover:bg-emerald-400 text-[#050A1A] font-black rounded-xl text-xs text-center flex items-center justify-center gap-1.5 transition-all shadow-md uppercase tracking-wider"
+            >
+              <Play className="w-3.5 h-3.5 fill-current text-[#050A1A]" />
+              <span>Live Scoring</span>
+            </Link>
+          )}
 
-        <Link
-          href={`/matches/${match.id}`}
-          className="flex items-center gap-1 font-bold text-emerald-600 hover:text-emerald-700 group-hover:translate-x-0.5 transition-transform"
-        >
-          View Center <ArrowRight className="w-3.5 h-3.5" />
-        </Link>
-      </div>
+          {onEdit && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit();
+              }}
+              className="h-8 px-3 bg-[#111A2D] hover:bg-[#173541] text-white border border-[#173541] hover:border-[#19D89A] font-bold rounded-xl text-xs flex items-center justify-center gap-1 transition-all shrink-0 active:scale-95 flex-1"
+              title="Edit Match"
+            >
+              <Pencil className="w-3.5 h-3.5 text-[#19D89A]" />
+              <span>Edit</span>
+            </button>
+          )}
+
+          {onDelete && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete();
+              }}
+              className="h-8 px-3 bg-[#E5232F]/10 hover:bg-[#E5232F]/20 text-[#E5232F] border border-[#E5232F]/30 font-bold rounded-xl text-xs flex items-center justify-center gap-1 transition-all shrink-0 active:scale-95 flex-1"
+              title="Delete Match"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Delete</span>
+            </button>
+          )}
+        </div>
+      )}
+
     </div>
   );
-};
+}
