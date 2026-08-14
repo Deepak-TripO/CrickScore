@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import MatchCard from '@/components/match/MatchCard';
-import { Trophy, ShieldCheck, Flame } from 'lucide-react';
+import { Trophy, Search, X } from 'lucide-react';
 
 interface HomePageClientProps {
   user: any;
@@ -16,11 +16,33 @@ export default function HomePageClient({
   allMatches = []
 }: HomePageClientProps) {
   const [activeCategory, setActiveCategory] = useState<string>('All');
+  const [searchQuery, setSearchQuery] = useState<string>('');
 
   const categories = ['All', 'Tournament', 'League', 'Club'];
 
-  // Filter matches dynamically based on active category
+  // Filter matches dynamically based strictly on TEAM NAME ONLY and active category
   const filteredMatches = allMatches.filter((m: any) => {
+    // 1. STRICT TEAM NAME ONLY SEARCH FILTER (Team 1 OR Team 2)
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+
+      const t1 = Array.isArray(m.team1) ? m.team1[0] : m.team1;
+      const t2 = Array.isArray(m.team2) ? m.team2[0] : m.team2;
+
+      // Extract Team 1 & Team 2 names strictly from database fields
+      const team1Name = (t1?.name || m.your_team_name || (m.title ? m.title.split(' vs ')[0] : '') || '').toLowerCase();
+      const team2Name = (t2?.name || m.opposite_team_name || (m.title ? m.title.split(' vs ')[1] : '') || '').toLowerCase();
+
+      const matchesTeam1 = team1Name.includes(q);
+      const matchesTeam2 = team2Name.includes(q);
+
+      // Require Team 1 Name OR Team 2 Name match only (ignore player names, categories, venues, etc.)
+      if (!matchesTeam1 && !matchesTeam2) {
+        return false;
+      }
+    }
+
+    // 2. Category Filter
     if (activeCategory === 'All') return true;
 
     const matchCategory = (m.category || m.format || m.match_type || '').toString().toLowerCase();
@@ -43,7 +65,31 @@ export default function HomePageClient({
     <div className="space-y-6 font-sans">
       
       {/* ========================================================== */}
-      {/* 1. CATEGORY FILTER BAR (ONLY 4 OPTIONS: All, Tournament, League, Club) */}
+      {/* 🔍 1. SEARCH BAR (SEARCHES TEAM 1 AND TEAM 2 NAMES ONLY)    */}
+      {/* ========================================================== */}
+      <div className="relative">
+        <Search className="w-4 h-4 text-[#19D89A] absolute left-4 top-1/2 -translate-y-1/2" />
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search by team name (e.g., Chennai Warriors, Madurai Kings)..."
+          className="w-full bg-[#0D1528] border border-[#173541] focus:border-[#19D89A] text-white text-xs pl-11 pr-10 py-3.5 rounded-2xl outline-none transition-all placeholder-[#71809A] shadow-inner font-medium"
+        />
+        {searchQuery && (
+          <button
+            type="button"
+            onClick={() => setSearchQuery('')}
+            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-[#AAB5CC] hover:text-white bg-[#050A1A] rounded-lg transition-colors"
+            title="Clear search"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        )}
+      </div>
+
+      {/* ========================================================== */}
+      {/* 2. CATEGORY FILTER BAR (ONLY 4 OPTIONS: All, Tournament, League, Club) */}
       {/* ========================================================== */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
         {categories.map((cat) => {
@@ -66,13 +112,17 @@ export default function HomePageClient({
       </div>
 
       {/* ========================================================== */}
-      {/* 2. CATEGORY RESULTS LIST                                   */}
+      {/* 3. CATEGORY / SEARCH RESULTS LIST                          */}
       {/* ========================================================== */}
       <section className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-extrabold text-white uppercase tracking-wider flex items-center gap-2">
             <Trophy className="w-4 h-4 text-[#19D89A]" />
-            {activeCategory === 'All' ? 'All Matches & Tournaments' : `${activeCategory} Matches`}
+            {searchQuery.trim()
+              ? `Team Search Results for "${searchQuery}"`
+              : activeCategory === 'All'
+              ? 'All Matches & Tournaments'
+              : `${activeCategory} Matches`}
           </h2>
           <span className="text-xs text-[#71809A] font-mono">
             {filteredMatches.length} {filteredMatches.length === 1 ? 'item' : 'items'}
@@ -85,7 +135,25 @@ export default function HomePageClient({
               <MatchCard key={m.id} match={m} isHomePageCard={true} />
             ))}
           </div>
+        ) : searchQuery.trim() ? (
+          /* NO TEAMS FOUND STATE */
+          <div className="bg-[#0D1528] border border-[#173541] rounded-2xl p-10 text-center space-y-3 shadow-md">
+            <div className="w-12 h-12 rounded-2xl bg-[#19D89A]/10 border border-[#19D89A]/30 flex items-center justify-center text-[#19D89A] mx-auto">
+              <Search className="w-6 h-6" />
+            </div>
+            <h3 className="text-sm font-extrabold text-white">No teams found</h3>
+            <p className="text-xs text-[#71809A]">
+              No matches found with team name matching &quot;{searchQuery}&quot;.
+            </p>
+            <button
+              onClick={() => setSearchQuery('')}
+              className="px-4 py-2 bg-[#19D89A] text-[#050A1A] font-black text-xs uppercase tracking-wider rounded-xl shadow-md transition-all active:scale-95"
+            >
+              Clear Search
+            </button>
+          </div>
         ) : (
+          /* NO CATEGORY MATCHES FOUND STATE */
           <div className="bg-[#0D1528] border border-[#173541] rounded-2xl p-10 text-center space-y-3">
             <p className="text-xs font-bold text-[#AAB5CC]">No {activeCategory.toLowerCase()} matches found.</p>
             <p className="text-[11px] text-[#71809A]">Try selecting another category to discover cricket content.</p>
