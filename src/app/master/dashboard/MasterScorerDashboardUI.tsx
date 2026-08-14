@@ -126,27 +126,11 @@ export default function MasterScorerDashboardUI({
     setIsDeleteModalOpen(false);
     setDeletingMatch(null);
     setIsDeleting(false);
-  };
+  };  const [currentMatches, setCurrentMatches] = useState(matches);
 
-  const handleConfirmDelete = async () => {
-    if (!deletingMatch) return;
-    setIsDeleting(true);
-    try {
-      const res = await deleteMatch(deletingMatch.id);
-      if (res.error) {
-        showToast(`Error: ${res.error}`);
-      } else {
-        showToast('✓ Match deleted successfully.');
-        setIsDeleteModalOpen(false);
-        setDeletingMatch(null);
-        router.refresh();
-      }
-    } catch (err: any) {
-      showToast(err.message || 'Failed to delete match.');
-    } finally {
-      setIsDeleting(false);
-    }
-  };
+  React.useEffect(() => {
+    setCurrentMatches(matches);
+  }, [matches]);
 
   const navItems = [
     {
@@ -181,15 +165,36 @@ export default function MasterScorerDashboardUI({
   };
 
   const sortedMatches = React.useMemo(() => {
-    if (!Array.isArray(matches)) return [];
-    return [...matches].sort((a, b) => {
+    if (!Array.isArray(currentMatches)) return [];
+    return [...currentMatches].sort((a, b) => {
       const timeA = new Date(a.created_at || a.scheduled_start || a.scheduled_at || 0).getTime();
       const timeB = new Date(b.created_at || b.scheduled_start || b.scheduled_at || 0).getTime();
       return timeB - timeA;
     });
-  }, [matches]);
+  }, [currentMatches]);
 
   const latestMatch = sortedMatches[0] || null;
+
+  const handleConfirmDelete = async () => {
+    if (!deletingMatch) return;
+    setIsDeleting(true);
+    try {
+      const res = await deleteMatch(deletingMatch.id);
+      if (res.error) {
+        showToast(`Error: ${res.error}`);
+      } else {
+        showToast('✓ Match deleted successfully.');
+        setCurrentMatches(prev => prev.filter((m: any) => m.id !== deletingMatch.id));
+        setIsDeleteModalOpen(false);
+        setDeletingMatch(null);
+        router.refresh();
+      }
+    } catch {
+      showToast('Error deleting match');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   return (
     <div className="space-y-6 font-sans">
@@ -240,6 +245,7 @@ export default function MasterScorerDashboardUI({
                 <MatchCard 
                   key={latestMatch.id} 
                   match={latestMatch} 
+                  isLatestOverviewCard={true}
                   onEdit={() => handleOpenEditModal(latestMatch)} 
                   onDelete={() => handleOpenDeleteModal(latestMatch)} 
                 />
@@ -304,6 +310,7 @@ export default function MasterScorerDashboardUI({
                   key={m.id} 
                   match={m} 
                   isHistoryView={true}
+                  onDelete={() => handleOpenDeleteModal(m)}
                 />
               ))}
             </div>
@@ -360,7 +367,7 @@ export default function MasterScorerDashboardUI({
             </div>
 
             <p className="text-xs text-[#AAB5CC] leading-relaxed bg-[#050A1A] p-4 rounded-2xl border border-[#173541]">
-              Are you sure you want to delete this match? This action will remove the match and its saved team/player data.
+              Are you sure you want to permanently delete this match and its associated data?
             </p>
 
             <div className="flex items-center justify-end gap-3 pt-2">

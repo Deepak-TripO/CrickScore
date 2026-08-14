@@ -177,6 +177,24 @@ export default function MatchCard({
 
         </div>
 
+        {/* 3. OPTIONAL ACTION BAR FOR HISTORY MATCH CARDS (DELETE ONLY) */}
+        {onDelete && (
+          <div className="pt-3 border-t border-[#172D42]/60 flex items-center justify-end">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete();
+              }}
+              className="py-1.5 px-3 bg-[#E5232F]/10 hover:bg-[#E5232F]/20 text-[#E5232F] border border-[#E5232F]/30 hover:border-[#E5232F] font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 transition-all shrink-0 active:scale-95 shadow-sm"
+              title="Delete Match"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Delete</span>
+            </button>
+          </div>
+        )}
+
       </div>
     );
   }

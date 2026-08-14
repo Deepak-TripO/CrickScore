@@ -867,6 +867,15 @@ export async function deleteMatch(matchId: string) {
     db = supabase;
   }
 
+  // Verify ownership before deleting
+  const { data: targetMatch } = await db.from('matches').select('master_id, created_by, scorer_id').eq('id', matchId).maybeSingle();
+  if (targetMatch) {
+    const isOwner = targetMatch.master_id === user.id || targetMatch.created_by === user.id || targetMatch.scorer_id === user.id;
+    if (!isOwner) {
+      return { error: 'Unauthorized: You can only delete your own matches.' };
+    }
+  }
+
   // 1. Cascade delete all child records by match_id
   try {
     const { data: innings } = await db.from('innings').select('id').eq('match_id', matchId);
