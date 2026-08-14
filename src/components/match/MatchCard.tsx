@@ -78,9 +78,9 @@ export default function MatchCard({
   };
 
   /* ========================================================================= */
-  /* 🏏 HOME PAGE MATCH CARD VARIANT (CLEAN TOP ROW: CATEGORY & DATE)           */
+  /* 🏏 HOME PAGE & HISTORY MATCH CARD VARIANT (EXACT SAME VISUAL DESIGN)      */
   /* ========================================================================= */
-  if (isHomePageCard) {
+  if (isHomePageCard || isHistoryView) {
     const categoryType = match.category || match.format || 'T20';
 
     const team1ScoreText = match.current_score || (isLive || isCompleted ? '142/6' : '0/0');
