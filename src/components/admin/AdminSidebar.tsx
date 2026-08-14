@@ -28,6 +28,7 @@ export default function AdminSidebar({ user }: AdminSidebarProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  // Full navigation array for Sidebar (Desktop) and 3-Line Hamburger Drawer (Mobile)
   const navigationGrouped = [
     {
       title: 'OVERVIEW',
@@ -59,10 +60,55 @@ export default function AdminSidebar({ user }: AdminSidebarProps) {
     }
   ];
 
+  // Section sub-items config for Mobile Bottom Navigation
+  const sectionSubItems = [
+    {
+      section: 'overview',
+      matchRoutes: ['/admin/dashboard', '/admin', '/admin/master-applications'],
+      primaryHref: '/admin/dashboard',
+      subItems: [
+        { name: 'Overview', href: '/admin/dashboard', icon: LayoutDashboard },
+        { name: 'Master Applications', href: '/admin/master-applications', icon: FileCheck }
+      ]
+    },
+    {
+      section: 'matches',
+      matchRoutes: ['/admin/matches', '/admin/live-matches'],
+      primaryHref: '/admin/matches',
+      subItems: [
+        { name: 'All Matches', href: '/admin/matches', icon: Trophy },
+        { name: 'Live Matches', href: '/admin/live-matches', icon: Radio, pulse: true }
+      ]
+    },
+    {
+      section: 'users',
+      matchRoutes: ['/admin/users', '/admin/masters'],
+      primaryHref: '/admin/users',
+      subItems: [
+        { name: 'Users', href: '/admin/users', icon: Users },
+        { name: 'Approved Masters', href: '/admin/masters', icon: Award }
+      ]
+    },
+    {
+      section: 'analytics',
+      matchRoutes: ['/admin/reports', '/admin/settings'],
+      primaryHref: '/admin/reports',
+      subItems: [
+        { name: 'Analytics', href: '/admin/reports', icon: BarChart3 },
+        { name: 'Settings', href: '/admin/settings', icon: Settings }
+      ]
+    }
+  ];
+
   const isActive = (href: string) => {
     if (href === '/admin/dashboard') return pathname === '/admin/dashboard' || pathname === '/admin';
     return pathname.startsWith(href);
   };
+
+  // Determine active section config for floating sub-bar on mobile
+  const activeSectionConfig = sectionSubItems.find(s => 
+    s.matchRoutes.some(r => r === '/admin' ? pathname === '/admin' || pathname === '/admin/dashboard' : pathname.startsWith(r))
+  );
 
   return (
     <>
@@ -202,6 +248,42 @@ export default function AdminSidebar({ user }: AdminSidebarProps) {
 
       </aside>
 
+      {/* FLOATING SUB-NAVIGATION STRIP FOR ACTIVE SECTION ON MOBILE */}
+      {activeSectionConfig && (
+        <div 
+          aria-label="Active Section Sub Navigation"
+          className="lg:hidden fixed bottom-[60px] left-3 right-3 z-40 bg-slate-900/95 backdrop-blur-md border border-purple-500/30 rounded-2xl shadow-2xl p-1.5 flex items-center justify-around gap-1"
+        >
+          {activeSectionConfig.subItems.map((sub) => {
+            const SubIcon = sub.icon;
+            const isSubActive = sub.href === '/admin/dashboard'
+              ? pathname === '/admin/dashboard' || pathname === '/admin'
+              : pathname.startsWith(sub.href);
+
+            return (
+              <Link
+                key={sub.href}
+                href={sub.href}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-xl text-xs font-extrabold transition-all ${
+                  isSubActive
+                    ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                }`}
+              >
+                <SubIcon className={`w-3.5 h-3.5 ${isSubActive ? 'text-white' : sub.pulse ? 'text-red-400' : 'text-slate-400'}`} />
+                <span className="truncate">{sub.name}</span>
+                {sub.pulse && (
+                  <span className="relative flex h-1.5 w-1.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500"></span>
+                  </span>
+                )}
+              </Link>
+            );
+          })}
+        </div>
+      )}
+
       {/* FIXED MOBILE BOTTOM NAVIGATION BAR (STRICTLY HIDDEN ON DESKTOP & TABLET LARGE) */}
       <nav 
         aria-label="Mobile Admin Bottom Navigation" 
@@ -209,20 +291,20 @@ export default function AdminSidebar({ user }: AdminSidebarProps) {
       >
         <div className="grid grid-cols-4 gap-1 items-center max-w-md mx-auto">
           
-          {/* 1. OVERVIEW */}
+          {/* 1. OVERVIEW (CONNECTS TO /admin/dashboard & SUB-NAV INCLUDES Master Applications) */}
           <Link
             href="/admin/dashboard"
             className={`flex flex-col items-center justify-center py-1.5 px-1 rounded-xl transition-all ${
-              pathname === '/admin/dashboard' || pathname === '/admin'
+              pathname === '/admin/dashboard' || pathname === '/admin' || pathname.startsWith('/admin/master-applications')
                 ? 'text-purple-400 bg-purple-500/10 font-bold'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
-            <LayoutDashboard className={`w-5 h-5 ${pathname === '/admin/dashboard' || pathname === '/admin' ? 'text-purple-400' : 'text-slate-400'}`} />
+            <LayoutDashboard className={`w-5 h-5 ${pathname === '/admin/dashboard' || pathname === '/admin' || pathname.startsWith('/admin/master-applications') ? 'text-purple-400' : 'text-slate-400'}`} />
             <span className="text-[10px] font-bold tracking-tight truncate mt-0.5">Overview</span>
           </Link>
 
-          {/* 2. MATCH MANAGEMENT */}
+          {/* 2. MATCH MANAGEMENT (CONNECTS TO /admin/matches & SUB-NAV INCLUDES Live Matches) */}
           <Link
             href="/admin/matches"
             className={`flex flex-col items-center justify-center py-1.5 px-1 rounded-xl transition-all ${
@@ -235,7 +317,7 @@ export default function AdminSidebar({ user }: AdminSidebarProps) {
             <span className="text-[10px] font-bold tracking-tight truncate mt-0.5">Match Mgmt</span>
           </Link>
 
-          {/* 3. USER & TEAM MANAGEMENT */}
+          {/* 3. USER & TEAM MANAGEMENT (CONNECTS TO /admin/users & SUB-NAV INCLUDES Approved Masters) */}
           <Link
             href="/admin/users"
             className={`flex flex-col items-center justify-center py-1.5 px-1 rounded-xl transition-all ${
@@ -248,7 +330,7 @@ export default function AdminSidebar({ user }: AdminSidebarProps) {
             <span className="text-[10px] font-bold tracking-tight truncate mt-0.5">User & Team</span>
           </Link>
 
-          {/* 4. ANALYTICS & SETTINGS */}
+          {/* 4. ANALYTICS & SETTINGS (CONNECTS TO /admin/reports & SUB-NAV INCLUDES Settings) */}
           <Link
             href="/admin/reports"
             className={`flex flex-col items-center justify-center py-1.5 px-1 rounded-xl transition-all ${
