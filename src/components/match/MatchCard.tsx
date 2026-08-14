@@ -67,7 +67,7 @@ export default function MatchCard({
   // Format Scheduled Date cleanly
   const rawDate = match.scheduled_start || match.scheduled_at || match.scheduled_date || match.created_at;
   const formattedDate = rawDate && !isNaN(new Date(rawDate).getTime())
-    ? new Date(rawDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
+    ? new Date(rawDate).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
     : 'Today';
 
   // Handle clicking anywhere on the card to open Scorecard (Home Page / History)
@@ -78,11 +78,10 @@ export default function MatchCard({
   };
 
   /* ========================================================================= */
-  /* 🏏 HOME PAGE MATCH CARD VARIANT (RECREATED EXACTLY FROM REFERENCE IMAGE)   */
+  /* 🏏 HOME PAGE MATCH CARD VARIANT (CLEAN TOP ROW: CATEGORY & DATE)           */
   /* ========================================================================= */
   if (isHomePageCard) {
-    const seriesTitle = match.category || match.format || 'Cricket Tournament';
-    const matchSubtitle = `${match.format || 'T20'} • ${team1Name} (${team1Short})`;
+    const categoryType = match.category || match.format || 'T20';
 
     const team1ScoreText = match.current_score || (isLive || isCompleted ? '142/6' : '0/0');
     const team1OversText = match.current_over ? `(${match.current_over} Ov)` : (isLive || isCompleted ? '(16.3 Ov)' : '(0.0 Ov)');
@@ -103,32 +102,21 @@ export default function MatchCard({
         }}
         className="bg-[#0A1224] border border-[#172D42] hover:border-[#19D89A]/50 rounded-2xl p-4 sm:p-5 text-white transition-all duration-300 shadow-md cursor-pointer hover:scale-[1.01] active:scale-[0.99] flex flex-col justify-between space-y-4 select-none"
       >
-        {/* 1. HEADER ROW */}
-        <div className="flex items-start justify-between text-xs space-x-2">
-          {/* Left: Series Name & Status */}
-          <div className="space-y-0.5">
-            <h4 className="text-[#AAB5CC] font-semibold text-xs tracking-wide">{seriesTitle}</h4>
-            {isLive ? (
-              <p className="text-[#E5232F] font-bold text-xs flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#E5232F] animate-ping" />
-                LIVE {match.current_over ? `- ${match.current_over} Overs` : '- 16.3 Overs'}
-              </p>
-            ) : isCompleted ? (
-              <p className="text-[#19D89A] font-bold text-xs">
-                COMPLETED {match.result_summary ? `• ${match.result_summary}` : ''}
-              </p>
-            ) : (
-              <p className="text-[#19D89A] font-bold text-xs">UPCOMING</p>
-            )}
-          </div>
+        {/* 1. CLEAN TOP HEADER ROW: TOP LEFT CATEGORY | TOP RIGHT DATE */}
+        <div className="flex items-center justify-between text-xs border-b border-[#172D42]/60 pb-2.5">
+          {/* Top Left: Match Category / Type */}
+          <span className="text-[#19D89A] font-extrabold text-xs uppercase tracking-wider">
+            {categoryType}
+          </span>
 
-          {/* Right: Format • Subtitle */}
-          <div className="text-right text-[#AAB5CC] font-medium text-xs truncate max-w-[50%]">
-            {matchSubtitle}
+          {/* Top Right: Match Date */}
+          <div className="flex items-center gap-1.5 text-[#AAB5CC] text-xs font-semibold">
+            <Calendar className="w-3.5 h-3.5 text-[#19D89A]" />
+            <span>{formattedDate}</span>
           </div>
         </div>
 
-        {/* 2. TEAMS & SCORES ROW (EXACT REFERENCE IMAGE RECREATION) */}
+        {/* 2. TEAMS & SCORES ROW */}
         <div className="grid grid-cols-2 items-center gap-4 pt-1">
           
           {/* LEFT TEAM (TEAM 1) */}
