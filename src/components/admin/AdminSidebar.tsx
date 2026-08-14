@@ -59,38 +59,6 @@ export default function AdminSidebar({ user }: AdminSidebarProps) {
     }
   ];
 
-  // 4 Main Mobile Bottom Navigation Items
-  const mobileBottomNavItems = [
-    {
-      label: 'Overview',
-      shortLabel: 'Overview',
-      href: '/admin/dashboard',
-      icon: LayoutDashboard,
-      checkActive: (p: string) => p === '/admin/dashboard' || p === '/admin'
-    },
-    {
-      label: 'Match Management',
-      shortLabel: 'Matches',
-      href: '/admin/matches',
-      icon: Trophy,
-      checkActive: (p: string) => p.startsWith('/admin/matches') || p.startsWith('/admin/live-matches')
-    },
-    {
-      label: 'User & Team Management',
-      shortLabel: 'Users & Teams',
-      href: '/admin/users',
-      icon: Users,
-      checkActive: (p: string) => p.startsWith('/admin/users') || p.startsWith('/admin/masters')
-    },
-    {
-      label: 'Analytics & Settings',
-      shortLabel: 'Analytics',
-      href: '/admin/reports',
-      icon: BarChart3,
-      checkActive: (p: string) => p.startsWith('/admin/reports') || p.startsWith('/admin/settings')
-    }
-  ];
-
   const isActive = (href: string) => {
     if (href === '/admin/dashboard') return pathname === '/admin/dashboard' || pathname === '/admin';
     return pathname.startsWith(href);
@@ -98,8 +66,8 @@ export default function AdminSidebar({ user }: AdminSidebarProps) {
 
   return (
     <>
-      {/* MOBILE TOP BAR WITH 3-LINE HAMBURGER TOGGLE (☰) */}
-      <div className="lg:hidden sticky top-0 z-40 bg-slate-950 border-b border-slate-800 px-4 py-3 flex items-center justify-between shadow-md">
+      {/* MOBILE TOP BAR WITH HAMBURGER TOGGLE (☰) */}
+      <div className="lg:hidden sticky top-0 z-40 bg-slate-950/95 backdrop-blur-md border-b border-slate-800 px-4 py-3 flex items-center justify-between">
         <Link href="/admin/dashboard" className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-purple-600 to-indigo-400 p-0.5 shadow-md">
             <div className="w-full h-full bg-slate-950 rounded-[6px] flex items-center justify-center">
@@ -111,25 +79,25 @@ export default function AdminSidebar({ user }: AdminSidebarProps) {
           </span>
         </Link>
 
-        {/* ☰ 3-LINE HAMBURGER MENU */}
+        {/* ☰ 3-LINE HAMBURGER BUTTON */}
         <button 
           onClick={() => setMobileOpen(!mobileOpen)}
-          className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-900 transition-colors"
-          aria-label="Toggle Admin Navigation Menu"
+          className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-900 border border-slate-800 transition-colors"
+          aria-label="Toggle Admin Sidebar Menu"
         >
           {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
         </button>
       </div>
 
-      {/* MOBILE BACKDROP OVERLAY */}
+      {/* MOBILE BACKDROP OVERLAY FOR HAMBURGER DRAWER */}
       {mobileOpen && (
         <div 
           onClick={() => setMobileOpen(false)}
-          className="lg:hidden fixed inset-0 z-40 bg-slate-950/80 backdrop-blur-sm"
+          className="lg:hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm"
         />
       )}
 
-      {/* DESKTOP SIDEBAR / MOBILE SLIDE-OVER SIDEBAR */}
+      {/* SIDEBAR CONTAINER (DESKTOP FIXED SIDEBAR & MOBILE FULL-MENU DRAWER) */}
       <aside className={`
         fixed lg:sticky top-0 left-0 z-50 lg:z-30 h-screen w-64 bg-slate-950 border-r border-slate-800 flex flex-col justify-between transition-transform duration-200 ease-in-out shrink-0
         ${mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
@@ -155,13 +123,13 @@ export default function AdminSidebar({ user }: AdminSidebarProps) {
 
           <button 
             onClick={() => setMobileOpen(false)}
-            className="lg:hidden text-slate-500 hover:text-white"
+            className="lg:hidden text-slate-500 hover:text-white p-1"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* NAVIGATION LINKS CONTAINER */}
+        {/* FULL NAVIGATION LINKS CONTAINER IN 3-LINE MENU DRAWER */}
         <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6 scrollbar-thin scrollbar-thumb-slate-800">
           {navigationGrouped.map((group) => (
             <div key={group.title} className="space-y-1.5">
@@ -234,35 +202,65 @@ export default function AdminSidebar({ user }: AdminSidebarProps) {
 
       </aside>
 
-      {/* MOBILE FIXED BOTTOM NAVIGATION BAR (ONLY VISIBLE ON MOBILE) */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-slate-950/95 backdrop-blur-md border-t border-slate-800/90 lg:hidden px-2 py-2 shadow-2xl">
-        <div className="grid grid-cols-4 items-center justify-between gap-1 max-w-md mx-auto">
-          {mobileBottomNavItems.map((navItem) => {
-            const Icon = navItem.icon;
-            const active = navItem.checkActive(pathname);
+      {/* FIXED MOBILE BOTTOM NAVIGATION BAR (STRICTLY HIDDEN ON DESKTOP & TABLET LARGE) */}
+      <nav 
+        aria-label="Mobile Admin Bottom Navigation" 
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-950/95 backdrop-blur-md border-t border-slate-800/90 shadow-2xl px-2 py-1.5"
+      >
+        <div className="grid grid-cols-4 gap-1 items-center max-w-md mx-auto">
+          
+          {/* 1. OVERVIEW */}
+          <Link
+            href="/admin/dashboard"
+            className={`flex flex-col items-center justify-center py-1.5 px-1 rounded-xl transition-all ${
+              pathname === '/admin/dashboard' || pathname === '/admin'
+                ? 'text-purple-400 bg-purple-500/10 font-bold'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <LayoutDashboard className={`w-5 h-5 ${pathname === '/admin/dashboard' || pathname === '/admin' ? 'text-purple-400' : 'text-slate-400'}`} />
+            <span className="text-[10px] font-bold tracking-tight truncate mt-0.5">Overview</span>
+          </Link>
 
-            return (
-              <Link
-                key={navItem.href}
-                href={navItem.href}
-                onClick={() => setMobileOpen(false)}
-                className={`flex flex-col items-center justify-center py-1.5 px-1 rounded-xl transition-all ${
-                  active
-                    ? 'text-purple-400 font-extrabold'
-                    : 'text-slate-400 hover:text-slate-200 font-medium'
-                }`}
-              >
-                <div className={`p-1.5 rounded-xl transition-all ${
-                  active ? 'bg-purple-600/20 text-purple-400 border border-purple-500/30 shadow-md' : 'bg-transparent'
-                }`}>
-                  <Icon className="w-4 h-4" />
-                </div>
-                <span className="text-[10px] tracking-tight text-center leading-tight mt-1 max-w-[76px] truncate">
-                  {navItem.shortLabel}
-                </span>
-              </Link>
-            );
-          })}
+          {/* 2. MATCH MANAGEMENT */}
+          <Link
+            href="/admin/matches"
+            className={`flex flex-col items-center justify-center py-1.5 px-1 rounded-xl transition-all ${
+              pathname.startsWith('/admin/matches') || pathname.startsWith('/admin/live-matches')
+                ? 'text-purple-400 bg-purple-500/10 font-bold'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Trophy className={`w-5 h-5 ${pathname.startsWith('/admin/matches') || pathname.startsWith('/admin/live-matches') ? 'text-purple-400' : 'text-slate-400'}`} />
+            <span className="text-[10px] font-bold tracking-tight truncate mt-0.5">Match Mgmt</span>
+          </Link>
+
+          {/* 3. USER & TEAM MANAGEMENT */}
+          <Link
+            href="/admin/users"
+            className={`flex flex-col items-center justify-center py-1.5 px-1 rounded-xl transition-all ${
+              pathname.startsWith('/admin/users') || pathname.startsWith('/admin/masters')
+                ? 'text-purple-400 bg-purple-500/10 font-bold'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Users className={`w-5 h-5 ${pathname.startsWith('/admin/users') || pathname.startsWith('/admin/masters') ? 'text-purple-400' : 'text-slate-400'}`} />
+            <span className="text-[10px] font-bold tracking-tight truncate mt-0.5">User & Team</span>
+          </Link>
+
+          {/* 4. ANALYTICS & SETTINGS */}
+          <Link
+            href="/admin/reports"
+            className={`flex flex-col items-center justify-center py-1.5 px-1 rounded-xl transition-all ${
+              pathname.startsWith('/admin/reports') || pathname.startsWith('/admin/settings')
+                ? 'text-purple-400 bg-purple-500/10 font-bold'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <BarChart3 className={`w-5 h-5 ${pathname.startsWith('/admin/reports') || pathname.startsWith('/admin/settings') ? 'text-purple-400' : 'text-slate-400'}`} />
+            <span className="text-[10px] font-bold tracking-tight truncate mt-0.5">Analytics</span>
+          </Link>
+
         </div>
       </nav>
     </>
