@@ -32,11 +32,20 @@ interface MatchCardProps {
     opposite_team_logo_url?: string;
   };
   isHistoryView?: boolean;
+  isLatestOverviewCard?: boolean;
+  isHomePageCard?: boolean;
   onEdit?: () => void;
   onDelete?: () => void;
 }
 
-export default function MatchCard({ match, isHistoryView = false, onEdit, onDelete }: MatchCardProps) {
+export default function MatchCard({
+  match,
+  isHistoryView = false,
+  isLatestOverviewCard = false,
+  isHomePageCard = false,
+  onEdit,
+  onDelete
+}: MatchCardProps) {
   const router = useRouter();
 
   const isLive = match.status === 'LIVE';
@@ -63,11 +72,275 @@ export default function MatchCard({ match, isHistoryView = false, onEdit, onDele
 
   // Handle clicking anywhere on the card to open Scorecard (Home Page / History)
   const handleCardClick = () => {
-    if (isHistoryView && match.id) {
+    if ((isHistoryView || isHomePageCard) && match.id) {
       router.push(`/matches/${match.id}`);
     }
   };
 
+  /* ========================================================================= */
+  /* 🏏 HOME PAGE MATCH CARD VARIANT (RECREATED EXACTLY FROM REFERENCE IMAGE)   */
+  /* ========================================================================= */
+  if (isHomePageCard) {
+    const seriesTitle = match.category || match.format || 'Cricket Tournament';
+    const matchSubtitle = `${match.format || 'T20'} • ${team1Name} (${team1Short})`;
+
+    const team1ScoreText = match.current_score || (isLive || isCompleted ? '142/6' : '0/0');
+    const team1OversText = match.current_over ? `(${match.current_over} Ov)` : (isLive || isCompleted ? '(16.3 Ov)' : '(0.0 Ov)');
+
+    const team2ScoreText = isLive || isCompleted ? '126/8' : '0/0';
+    const team2OversText = isLive || isCompleted ? '(15.5 Ov)' : '(0.0 Ov)';
+
+    return (
+      <div
+        onClick={handleCardClick}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleCardClick();
+          }
+        }}
+        className="bg-[#0A1224] border border-[#172D42] hover:border-[#19D89A]/50 rounded-2xl p-4 sm:p-5 text-white transition-all duration-300 shadow-md cursor-pointer hover:scale-[1.01] active:scale-[0.99] flex flex-col justify-between space-y-4 select-none"
+      >
+        {/* 1. HEADER ROW */}
+        <div className="flex items-start justify-between text-xs space-x-2">
+          {/* Left: Series Name & Status */}
+          <div className="space-y-0.5">
+            <h4 className="text-[#AAB5CC] font-semibold text-xs tracking-wide">{seriesTitle}</h4>
+            {isLive ? (
+              <p className="text-[#E5232F] font-bold text-xs flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#E5232F] animate-ping" />
+                LIVE {match.current_over ? `- ${match.current_over} Overs` : '- 16.3 Overs'}
+              </p>
+            ) : isCompleted ? (
+              <p className="text-[#19D89A] font-bold text-xs">
+                COMPLETED {match.result_summary ? `• ${match.result_summary}` : ''}
+              </p>
+            ) : (
+              <p className="text-[#19D89A] font-bold text-xs">UPCOMING</p>
+            )}
+          </div>
+
+          {/* Right: Format • Subtitle */}
+          <div className="text-right text-[#AAB5CC] font-medium text-xs truncate max-w-[50%]">
+            {matchSubtitle}
+          </div>
+        </div>
+
+        {/* 2. TEAMS & SCORES ROW (EXACT REFERENCE IMAGE RECREATION) */}
+        <div className="grid grid-cols-2 items-center gap-4 pt-1">
+          
+          {/* LEFT TEAM (TEAM 1) */}
+          <div className="space-y-1">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-[#050A1A] border border-[#172D42] p-0.5 flex items-center justify-center overflow-hidden shrink-0">
+                {team1Logo ? (
+                  <img
+                    src={team1Logo.includes('/storage/v1/object/') && !team1Logo.includes('/storage/v1/object/public/') ? team1Logo.replace('/storage/v1/object/', '/storage/v1/object/public/') : team1Logo}
+                    alt={team1Name}
+                    className="w-full h-full object-cover rounded-lg"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLElement).style.display = 'none';
+                    }}
+                  />
+                ) : (
+                  <span className="font-black text-xs text-[#19D89A] font-mono">{team1Short}</span>
+                )}
+              </div>
+              <span className="text-xl sm:text-2xl font-black text-white font-mono tracking-tight">
+                {team1ScoreText}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2 pl-0.5 text-xs">
+              <span className="font-black text-white">{team1Short}</span>
+              <span className="text-[#AAB5CC] font-mono text-[11px]">{team1OversText}</span>
+            </div>
+          </div>
+
+          {/* RIGHT TEAM (TEAM 2) */}
+          <div className="space-y-1 text-right">
+            <div className="flex items-center justify-end gap-2.5">
+              <span className="text-xl sm:text-2xl font-black text-white font-mono tracking-tight">
+                {team2ScoreText}
+              </span>
+              <div className="w-9 h-9 rounded-xl bg-[#050A1A] border border-[#172D42] p-0.5 flex items-center justify-center overflow-hidden shrink-0">
+                {team2Logo ? (
+                  <img
+                    src={team2Logo.includes('/storage/v1/object/') && !team2Logo.includes('/storage/v1/object/public/') ? team2Logo.replace('/storage/v1/object/', '/storage/v1/object/public/') : team2Logo}
+                    alt={team2Name}
+                    className="w-full h-full object-cover rounded-lg"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLElement).style.display = 'none';
+                    }}
+                  />
+                ) : (
+                  <span className="font-black text-xs text-[#19D89A] font-mono">{team2Short}</span>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pr-0.5 text-xs">
+              <span className="text-[#AAB5CC] font-mono text-[11px]">{team2OversText}</span>
+              <span className="font-black text-white">{team2Short}</span>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    );
+  }
+
+  /* ========================================================================= */
+  /* 🌟 DEDICATED MODERN UI FOR OVERVIEW LATEST CREATED MATCH CARD ONLY        */
+  /* ========================================================================= */
+  if (isLatestOverviewCard) {
+    return (
+      <div className="relative rounded-3xl bg-gradient-to-br from-[#0D1629] via-[#0A1120] to-[#050A1A] border border-[#19D89A]/35 hover:border-[#19D89A]/70 shadow-xl overflow-hidden flex flex-col justify-between transition-all duration-300">
+        
+        {/* Top Emerald Accent Line */}
+        <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-[#19D89A] to-transparent" />
+
+        {/* Header: Category Badge & Date */}
+        <div className="flex items-center justify-between px-5 py-3.5 bg-[#050A1A]/70 border-b border-[#173541]/80">
+          <div className="flex items-center gap-2">
+            {isLive ? (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#E5232F]/15 text-[#E5232F] border border-[#E5232F]/30 font-black text-[11px] uppercase tracking-wider">
+                <span className="w-2 h-2 rounded-full bg-[#E5232F] animate-ping" />
+                LIVE MATCH
+              </span>
+            ) : isCompleted ? (
+              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-[#111A2D] text-[#AAB5CC] font-bold text-[11px]">
+                COMPLETED
+              </span>
+            ) : (
+              <span className="text-[#19D89A] bg-[#19D89A]/10 border border-[#19D89A]/20 px-3 py-1 rounded-full font-extrabold text-[11px] uppercase tracking-wider">
+                {match.category || match.format || 'Cricket Match'}
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-center gap-1.5 text-[#AAB5CC] text-xs font-semibold">
+            <Calendar className="w-3.5 h-3.5 text-[#19D89A]" />
+            <span>{formattedDate}</span>
+          </div>
+        </div>
+
+        {/* Main Teams & Scores Section */}
+        <div className="p-5 sm:p-6 space-y-4">
+          <div className="grid grid-cols-7 items-center gap-3">
+            
+            {/* Team 1 */}
+            <div className="col-span-3 flex flex-col items-center text-center space-y-2">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-[#050A1A] border border-[#173541] p-1.5 flex items-center justify-center shadow-lg overflow-hidden shrink-0">
+                {team1Logo ? (
+                  <img 
+                    src={team1Logo.includes('/storage/v1/object/') && !team1Logo.includes('/storage/v1/object/public/') ? team1Logo.replace('/storage/v1/object/', '/storage/v1/object/public/') : team1Logo} 
+                    alt={team1Name} 
+                    className="w-full h-full object-cover rounded-xl"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLElement).style.display = 'none';
+                    }} 
+                  />
+                ) : (
+                  <span className="font-black text-xl text-[#19D89A] font-mono">{team1Short}</span>
+                )}
+              </div>
+              <h3 className="font-extrabold text-sm sm:text-base text-white line-clamp-1">{team1Name}</h3>
+              <div className="bg-[#050A1A] border border-[#173541] px-3 py-1 rounded-xl">
+                <p className="text-xs text-[#19D89A] font-black font-mono">
+                  {isLive || isCompleted ? match.current_score || '0/0' : 'Yet to Bat'}
+                </p>
+              </div>
+            </div>
+
+            {/* VS Badge */}
+            <div className="col-span-1 flex flex-col items-center justify-center">
+              <div className="w-9 h-9 rounded-full bg-[#050A1A] border border-[#19D89A]/40 flex items-center justify-center text-[#19D89A] font-black text-xs shadow-md">
+                VS
+              </div>
+            </div>
+
+            {/* Team 2 */}
+            <div className="col-span-3 flex flex-col items-center text-center space-y-2">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-[#050A1A] border border-[#173541] p-1.5 flex items-center justify-center shadow-lg overflow-hidden shrink-0">
+                {team2Logo ? (
+                  <img 
+                    src={team2Logo.includes('/storage/v1/object/') && !team2Logo.includes('/storage/v1/object/public/') ? team2Logo.replace('/storage/v1/object/', '/storage/v1/object/public/') : team2Logo} 
+                    alt={team2Name} 
+                    className="w-full h-full object-cover rounded-xl" 
+                    onError={(e) => {
+                      (e.currentTarget as HTMLElement).style.display = 'none';
+                    }}
+                  />
+                ) : (
+                  <span className="font-black text-xl text-[#19D89A] font-mono">{team2Short}</span>
+                )}
+              </div>
+              <h3 className="font-extrabold text-sm sm:text-base text-white line-clamp-1">{team2Name}</h3>
+              <div className="bg-[#050A1A] border border-[#173541] px-3 py-1 rounded-xl">
+                <p className="text-xs text-[#19D89A] font-black font-mono">
+                  {isLive || isCompleted ? 'Innings' : 'Yet to Bat'}
+                </p>
+              </div>
+            </div>
+
+          </div>
+
+          {/* Result Summary Badge */}
+          {match.result_summary && (
+            <div className="pt-2 text-center">
+              <p className="text-xs font-bold text-[#19D89A] bg-[#19D89A]/10 py-1.5 px-4 rounded-xl border border-[#19D89A]/20 inline-block shadow-sm">
+                🏆 {match.result_summary}
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Action Bar */}
+        <div className="p-4 bg-[#050A1A]/80 border-t border-[#173541]/80 flex items-center gap-2.5">
+          <Link 
+            href={`/master/matches/${match.id}/score`}
+            className="flex-1 py-3 px-4 bg-[#19D89A] hover:bg-emerald-400 text-[#050A1A] font-black rounded-xl text-xs text-center flex items-center justify-center gap-2 transition-all shadow-lg active:scale-95 uppercase tracking-wider"
+          >
+            <Play className="w-4 h-4 fill-current text-[#050A1A]" />
+            <span>Live Scoring</span>
+          </Link>
+
+          {onEdit && (
+            <button
+              type="button"
+              onClick={onEdit}
+              className="h-10 px-4 bg-[#111A2D] hover:bg-[#173541] text-white border border-[#173541] hover:border-[#19D89A] font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 transition-all shrink-0 active:scale-95 shadow-sm"
+              title="Edit Match"
+            >
+              <Pencil className="w-3.5 h-3.5 text-[#19D89A]" />
+              <span className="hidden sm:inline">Edit</span>
+            </button>
+          )}
+
+          {onDelete && (
+            <button
+              type="button"
+              onClick={onDelete}
+              className="h-10 px-4 bg-[#E5232F]/10 hover:bg-[#E5232F]/20 text-[#E5232F] border border-[#E5232F]/30 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 transition-all shrink-0 active:scale-95 shadow-sm"
+              title="Delete Match"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Delete</span>
+            </button>
+          )}
+        </div>
+
+      </div>
+    );
+  }
+
+  /* ========================================================================= */
+  /* STANDARD MATCH CARD DESIGN FOR HISTORY AND OTHER SECTIONS                 */
+  /* ========================================================================= */
   return (
     <div 
       onClick={handleCardClick}

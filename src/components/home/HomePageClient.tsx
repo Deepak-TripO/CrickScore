@@ -82,7 +82,7 @@ export default function HomePageClient({
         {filteredMatches && filteredMatches.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredMatches.map((m: any) => (
-              <MatchCard key={m.id} match={m} isHistoryView={true} />
+              <MatchCard key={m.id} match={m} isHomePageCard={true} />
             ))}
           </div>
         ) : (
