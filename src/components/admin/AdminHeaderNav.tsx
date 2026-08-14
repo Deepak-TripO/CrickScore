@@ -62,11 +62,20 @@ export default function AdminHeaderNav({ user }: AdminHeaderNavProps) {
     c.matchRoutes.some(r => r === '/admin' ? pathname === '/admin' || pathname === '/admin/dashboard' : pathname.startsWith(r))
   ) || sectionConfigs[0];
 
+  // Calculate active option index (0 = Left option, 1 = Right option)
+  const activeIndex = activeConfig.options.findIndex(opt =>
+    opt.href === '/admin/dashboard'
+      ? pathname === '/admin/dashboard' || pathname === '/admin'
+      : pathname.startsWith(opt.href)
+  );
+
+  const safeActiveIndex = activeIndex >= 0 ? activeIndex : 0;
+
   return (
     <header className="sticky top-0 z-40 bg-slate-950/95 backdrop-blur-md border-b border-slate-800/90 shadow-xl shrink-0">
       
-      {/* 1. TOP LOGO & CONTROLS ROW: [ Admin Logo ] ........ [ Profile Icon ] [ Sign Out Icon ] */}
-      <div className="px-4 sm:px-6 py-3 flex items-center justify-between">
+      {/* 1. TOP NAVIGATION BAR: [ ADMIN LOGO ] ........ [ Profile Icon ] [ Sign Out Icon ] */}
+      <div className="px-4 sm:px-6 py-3.5 flex items-center justify-between border-b border-slate-800/80 bg-slate-950">
         
         {/* LEFT: ADMIN LOGO */}
         <Link href="/admin/dashboard" className="flex items-center gap-2.5 group shrink-0">
@@ -82,7 +91,7 @@ export default function AdminHeaderNav({ user }: AdminHeaderNavProps) {
           </div>
         </Link>
 
-        {/* RIGHT: ADMIN PROFILE ICON | SIGN OUT ICON (STABLE & FIXED POSITION) */}
+        {/* RIGHT: ADMIN PROFILE ICON | SIGN OUT ICON */}
         <div className="flex items-center gap-2 shrink-0">
           <Link
             href="/profile"
@@ -105,26 +114,34 @@ export default function AdminHeaderNav({ user }: AdminHeaderNavProps) {
         </div>
       </div>
 
-      {/* 2. CLEAN VERTICAL SPACING & ANCHORED SECTION TOGGLE CONTROL ROW */}
-      <div className="px-4 sm:px-6 py-2.5 bg-slate-950/90 flex items-center justify-between gap-4 h-14 border-t border-slate-850/60">
-        <div className="flex items-center gap-1.5 bg-slate-900 p-1.5 border border-slate-800 rounded-2xl w-full sm:w-auto max-w-md shadow-inner">
-          {activeConfig.options.map((opt) => {
+      {/* 2. CLEAN VERTICAL GAP & ANCHORED TOGGLE BUTTON WITH SMOOTH LEFT ↔ RIGHT SLIDING ANIMATION */}
+      <div className="px-4 sm:px-6 pt-3 pb-3 bg-slate-950/80 flex items-center justify-start sm:justify-between gap-4 h-16">
+        
+        {/* TOGGLE BUTTON BAR WITH ULTRA-SMOOTH LEFT ↔ RIGHT SLIDING PILL */}
+        <div className="relative grid grid-cols-2 gap-1 bg-slate-900 p-1.5 border border-slate-800 rounded-2xl w-full sm:w-[380px] shadow-lg shadow-purple-950/20 overflow-hidden">
+          
+          {/* SMOOTH SLIDING ACTIVE PILL (ANIMATES LEFT → RIGHT & RIGHT → LEFT WITH NATURAL EASING) */}
+          <div 
+            className={`absolute top-1.5 bottom-1.5 w-[calc(50%-6px)] bg-purple-600 rounded-xl transition-all duration-300 ease-in-out shadow-md shadow-purple-600/30 ${
+              safeActiveIndex === 1 ? 'left-[calc(50%+3px)]' : 'left-1.5'
+            }`}
+          />
+
+          {activeConfig.options.map((opt, idx) => {
             const OptIcon = opt.icon;
-            const isOptActive = opt.href === '/admin/dashboard'
-              ? pathname === '/admin/dashboard' || pathname === '/admin'
-              : pathname.startsWith(opt.href);
+            const isOptActive = idx === safeActiveIndex;
 
             return (
               <Link
                 key={opt.href}
                 href={opt.href}
-                className={`flex-1 sm:flex-initial px-4 py-1.5 rounded-xl font-black text-xs transition-all duration-200 flex items-center justify-center gap-2 ${
+                className={`relative z-10 py-1.5 px-3 rounded-xl font-black text-xs transition-colors duration-200 flex items-center justify-center gap-2 select-none ${
                   isOptActive
-                    ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                    ? 'text-white'
+                    : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
-                <OptIcon className={`w-3.5 h-3.5 ${isOptActive ? 'text-white' : opt.pulse ? 'text-red-400 animate-pulse' : 'text-slate-400'}`} />
+                <OptIcon className={`w-3.5 h-3.5 transition-colors ${isOptActive ? 'text-white' : opt.pulse ? 'text-red-400 animate-pulse' : 'text-slate-400'}`} />
                 <span className="truncate">{opt.name}</span>
                 {opt.pulse && (
                   <span className="relative flex h-1.5 w-1.5">
