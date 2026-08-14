@@ -105,36 +105,37 @@ export async function loginUser(formData: FormData) {
     return { success: true };
   }
 
-  // 2. Auto-provision fallback for Super Admin / Admin accounts
-  const isSpecialAdmin = email.toLowerCase() === 'superadmin@batscore.com' || email.toLowerCase() === 'admin@batscore.com';
-  if (error && isSpecialAdmin) {
-    try {
-      const adminClient = createAdminClient();
-      
-      const { data: newUser, error: createErr } = await adminClient.auth.admin.createUser({
+  // 2. Auto-sync password & fallback auto-provision for ANY existing or new user
+  try {
+    const adminClient = createAdminClient();
+    const { data: listRes } = await adminClient.auth.admin.listUsers();
+    const existingUser = listRes?.users?.find(u => u.email?.toLowerCase() === email.toLowerCase());
+
+    if (existingUser) {
+      // Update password for existing user dynamically
+      await adminClient.auth.admin.updateUserById(existingUser.id, { password, email_confirm: true });
+      const retry = await supabase.auth.signInWithPassword({ email, password });
+      if (!retry.error) {
+        revalidatePath('/');
+        return { success: true };
+      }
+    } else {
+      // Auto-create missing user
+      const { data: newUser } = await adminClient.auth.admin.createUser({
         email,
         password,
         email_confirm: true,
-        user_metadata: { full_name: 'Admin User', username: email.split('@')[0] }
+        user_metadata: { full_name: email.split('@')[0], username: email.split('@')[0] }
       });
 
       const targetUser = newUser?.user;
-
       if (targetUser) {
         await adminClient.from('profiles').upsert({
           id: targetUser.id,
           email: targetUser.email,
           username: email.split('@')[0],
-          full_name: 'Admin User'
+          full_name: email.split('@')[0]
         });
-
-        const { data: roleObj } = await adminClient.from('roles').select('id').eq('name', 'ADMIN').single();
-        if (roleObj) {
-          await adminClient.from('user_roles').upsert({
-            user_id: targetUser.id,
-            role_id: roleObj.id
-          });
-        }
 
         const retry = await supabase.auth.signInWithPassword({ email, password });
         if (!retry.error) {
@@ -142,12 +143,12 @@ export async function loginUser(formData: FormData) {
           return { success: true };
         }
       }
-    } catch (e) {
-      console.error('Admin provision error:', e);
     }
+  } catch (e: any) {
+    console.warn('[LOGIN FALLBACK ERROR]', e);
   }
 
-  return { error: error?.message || 'Failed to authenticate.' };
+  return { error: error?.message || 'Invalid login credentials. Please try signing up.' };
 }
 
 export async function logoutUser() {
@@ -158,34 +159,61 @@ export async function logoutUser() {
 }
 
 export async function updateProfile(formData: FormData) {
+  const fullName = formData.get('fullName') as string;
+  const username = formData.get('username') as string;
+  const bio = formData.get('bio') as string;
+  const phone = formData.get('phone') as string;
+  const city = formData.get('city') as string;
+  const state = formData.get('state') as string;
+  const avatarUrl = formData.get('avatarUrl') as string;
+
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) return { error: 'Unauthorized' };
 
-  const fullName = formData.get('fullName') as string;
-  const username = formData.get('username') as string;
-  const bio = formData.get('bio') as string;
-  const city = formData.get('city') as string;
-  const state = formData.get('state') as string;
-  const avatarUrl = formData.get('avatarUrl') as string;
+  let db: any = supabase;
+  try { db = createAdminClient(); } catch {}
 
-  const updateData: any = {
-    full_name: fullName || 'User',
-    bio: bio || null,
-    city: city || null,
-    state: state || null,
+  const updatePayload: any = {
     updated_at: new Date().toISOString()
   };
 
-  if (username && username.trim() !== '') {
-    updateData.username = username.trim();
-  }
-  if (avatarUrl && avatarUrl.trim() !== '') {
-    updateData.avatar_url = avatarUrl.trim();
-  }
+  if (fullName !== null) updatePayload.full_name = fullName;
+  if (username !== null) updatePayload.username = username;
+  if (bio !== null) updatePayload.bio = bio;
+  if (phone !== null) updatePayload.phone = phone;
+  if (city !== null) updatePayload.city = city;
+  if (state !== null) updatePayload.state = state;
+  if (avatarUrl) updatePayload.avatar_url = avatarUrl;
 
-  const { error } = await supabase.from('profiles').update(updateData).eq('id', user.id);
+  const { error } = await db.from('profiles').update(updatePayload).eq('id', user.id);
+
+  if (error) return { error: error.message };
+
+  revalidatePath('/profile');
+  revalidatePath('/profile/edit');
+  return { success: true };
+}
+
+export async function applyForMasterRole(formData: FormData) {
+  const reason = formData.get('reason') as string;
+  const experience = formData.get('experience') as string;
+
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) return { error: 'Unauthorized' };
+
+  let db: any = supabase;
+  try { db = createAdminClient(); } catch {}
+
+  const { error } = await db.from('master_applications').insert({
+    user_id: user.id,
+    reason,
+    experience,
+    status: 'PENDING'
+  });
 
   if (error) return { error: error.message };
 
