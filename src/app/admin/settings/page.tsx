@@ -1,6 +1,7 @@
 import React from 'react';
 import { getCurrentUser, getCurrentUserProfile } from '@/lib/auth';
-import { Settings, ShieldCheck, Mail, User, Server } from 'lucide-react';
+import { Settings, ShieldCheck, BarChart3, Server } from 'lucide-react';
+import Link from 'next/link';
 
 export default async function AdminSettingsPage() {
   const user = await getCurrentUser();
@@ -8,15 +9,32 @@ export default async function AdminSettingsPage() {
 
   return (
     <div className="space-y-8">
-      {/* PAGE HEADER */}
-      <div className="border-b border-slate-800/80 pb-6">
-        <h1 className="text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-2">
-          <Settings className="w-7 h-7 text-purple-400" />
-          Admin System & Profile Settings
-        </h1>
-        <p className="text-xs sm:text-sm text-slate-400 mt-1">
-          Administrator profile information, privilege status, and system configuration overview.
-        </p>
+      {/* PAGE HEADER WITH SECTION TOGGLE NAVIGATION CONTROL */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-800/80 pb-6">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white flex items-center gap-2">
+            <Settings className="w-7 h-7 text-purple-400" />
+            Analytics & Settings
+          </h1>
+        </div>
+
+        {/* SECTION TOGGLE BUTTON / NAVIGATION CONTROL */}
+        <div className="flex items-center gap-1.5 bg-slate-900 p-1.5 border border-slate-800 rounded-2xl w-full sm:w-auto">
+          <Link
+            href="/admin/reports"
+            className="flex-1 sm:flex-initial px-4 py-2 text-slate-400 hover:text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 hover:bg-slate-800/60 transition-all"
+          >
+            <BarChart3 className="w-4 h-4" />
+            Analytics
+          </Link>
+          <Link
+            href="/admin/settings"
+            className="flex-1 sm:flex-initial px-4 py-2 bg-purple-600 text-white font-black text-xs rounded-xl flex items-center justify-center gap-2 shadow-md shadow-purple-600/30 transition-all"
+          >
+            <Settings className="w-4 h-4" />
+            Settings
+          </Link>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -45,40 +63,30 @@ export default async function AdminSettingsPage() {
                 {profile?.roles?.join(', ') || 'ADMIN'}
               </span>
             </div>
-
-            <div className="flex items-center justify-between p-3 bg-slate-950 rounded-xl border border-slate-800">
-              <span className="text-slate-400">Display Name:</span>
-              <strong className="text-slate-200">{profile?.full_name || 'Admin User'}</strong>
-            </div>
           </div>
         </div>
 
-        {/* SYSTEM ENVIRONMENT INFO */}
+        {/* SYSTEM STATUS CARD */}
         <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4 shadow-xl">
           <h2 className="text-base font-bold text-white flex items-center gap-2 border-b border-slate-800 pb-3">
             <Server className="w-4 h-4 text-emerald-400" />
-            Platform Environment Configuration
+            System Configuration
           </h2>
 
           <div className="space-y-3 text-xs">
             <div className="flex items-center justify-between p-3 bg-slate-950 rounded-xl border border-slate-800">
-              <span className="text-slate-400">Database Engine:</span>
-              <strong className="text-emerald-400 font-mono">Supabase PostgreSQL</strong>
+              <span className="text-slate-400">Environment:</span>
+              <strong className="text-emerald-400">Production Ready</strong>
             </div>
 
             <div className="flex items-center justify-between p-3 bg-slate-950 rounded-xl border border-slate-800">
-              <span className="text-slate-400">Security Model:</span>
-              <strong className="text-emerald-400 font-mono">Row Level Security (RLS) Active</strong>
+              <span className="text-slate-400">Database Connection:</span>
+              <strong className="text-emerald-400">Supabase Connected</strong>
             </div>
 
             <div className="flex items-center justify-between p-3 bg-slate-950 rounded-xl border border-slate-800">
-              <span className="text-slate-400">Framework:</span>
-              <strong className="text-slate-200 font-mono">Next.js App Router (React 18)</strong>
-            </div>
-
-            <div className="flex items-center justify-between p-3 bg-slate-950 rounded-xl border border-slate-800">
-              <span className="text-slate-400">Realtime Scoring Engine:</span>
-              <strong className="text-purple-400 font-mono">Supabase Realtime Enabled</strong>
+              <span className="text-slate-400">Auth Engine:</span>
+              <strong className="text-white">GoTrue / Service Role</strong>
             </div>
           </div>
         </div>

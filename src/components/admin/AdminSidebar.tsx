@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { 
@@ -13,8 +13,7 @@ import {
   BarChart3, 
   Settings, 
   LogOut,
-  Menu,
-  X,
+  User,
   ShieldCheck,
   ChevronRight
 } from 'lucide-react';
@@ -26,9 +25,8 @@ interface AdminSidebarProps {
 
 export default function AdminSidebar({ user }: AdminSidebarProps) {
   const pathname = usePathname();
-  const [mobileOpen, setMobileOpen] = useState(false);
 
-  // Full navigation array for Sidebar (Desktop) and 3-Line Hamburger Drawer (Mobile)
+  // Full navigation array for Desktop Sidebar
   const navigationGrouped = [
     {
       title: 'OVERVIEW',
@@ -60,59 +58,14 @@ export default function AdminSidebar({ user }: AdminSidebarProps) {
     }
   ];
 
-  // Section sub-items config for Mobile Bottom Navigation
-  const sectionSubItems = [
-    {
-      section: 'overview',
-      matchRoutes: ['/admin/dashboard', '/admin', '/admin/master-applications'],
-      primaryHref: '/admin/dashboard',
-      subItems: [
-        { name: 'Overview', href: '/admin/dashboard', icon: LayoutDashboard },
-        { name: 'Master Applications', href: '/admin/master-applications', icon: FileCheck }
-      ]
-    },
-    {
-      section: 'matches',
-      matchRoutes: ['/admin/matches', '/admin/live-matches'],
-      primaryHref: '/admin/matches',
-      subItems: [
-        { name: 'All Matches', href: '/admin/matches', icon: Trophy },
-        { name: 'Live Matches', href: '/admin/live-matches', icon: Radio, pulse: true }
-      ]
-    },
-    {
-      section: 'users',
-      matchRoutes: ['/admin/users', '/admin/masters'],
-      primaryHref: '/admin/users',
-      subItems: [
-        { name: 'Users', href: '/admin/users', icon: Users },
-        { name: 'Approved Masters', href: '/admin/masters', icon: Award }
-      ]
-    },
-    {
-      section: 'analytics',
-      matchRoutes: ['/admin/reports', '/admin/settings'],
-      primaryHref: '/admin/reports',
-      subItems: [
-        { name: 'Analytics', href: '/admin/reports', icon: BarChart3 },
-        { name: 'Settings', href: '/admin/settings', icon: Settings }
-      ]
-    }
-  ];
-
   const isActive = (href: string) => {
     if (href === '/admin/dashboard') return pathname === '/admin/dashboard' || pathname === '/admin';
     return pathname.startsWith(href);
   };
 
-  // Determine active section config for floating sub-bar on mobile
-  const activeSectionConfig = sectionSubItems.find(s => 
-    s.matchRoutes.some(r => r === '/admin' ? pathname === '/admin' || pathname === '/admin/dashboard' : pathname.startsWith(r))
-  );
-
   return (
     <>
-      {/* MOBILE TOP BAR WITH HAMBURGER TOGGLE (☰) */}
+      {/* MOBILE TOP BAR (3-LINE HAMBURGER MENU REMOVED COMPLETELY; REPLACED WITH ADMIN PROFILE | SIGN OUT) */}
       <div className="lg:hidden sticky top-0 z-40 bg-slate-950/95 backdrop-blur-md border-b border-slate-800 px-4 py-3 flex items-center justify-between">
         <Link href="/admin/dashboard" className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-purple-600 to-indigo-400 p-0.5 shadow-md">
@@ -120,34 +73,35 @@ export default function AdminSidebar({ user }: AdminSidebarProps) {
               <ShieldCheck className="w-4 h-4 text-purple-400" />
             </div>
           </div>
-          <span className="font-black text-lg tracking-tight bg-gradient-to-r from-white via-slate-200 to-purple-400 bg-clip-text text-transparent">
+          <span className="font-black text-base tracking-tight bg-gradient-to-r from-white via-slate-200 to-purple-400 bg-clip-text text-transparent">
             BatScore Admin
           </span>
         </Link>
 
-        {/* ☰ 3-LINE HAMBURGER BUTTON */}
-        <button 
-          onClick={() => setMobileOpen(!mobileOpen)}
-          className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-900 border border-slate-800 transition-colors"
-          aria-label="Toggle Admin Sidebar Menu"
-        >
-          {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-        </button>
+        {/* TOP RIGHT: ADMIN PROFILE | SIGN OUT */}
+        <div className="flex items-center gap-2">
+          <Link
+            href="/profile"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-xl text-xs font-bold text-slate-200 hover:text-white transition-colors"
+          >
+            <User className="w-3.5 h-3.5 text-purple-400" />
+            <span>Profile</span>
+          </Link>
+
+          <form action={logoutUser}>
+            <button
+              type="submit"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 border border-slate-800 hover:border-red-500/40 text-slate-300 hover:text-red-400 rounded-xl text-xs font-bold transition-colors"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>Sign Out</span>
+            </button>
+          </form>
+        </div>
       </div>
 
-      {/* MOBILE BACKDROP OVERLAY FOR HAMBURGER DRAWER */}
-      {mobileOpen && (
-        <div 
-          onClick={() => setMobileOpen(false)}
-          className="lg:hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm"
-        />
-      )}
-
-      {/* SIDEBAR CONTAINER (DESKTOP FIXED SIDEBAR & MOBILE FULL-MENU DRAWER) */}
-      <aside className={`
-        fixed lg:sticky top-0 left-0 z-50 lg:z-30 h-screen w-64 bg-slate-950 border-r border-slate-800 flex flex-col justify-between transition-transform duration-200 ease-in-out shrink-0
-        ${mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-      `}>
+      {/* DESKTOP SIDEBAR CONTAINER (UNCHANGED DESKTOP VIEW) */}
+      <aside className="hidden lg:flex sticky top-0 left-0 z-30 h-screen w-64 bg-slate-950 border-r border-slate-800 flex-col justify-between shrink-0">
         
         {/* BRAND HEADER */}
         <div className="p-6 border-b border-slate-800/80 flex items-center justify-between">
@@ -166,16 +120,9 @@ export default function AdminSidebar({ user }: AdminSidebarProps) {
               </span>
             </div>
           </Link>
-
-          <button 
-            onClick={() => setMobileOpen(false)}
-            className="lg:hidden text-slate-500 hover:text-white p-1"
-          >
-            <X className="w-5 h-5" />
-          </button>
         </div>
 
-        {/* FULL NAVIGATION LINKS CONTAINER IN 3-LINE MENU DRAWER */}
+        {/* FULL NAVIGATION LINKS CONTAINER */}
         <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6 scrollbar-thin scrollbar-thumb-slate-800">
           {navigationGrouped.map((group) => (
             <div key={group.title} className="space-y-1.5">
@@ -192,7 +139,6 @@ export default function AdminSidebar({ user }: AdminSidebarProps) {
                     <Link
                       key={item.href}
                       href={item.href}
-                      onClick={() => setMobileOpen(false)}
                       className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${
                         active
                           ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20 font-bold'
@@ -223,7 +169,7 @@ export default function AdminSidebar({ user }: AdminSidebarProps) {
           ))}
         </div>
 
-        {/* FOOTER USER / LOGOUT */}
+        {/* FOOTER USER / LOGOUT FOR DESKTOP */}
         <div className="p-4 border-t border-slate-800/80 bg-slate-950/60 space-y-3">
           <Link href="/profile" className="flex items-center gap-2.5 p-2 rounded-xl bg-slate-900/80 border border-slate-800/80 hover:bg-slate-850 transition-colors">
             <div className="w-8 h-8 rounded-lg bg-purple-950 border border-purple-500/30 text-purple-400 font-bold text-xs flex items-center justify-center uppercase">
@@ -248,50 +194,14 @@ export default function AdminSidebar({ user }: AdminSidebarProps) {
 
       </aside>
 
-      {/* FLOATING SUB-NAVIGATION STRIP FOR ACTIVE SECTION ON MOBILE */}
-      {activeSectionConfig && (
-        <div 
-          aria-label="Active Section Sub Navigation"
-          className="lg:hidden fixed bottom-[60px] left-3 right-3 z-40 bg-slate-900/95 backdrop-blur-md border border-purple-500/30 rounded-2xl shadow-2xl p-1.5 flex items-center justify-around gap-1"
-        >
-          {activeSectionConfig.subItems.map((sub) => {
-            const SubIcon = sub.icon;
-            const isSubActive = sub.href === '/admin/dashboard'
-              ? pathname === '/admin/dashboard' || pathname === '/admin'
-              : pathname.startsWith(sub.href);
-
-            return (
-              <Link
-                key={sub.href}
-                href={sub.href}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-xl text-xs font-extrabold transition-all ${
-                  isSubActive
-                    ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-                }`}
-              >
-                <SubIcon className={`w-3.5 h-3.5 ${isSubActive ? 'text-white' : sub.pulse ? 'text-red-400' : 'text-slate-400'}`} />
-                <span className="truncate">{sub.name}</span>
-                {sub.pulse && (
-                  <span className="relative flex h-1.5 w-1.5">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500"></span>
-                  </span>
-                )}
-              </Link>
-            );
-          })}
-        </div>
-      )}
-
-      {/* FIXED MOBILE BOTTOM NAVIGATION BAR (STRICTLY HIDDEN ON DESKTOP & TABLET LARGE) */}
+      {/* FIXED MOBILE BOTTOM NAVIGATION BAR */}
       <nav 
         aria-label="Mobile Admin Bottom Navigation" 
         className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-950/95 backdrop-blur-md border-t border-slate-800/90 shadow-2xl px-2 py-1.5"
       >
         <div className="grid grid-cols-4 gap-1 items-center max-w-md mx-auto">
           
-          {/* 1. OVERVIEW (CONNECTS TO /admin/dashboard & SUB-NAV INCLUDES Master Applications) */}
+          {/* 1. OVERVIEW */}
           <Link
             href="/admin/dashboard"
             className={`flex flex-col items-center justify-center py-1.5 px-1 rounded-xl transition-all ${
@@ -304,7 +214,7 @@ export default function AdminSidebar({ user }: AdminSidebarProps) {
             <span className="text-[10px] font-bold tracking-tight truncate mt-0.5">Overview</span>
           </Link>
 
-          {/* 2. MATCH MANAGEMENT (CONNECTS TO /admin/matches & SUB-NAV INCLUDES Live Matches) */}
+          {/* 2. MATCH MANAGEMENT */}
           <Link
             href="/admin/matches"
             className={`flex flex-col items-center justify-center py-1.5 px-1 rounded-xl transition-all ${
@@ -317,7 +227,7 @@ export default function AdminSidebar({ user }: AdminSidebarProps) {
             <span className="text-[10px] font-bold tracking-tight truncate mt-0.5">Match Mgmt</span>
           </Link>
 
-          {/* 3. USER & TEAM MANAGEMENT (CONNECTS TO /admin/users & SUB-NAV INCLUDES Approved Masters) */}
+          {/* 3. USER & TEAM MANAGEMENT */}
           <Link
             href="/admin/users"
             className={`flex flex-col items-center justify-center py-1.5 px-1 rounded-xl transition-all ${
@@ -330,7 +240,7 @@ export default function AdminSidebar({ user }: AdminSidebarProps) {
             <span className="text-[10px] font-bold tracking-tight truncate mt-0.5">User & Team</span>
           </Link>
 
-          {/* 4. ANALYTICS & SETTINGS (CONNECTS TO /admin/reports & SUB-NAV INCLUDES Settings) */}
+          {/* 4. ANALYTICS & SETTINGS */}
           <Link
             href="/admin/reports"
             className={`flex flex-col items-center justify-center py-1.5 px-1 rounded-xl transition-all ${

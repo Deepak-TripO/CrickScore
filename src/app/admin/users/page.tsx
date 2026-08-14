@@ -1,26 +1,20 @@
 import React from 'react';
 import { createClient } from '@/lib/supabase/server';
-import { createAdminClient } from '@/lib/supabase/admin';
 import UserManagementTable from './UserManagementTable';
-import { Users } from 'lucide-react';
+import { Users, Award } from 'lucide-react';
+import Link from 'next/link';
 
 export default async function AdminUsersPage() {
   const supabase = createClient();
-  let db: any = supabase;
-  try {
-    db = createAdminClient();
-  } catch {
-    db = supabase;
-  }
 
-  // Fetch all registered user profiles directly from database using service role client
-  const { data: rawProfiles } = await db
+  // Fetch all profiles
+  const { data: rawProfiles } = await supabase
     .from('profiles')
     .select('*')
     .order('created_at', { ascending: false });
 
-  // Fetch user roles mapping from database
-  const { data: userRoles } = await db
+  // Fetch user roles mapping
+  const { data: userRoles } = await supabase
     .from('user_roles')
     .select('user_id, roles(name)');
 
@@ -32,34 +26,38 @@ export default async function AdminUsersPage() {
     });
   }
 
-  // Deduplicate and resolve unique profiles with actual database roles (USER / MASTER / ADMIN)
-  const profilesWithRoles = (rawProfiles || []).map((p: any) => {
-    const roles = roleMap[p.id] && roleMap[p.id].length > 0 ? roleMap[p.id] : ['USER'];
-    return {
-      ...p,
-      roles
-    };
-  });
+  const profilesWithRoles = (rawProfiles || []).map((p: any) => ({
+    ...p,
+    roles: roleMap[p.id] && roleMap[p.id].length > 0 ? roleMap[p.id] : ['USER']
+  }));
 
   return (
     <div className="space-y-6">
-      {/* PAGE HEADER */}
-      <div className="border-b border-slate-800/80 pb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* PAGE HEADER WITH SECTION TOGGLE NAVIGATION CONTROL */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-800/80 pb-6">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-2">
-            <Users className="w-7 h-7 text-purple-400" />
-            Registered Users Management ({profilesWithRoles.length})
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white flex items-center gap-2">
+            <Users className="w-7 h-7 text-emerald-400" />
+            User & Team Management
           </h1>
-          <p className="text-xs sm:text-sm text-slate-400 mt-1">
-            Real-time database records of all registered Normal Users and Master Users.
-          </p>
         </div>
 
-        <div className="bg-slate-900 border border-slate-800 px-4 py-2 rounded-2xl flex items-center gap-3">
-          <div className="text-right">
-            <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">Total Users</span>
-            <span className="text-lg font-black text-purple-400 font-mono">{profilesWithRoles.length}</span>
-          </div>
+        {/* SECTION TOGGLE BUTTON / NAVIGATION CONTROL */}
+        <div className="flex items-center gap-1.5 bg-slate-900 p-1.5 border border-slate-800 rounded-2xl w-full sm:w-auto">
+          <Link
+            href="/admin/users"
+            className="flex-1 sm:flex-initial px-4 py-2 bg-purple-600 text-white font-black text-xs rounded-xl flex items-center justify-center gap-2 shadow-md shadow-purple-600/30 transition-all"
+          >
+            <Users className="w-4 h-4" />
+            Users
+          </Link>
+          <Link
+            href="/admin/masters"
+            className="flex-1 sm:flex-initial px-4 py-2 text-slate-400 hover:text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 hover:bg-slate-800/60 transition-all"
+          >
+            <Award className="w-4 h-4 text-purple-400" />
+            Approved Masters
+          </Link>
         </div>
       </div>
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import { createClient } from '@/lib/supabase/server';
 import MasterAppReviewCard from './MasterAppReviewCard';
-import { FileCheck, Filter } from 'lucide-react';
+import { FileCheck, LayoutDashboard } from 'lucide-react';
 import Link from 'next/link';
 
 export default async function MasterApplicationsAdminPage({
@@ -31,15 +31,32 @@ export default async function MasterApplicationsAdminPage({
 
   return (
     <div className="space-y-6">
-      {/* PAGE HEADER */}
-      <div className="border-b border-slate-800/80 pb-6">
-        <h1 className="text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-2">
-          <FileCheck className="w-7 h-7 text-purple-400" />
-          Master Scorer Applications
-        </h1>
-        <p className="text-xs sm:text-sm text-slate-400 mt-1">
-          Review, approve, or reject user applications to become Master Scorers.
-        </p>
+      {/* PAGE HEADER WITH SECTION TOGGLE NAVIGATION CONTROL */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-800/80 pb-6">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white flex items-center gap-2">
+            <FileCheck className="w-7 h-7 text-purple-400" />
+            Master Applications
+          </h1>
+        </div>
+
+        {/* SECTION TOGGLE BUTTON / NAVIGATION CONTROL */}
+        <div className="flex items-center gap-1.5 bg-slate-900 p-1.5 border border-slate-800 rounded-2xl w-full sm:w-auto">
+          <Link
+            href="/admin/dashboard"
+            className="flex-1 sm:flex-initial px-4 py-2 text-slate-400 hover:text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 hover:bg-slate-800/60 transition-all"
+          >
+            <LayoutDashboard className="w-4 h-4" />
+            Overview
+          </Link>
+          <Link
+            href="/admin/master-applications"
+            className="flex-1 sm:flex-initial px-4 py-2 bg-purple-600 text-white font-black text-xs rounded-xl flex items-center justify-center gap-2 shadow-md shadow-purple-600/30 transition-all"
+          >
+            <FileCheck className="w-4 h-4 text-amber-400" />
+            Master Applications
+          </Link>
+        </div>
       </div>
 
       {/* FILTER TABS */}
@@ -59,8 +76,8 @@ export default async function MasterApplicationsAdminPage({
           href="/admin/master-applications?status=PENDING"
           className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 border ${
             selectedStatus === 'PENDING'
-              ? 'bg-amber-500 text-slate-950 border-amber-400 font-extrabold shadow-md shadow-amber-500/20'
-              : 'bg-slate-900 text-amber-400 border-slate-800 hover:border-amber-500/40'
+              ? 'bg-amber-600 text-white border-amber-500 shadow-md shadow-amber-600/20'
+              : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'
           }`}
         >
           Pending ({pendingApps || 0})
@@ -70,8 +87,8 @@ export default async function MasterApplicationsAdminPage({
           href="/admin/master-applications?status=APPROVED"
           className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 border ${
             selectedStatus === 'APPROVED'
-              ? 'bg-emerald-500 text-slate-950 border-emerald-400 font-extrabold shadow-md shadow-emerald-500/20'
-              : 'bg-slate-900 text-emerald-400 border-slate-800 hover:border-emerald-500/40'
+              ? 'bg-emerald-600 text-white border-emerald-500 shadow-md shadow-emerald-600/20'
+              : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'
           }`}
         >
           Approved ({approvedApps || 0})
@@ -82,7 +99,7 @@ export default async function MasterApplicationsAdminPage({
           className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 border ${
             selectedStatus === 'REJECTED'
               ? 'bg-red-600 text-white border-red-500 shadow-md shadow-red-600/20'
-              : 'bg-slate-900 text-red-400 border-slate-800 hover:border-red-500/40'
+              : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'
           }`}
         >
           Rejected ({rejectedApps || 0})
@@ -91,13 +108,18 @@ export default async function MasterApplicationsAdminPage({
 
       {/* APPLICATIONS LIST */}
       {!applications || applications.length === 0 ? (
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-12 text-center text-slate-500 text-sm space-y-2">
-          <FileCheck className="w-8 h-8 text-slate-600 mx-auto" />
-          <p>No master applications found for status "{selectedStatus}".</p>
+        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-12 text-center text-slate-500 text-sm space-y-2 shadow-xl">
+          <FileCheck className="w-10 h-10 text-slate-700 mx-auto" />
+          <h3 className="text-base font-bold text-slate-400">No Applications Found</h3>
+          <p className="text-xs text-slate-500">
+            {selectedStatus === 'ALL'
+              ? 'There are currently no Master Scorer applications in the database.'
+              : `No applications found with status "${selectedStatus}".`}
+          </p>
         </div>
       ) : (
-        <div className="space-y-4">
-          {applications.map((app: any) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {applications.map((app) => (
             <MasterAppReviewCard key={app.id} application={app} />
           ))}
         </div>

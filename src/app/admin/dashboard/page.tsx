@@ -14,7 +14,8 @@ import {
   Trash2, 
   Users2,
   ArrowRight,
-  Clock
+  Clock,
+  LayoutDashboard
 } from 'lucide-react';
 
 export default async function AdminDashboardPage() {
@@ -58,16 +59,14 @@ export default async function AdminDashboardPage() {
   const approvedApps = approvedAppsResult.count || 0;
   const rejectedApps = rejectedAppsResult.count || 0;
 
-  // STRICT REQUIREMENT 7: Total Masters = Approved Masters + Rejected Apps (Pending applications EXCLUDED)
+  // STRICT REQUIREMENT: Total Masters = Approved Masters + Rejected Apps (Pending EXCLUDED)
   const totalMasters = approvedApps + rejectedApps;
 
-  // STRICT REQUIREMENT 8: Total Matches excludes deleted matches
   const totalMatches = activeMatchesResult.count || 0;
   const liveMatches = liveMatchesResult.count || 0;
   const completedMatches = completedMatchesResult.count || 0;
   const deletedMatches = deletedMatchesResult.count || 0;
 
-  // STRICT REQUIREMENT 1: Total Community registered members/users
   const totalCommunity = communityResult.count || 0;
 
   const pendingApplications = pendingApplicationsResult.data || [];
@@ -75,32 +74,37 @@ export default async function AdminDashboardPage() {
 
   return (
     <div className="space-y-8">
-      {/* PAGE HEADER */}
+      {/* PAGE HEADER WITH SECTION TOGGLE NAVIGATION CONTROL */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-800/80 pb-6">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight bg-gradient-to-r from-white via-slate-100 to-purple-400 bg-clip-text text-transparent">
-            Admin Overview & Analytics
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
+            Overview
           </h1>
-          <p className="text-xs sm:text-sm text-slate-400 mt-1">
-            Real-time platform metrics, user management, and match oversight control panel.
-          </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <Link 
-            href="/admin/master-applications"
-            className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-purple-600/20 flex items-center gap-2"
+        {/* SECTION TOGGLE BUTTON / NAVIGATION CONTROL */}
+        <div className="flex items-center gap-1.5 bg-slate-900 p-1.5 border border-slate-800 rounded-2xl w-full sm:w-auto">
+          <Link
+            href="/admin/dashboard"
+            className="flex-1 sm:flex-initial px-4 py-2 bg-purple-600 text-white font-black text-xs rounded-xl flex items-center justify-center gap-2 shadow-md shadow-purple-600/30 transition-all"
           >
-            <FileCheck className="w-4 h-4" />
-            Review Applications ({pendingApps || 0})
+            <LayoutDashboard className="w-4 h-4" />
+            Overview
+          </Link>
+          <Link
+            href="/admin/master-applications"
+            className="flex-1 sm:flex-initial px-4 py-2 text-slate-400 hover:text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 hover:bg-slate-800/60 transition-all"
+          >
+            <FileCheck className="w-4 h-4 text-amber-400" />
+            Master Applications
           </Link>
         </div>
       </div>
 
-      {/* REAL-DATA OVERVIEW METRIC CARDS (SYNCHRONIZED WITH DATABASE STATUSES) */}
+      {/* REAL-DATA OVERVIEW METRIC CARDS */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
         
-        {/* 1. TOTAL COMMUNITY (REPLACED TOTAL TEAMS) */}
+        {/* 1. TOTAL COMMUNITY */}
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-2">
           <div className="flex items-center justify-between text-indigo-400">
             <span className="text-[11px] font-bold uppercase tracking-wider">Total Community</span>
@@ -145,7 +149,7 @@ export default async function AdminDashboardPage() {
           <div className="text-2xl font-black text-red-400 font-mono">{rejectedApps}</div>
         </div>
 
-        {/* 6. TOTAL MASTERS = APPROVED MASTERS + REJECTED APPS */}
+        {/* 6. TOTAL MASTERS */}
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-2">
           <div className="flex items-center justify-between text-purple-400">
             <span className="text-[11px] font-bold uppercase tracking-wider">Total Masters</span>
@@ -154,7 +158,7 @@ export default async function AdminDashboardPage() {
           <div className="text-2xl font-black text-purple-400 font-mono">{totalMasters}</div>
         </div>
 
-        {/* 7. TOTAL MATCHES (EXCLUDING DELETED MATCHES) */}
+        {/* 7. TOTAL MATCHES */}
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-2">
           <div className="flex items-center justify-between text-cyan-400">
             <span className="text-[11px] font-bold uppercase tracking-wider">Total Matches</span>
@@ -163,7 +167,7 @@ export default async function AdminDashboardPage() {
           <div className="text-2xl font-black text-white font-mono">{totalMatches}</div>
         </div>
 
-        {/* 8. DELETED MATCHES (ISOLATED COUNT OF DELETED MATCHES) */}
+        {/* 8. DELETED MATCHES */}
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-2">
           <div className="flex items-center justify-between text-rose-400">
             <span className="text-[11px] font-bold uppercase tracking-wider">Deleted Matches</span>
