@@ -117,23 +117,20 @@ export default function UserManagementTable({ profiles }: { profiles: any[] }) {
 
                     <td className="p-4">
                       <div className="flex flex-wrap gap-1">
-                        {p.roles?.map((r: string) => {
-                          const roleLabel = r === 'ADMIN' ? 'Admin' : r === 'MASTER' ? 'Master' : 'Normal User';
-                          return (
-                            <span
-                              key={r}
-                              className={`px-2.5 py-0.5 rounded-full font-extrabold text-[10px] uppercase border ${
-                                r === 'ADMIN'
-                                  ? 'bg-purple-950 text-purple-400 border-purple-500/30'
-                                  : r === 'MASTER'
-                                  ? 'bg-emerald-950 text-emerald-400 border-emerald-500/30'
-                                  : 'bg-slate-800 text-slate-300 border-slate-700'
-                              }`}
-                            >
-                              {roleLabel}
-                            </span>
-                          );
-                        })}
+                        {p.roles?.map((r: string) => (
+                          <span
+                            key={r}
+                            className={`px-2.5 py-0.5 rounded-full font-bold text-[10px] uppercase border ${
+                              r === 'ADMIN'
+                                ? 'bg-purple-950 text-purple-400 border-purple-500/30'
+                                : r === 'MASTER'
+                                ? 'bg-emerald-950 text-emerald-400 border-emerald-500/30'
+                                : 'bg-slate-800 text-slate-400 border-slate-700'
+                            }`}
+                          >
+                            {r}
+                          </span>
+                        ))}
                       </div>
                     </td>
 
