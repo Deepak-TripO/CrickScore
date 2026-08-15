@@ -28,11 +28,13 @@ CREATE TABLE IF NOT EXISTS public.roles (
   description TEXT
 );
 
-INSERT INTO public.roles (name, description) VALUES 
-  ('USER', 'Standard User'),
-  ('MASTER', 'Scorer / Organizer'),
-  ('ADMIN', 'Administrator'),
-  ('SUPER_ADMIN', 'Super Administrator')
+ALTER TABLE public.roles ADD COLUMN IF NOT EXISTS description TEXT;
+
+INSERT INTO public.roles (name) VALUES 
+  ('USER'),
+  ('MASTER'),
+  ('ADMIN'),
+  ('SUPER_ADMIN')
 ON CONFLICT (name) DO NOTHING;
 
 -- 4. USER ROLES TABLE
