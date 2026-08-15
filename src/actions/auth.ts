@@ -6,10 +6,10 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
 export async function signupUser(formData: FormData) {
-  const username = formData.get('username') as string;
-  const email = formData.get('email') as string;
-  const password = formData.get('password') as string;
-  const confirmPassword = formData.get('confirmPassword') as string;
+  const username = (formData.get('username') as string || '').trim();
+  const email = (formData.get('email') as string || '').trim();
+  const password = (formData.get('password') as string || '').trim();
+  const confirmPassword = (formData.get('confirmPassword') as string || '').trim();
 
   if (!email || !password) {
     return { error: 'Please fill in all required fields.' };
@@ -22,11 +22,14 @@ export async function signupUser(formData: FormData) {
   const supabase = createClient();
   let user: any = null;
 
-  // Try standard signup first
+  const appUrl = (process.env.NEXT_PUBLIC_APP_URL || 'https://crick-score-two.vercel.app').replace(/\/+$/, '');
+
+  // 1. Try standard signup with explicit emailRedirectTo
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
+      emailRedirectTo: `${appUrl}/auth/callback`,
       data: {
         username: username || email.split('@')[0],
         role: 'USER'
@@ -35,7 +38,7 @@ export async function signupUser(formData: FormData) {
   });
 
   if (error) {
-    // Fallback: create user via admin client if email rate limit or schema error occurs
+    // 2. Fallback: create user via admin client if email rate limit or redirect URL error occurs
     try {
       const adminClient = createAdminClient();
       const { data: adminCreatedUser, error: adminErr } = await adminClient.auth.admin.createUser({
@@ -48,25 +51,33 @@ export async function signupUser(formData: FormData) {
         }
       });
 
-      if (adminErr && !adminErr.message.includes('already registered')) {
-        return { error: adminErr.message };
+      if (adminErr) {
+        let errMsg = adminErr.message;
+        if (errMsg.includes('already registered')) {
+          return { error: 'An account with this email address already exists. Please log in.' };
+        }
+        if (errMsg.includes('Invalid path') || errMsg.includes('Invalid API key')) {
+          errMsg = 'Account creation failed. Please check your details and try again.';
+        }
+        return { error: errMsg };
       }
       user = adminCreatedUser?.user;
     } catch (e: any) {
-      return { error: error.message };
+      return { error: e.message || 'Signup failed. Please try again.' };
     }
   } else {
     user = data.user;
   }
 
-  // Ensure profile & role
+  // 3. Ensure profile & role in database
   if (user) {
     try {
       const adminClient = createAdminClient();
       await adminClient.from('profiles').upsert({
         id: user.id,
         username: username || email.split('@')[0],
-        email
+        email,
+        full_name: username || email.split('@')[0]
       });
 
       const { data: userRole } = await adminClient.from('roles').select('id').eq('name', 'USER').maybeSingle();
