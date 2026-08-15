@@ -5,10 +5,12 @@ import HomePageClient from '@/components/home/HomePageClient';
 import { getUserAndRole, getCurrentUserProfile } from '@/lib/auth';
 import { fetchMatchesSafely } from '@/lib/fetchMatches';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function HomePage() {
   const { user, role: userRole } = await getUserAndRole();
   const profile = user ? await getCurrentUserProfile(user) : null;
-
   const allMatches = await fetchMatchesSafely({ limit: 20 });
 
   return (
