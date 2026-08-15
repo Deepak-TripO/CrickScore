@@ -148,7 +148,12 @@ export async function loginUser(formData: FormData) {
     console.warn('[LOGIN FALLBACK ERROR]', e);
   }
 
-  return { error: error?.message || 'Invalid login credentials. Please try signing up.' };
+  let errMsg = error?.message || 'Invalid login credentials.';
+  if (errMsg.includes('Invalid path') || errMsg.includes('Invalid API key')) {
+    errMsg = 'Invalid email or password. Please verify your details.';
+  }
+
+  return { error: errMsg };
 }
 
 export async function logoutUser() {
