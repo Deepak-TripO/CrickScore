@@ -236,7 +236,29 @@ CREATE TABLE IF NOT EXISTS public.notifications (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- 16. SAFE AUTH USER TRIGGER FUNCTION
+-- 16. COMMUNITIES TABLE
+CREATE TABLE IF NOT EXISTS public.communities (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  owner_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  bio TEXT NOT NULL,
+  profile_image TEXT,
+  cover_image TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- 17. COMMUNITY MEMBERS TABLE
+CREATE TABLE IF NOT EXISTS public.community_members (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  community_id UUID NOT NULL REFERENCES public.communities(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  role TEXT DEFAULT 'MEMBER',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE(community_id, user_id)
+);
+
+-- 18. SAFE AUTH USER TRIGGER FUNCTION
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -295,3 +317,5 @@ ALTER TABLE public.innings DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.deliveries DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.match_commentary DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.notifications DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.communities DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.community_members DISABLE ROW LEVEL SECURITY;

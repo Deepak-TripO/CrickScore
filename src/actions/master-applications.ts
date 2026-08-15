@@ -113,8 +113,10 @@ export async function reviewMasterApplication(
     if (masterRole) {
       await adminClient
         .from('user_roles')
-        .insert({ user_id: userId, role_id: masterRole.id })
-        .single();
+        .upsert(
+          { user_id: userId, role_id: masterRole.id },
+          { onConflict: 'user_id,role_id' }
+        );
     }
 
     await adminClient.from('notifications').insert({
@@ -145,5 +147,11 @@ export async function reviewMasterApplication(
   }
 
   revalidatePath('/admin/master-applications');
+  revalidatePath('/admin/dashboard');
+  revalidatePath('/admin/masters');
+  revalidatePath('/admin/users');
+  revalidatePath('/apply-master');
+  revalidatePath('/master/dashboard');
+  revalidatePath('/');
   return { success: true };
 }

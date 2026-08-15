@@ -23,6 +23,7 @@ import {
   updateCommunityAction, 
   deleteCommunityAction, 
   getCommunityMembersAction,
+  getPublicCommunities,
   CommunityMemberItem
 } from '@/actions/community';
 
@@ -81,32 +82,26 @@ export default function CommunityCreateSection() {
   const profileInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
 
-  // Load stored communities on mount & sync with database
+  // Load communities from Supabase database on mount
   useEffect(() => {
     const loadData = async () => {
-      let localList: CommunityItem[] = [];
       try {
-        const stored = localStorage.getItem('batscore_communities');
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            localList = parsed;
-          }
+        const dbList = await getPublicCommunities();
+        if (Array.isArray(dbList) && dbList.length > 0) {
+          setCommunities(dbList);
+        } else {
+          setCommunities(DEFAULT_COMMUNITIES);
         }
-      } catch {}
-
-      setCommunities(localList.length > 0 ? localList : DEFAULT_COMMUNITIES);
+      } catch {
+        setCommunities(DEFAULT_COMMUNITIES);
+      }
     };
 
     loadData();
   }, []);
 
-  // Save to state and localStorage
-  const saveCommunitiesToStorage = (updated: CommunityItem[]) => {
+  const saveCommunitiesToState = (updated: CommunityItem[]) => {
     setCommunities(updated);
-    try {
-      localStorage.setItem('batscore_communities', JSON.stringify(updated));
-    } catch {}
   };
 
   // View Community Handler
@@ -207,7 +202,7 @@ export default function CommunityCreateSection() {
       await deleteCommunityAction(deletingCommunity.id);
 
       const updated = communities.filter(c => c.id !== deletingCommunity.id);
-      saveCommunitiesToStorage(updated);
+      saveCommunitiesToState(updated);
 
       handleCloseDeleteModal();
     } catch (err: any) {
@@ -262,7 +257,7 @@ export default function CommunityCreateSection() {
           return c;
         });
 
-        saveCommunitiesToStorage(updatedList);
+        saveCommunitiesToState(updatedList);
         setSuccessMsg('✓ Community Updated Successfully!');
       } else {
         // CREATE NEW COMMUNITY
@@ -290,7 +285,7 @@ export default function CommunityCreateSection() {
         };
 
         const updatedList = [newComm, ...communities];
-        saveCommunitiesToStorage(updatedList);
+        saveCommunitiesToState(updatedList);
         setSuccessMsg('✓ Community Created Successfully!');
       }
 

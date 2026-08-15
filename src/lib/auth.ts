@@ -1,4 +1,5 @@
 import { createClient } from './supabase/server';
+import { createAdminClient } from './supabase/admin';
 
 export interface UserProfile {
   id: string;
@@ -26,15 +27,17 @@ export async function getCurrentUserProfile(existingUser?: any): Promise<UserPro
   if (!user) return null;
 
   const supabase = createClient();
+  let db: any = supabase;
+  try { db = createAdminClient(); } catch {}
   
   // Fetch profile and roles in parallel
   const [profileResult, rolesResult] = await Promise.all([
-    supabase
+    db
       .from('profiles')
       .select('*')
       .eq('id', user.id)
       .single(),
-    supabase
+    db
       .from('user_roles')
       .select('roles(name)')
       .eq('user_id', user.id)
@@ -66,6 +69,9 @@ export async function getUserAndRole(): Promise<{ user: any; role: 'ADMIN' | 'MA
   const { data: { user }, error } = await supabase.auth.getUser();
   if (error || !user) return { user: null, role: 'USER' };
 
+  let db: any = supabase;
+  try { db = createAdminClient(); } catch {}
+
   const configuredAdminEmail = (process.env.ADMIN_EMAIL || process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'admin@batscore.com').toLowerCase();
   const userEmail = (user.email || '').toLowerCase();
   const isAdminEmail = (
@@ -75,11 +81,11 @@ export async function getUserAndRole(): Promise<{ user: any; role: 'ADMIN' | 'MA
   );
 
   const [userRolesResult, appResult] = await Promise.all([
-    supabase
+    db
       .from('user_roles')
       .select('roles(name)')
       .eq('user_id', user.id),
-    supabase
+    db
       .from('master_applications')
       .select('status')
       .eq('user_id', user.id)

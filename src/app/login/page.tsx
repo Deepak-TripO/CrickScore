@@ -55,8 +55,8 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-8 space-y-6 shadow-2xl">
+    <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center p-3 sm:p-4">
+      <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-5 sm:p-8 space-y-5 sm:space-y-6 shadow-2xl overflow-hidden">
         
         <div className="text-center space-y-2">
           <Link href="/" className="inline-flex items-center gap-2 group">
@@ -74,9 +74,9 @@ export default function LoginPage() {
         </div>
 
         {errorMsg && (
-          <div className="p-3 bg-red-950/80 border border-red-500/40 rounded-xl text-red-200 text-xs flex items-center gap-2">
+          <div className="p-3 bg-red-950/80 border border-red-500/40 rounded-xl text-red-200 text-xs flex items-center gap-2 break-words">
             <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
-            <span>{errorMsg}</span>
+            <span className="break-all sm:break-normal">{errorMsg}</span>
           </div>
         )}
 

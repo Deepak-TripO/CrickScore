@@ -2,19 +2,11 @@ import React from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import RealtimeDashboardMetrics from '@/components/admin/RealtimeDashboardMetrics';
 import { 
-  Users, 
-  Award, 
   FileCheck, 
-  CheckCircle2, 
-  XCircle, 
   Trophy, 
-  Radio, 
-  CheckCheck, 
-  Trash2, 
-  Users2,
-  ArrowRight,
-  Clock
+  ArrowRight
 } from 'lucide-react';
 
 export default async function AdminDashboardPage() {
@@ -73,100 +65,19 @@ export default async function AdminDashboardPage() {
 
   return (
     <div className="space-y-8">
-      {/* REAL-DATA OVERVIEW METRIC CARDS */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-        
-        {/* 1. TOTAL COMMUNITY */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-2">
-          <div className="flex items-center justify-between text-indigo-400">
-            <span className="text-[11px] font-bold uppercase tracking-wider">Total Community</span>
-            <Users2 className="w-4 h-4 text-indigo-400" />
-          </div>
-          <div className="text-2xl font-black text-white font-mono">{totalCommunity}</div>
-        </div>
-
-        {/* 2. TOTAL USERS */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-2">
-          <div className="flex items-center justify-between text-emerald-400">
-            <span className="text-[11px] font-bold uppercase tracking-wider">Total Users</span>
-            <Users className="w-4 h-4 text-emerald-400" />
-          </div>
-          <div className="text-2xl font-black text-white font-mono">{totalUsers}</div>
-        </div>
-
-        {/* 3. PENDING APPS */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-2">
-          <div className="flex items-center justify-between text-amber-400">
-            <span className="text-[11px] font-bold uppercase tracking-wider">Pending Apps</span>
-            <Clock className="w-4 h-4 text-amber-400" />
-          </div>
-          <div className="text-2xl font-black text-amber-400 font-mono">{pendingApps}</div>
-        </div>
-
-        {/* 4. APPROVED MASTERS */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-2">
-          <div className="flex items-center justify-between text-emerald-400">
-            <span className="text-[11px] font-bold uppercase tracking-wider">Approved Masters</span>
-            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-          </div>
-          <div className="text-2xl font-black text-emerald-400 font-mono">{approvedApps}</div>
-        </div>
-
-        {/* 5. REJECTED APPS */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-2">
-          <div className="flex items-center justify-between text-red-400">
-            <span className="text-[11px] font-bold uppercase tracking-wider">Rejected Apps</span>
-            <XCircle className="w-4 h-4 text-red-400" />
-          </div>
-          <div className="text-2xl font-black text-red-400 font-mono">{rejectedApps}</div>
-        </div>
-
-        {/* 6. TOTAL MASTERS */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-2">
-          <div className="flex items-center justify-between text-purple-400">
-            <span className="text-[11px] font-bold uppercase tracking-wider">Total Masters</span>
-            <Award className="w-4 h-4 text-purple-400" />
-          </div>
-          <div className="text-2xl font-black text-purple-400 font-mono">{totalMasters}</div>
-        </div>
-
-        {/* 7. TOTAL MATCHES */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-2">
-          <div className="flex items-center justify-between text-cyan-400">
-            <span className="text-[11px] font-bold uppercase tracking-wider">Total Matches</span>
-            <Trophy className="w-4 h-4 text-cyan-400" />
-          </div>
-          <div className="text-2xl font-black text-white font-mono">{totalMatches}</div>
-        </div>
-
-        {/* 8. DELETED MATCHES */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-2">
-          <div className="flex items-center justify-between text-rose-400">
-            <span className="text-[11px] font-bold uppercase tracking-wider">Deleted Matches</span>
-            <Trash2 className="w-4 h-4 text-rose-400" />
-          </div>
-          <div className="text-2xl font-black text-rose-400 font-mono">{deletedMatches}</div>
-        </div>
-
-        {/* 9. LIVE MATCHES */}
-        <div className="bg-slate-900 border border-red-500/30 rounded-2xl p-4 space-y-2">
-          <div className="flex items-center justify-between text-red-400">
-            <span className="text-[11px] font-bold uppercase tracking-wider">Live Matches</span>
-            <Radio className="w-4 h-4 text-red-500 animate-pulse" />
-          </div>
-          <div className="text-2xl font-black text-red-400 font-mono">{liveMatches}</div>
-        </div>
-
-        {/* 10. COMPLETED MATCHES */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-2">
-          <div className="flex items-center justify-between text-teal-400">
-            <span className="text-[11px] font-bold uppercase tracking-wider">Completed</span>
-            <CheckCheck className="w-4 h-4 text-teal-400" />
-          </div>
-          <div className="text-2xl font-black text-teal-400 font-mono">{completedMatches}</div>
-        </div>
-
-      </div>
+      {/* REALTIME OVERVIEW METRIC CARDS */}
+      <RealtimeDashboardMetrics
+        initialTotalUsers={totalUsers}
+        initialPendingApps={pendingApps}
+        initialApprovedApps={approvedApps}
+        initialRejectedApps={rejectedApps}
+        initialTotalMasters={totalMasters}
+        initialTotalMatches={totalMatches}
+        initialDeletedMatches={deletedMatches}
+        initialLiveMatches={liveMatches}
+        initialCompletedMatches={completedMatches}
+        initialTotalCommunity={totalCommunity}
+      />
 
       {/* TWO COLUMN GRID FOR PENDING APPLICATIONS & RECENT MATCHES */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
