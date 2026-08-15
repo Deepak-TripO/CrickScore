@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS public.roles (
 );
 
 ALTER TABLE public.roles ADD COLUMN IF NOT EXISTS description TEXT;
+ALTER TABLE public.roles DROP CONSTRAINT IF EXISTS roles_name_check;
 
 INSERT INTO public.roles (name) VALUES 
   ('USER'),
