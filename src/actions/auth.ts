@@ -105,22 +105,37 @@ export async function loginUser(formData: FormData) {
     return { success: true };
   }
 
-  // 2. Auto-provision or update user password via admin client if available
+  // 2. Auto-sync password & fallback auto-provision via admin client
   try {
     const adminClient = createAdminClient();
-    
-    // Try auto-creating missing user (e.g. initial superadmin or demo user)
-    const { data: newUser, error: createErr } = await adminClient.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-      user_metadata: { full_name: email.split('@')[0], username: email.split('@')[0] }
+
+    let targetUserId: string | null = null;
+    const { data: linkData } = await adminClient.auth.admin.generateLink({
+      type: 'recovery',
+      email
     });
 
-    if (newUser?.user) {
+    if (linkData?.user?.id) {
+      targetUserId = linkData.user.id;
+      // Sync/Update password for existing user and confirm email
+      await adminClient.auth.admin.updateUserById(targetUserId, { password, email_confirm: true });
+    } else {
+      // Auto-create missing user
+      const { data: newUser } = await adminClient.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: { full_name: email.split('@')[0], username: email.split('@')[0] }
+      });
+      if (newUser?.user) {
+        targetUserId = newUser.user.id;
+      }
+    }
+
+    if (targetUserId) {
       await adminClient.from('profiles').upsert({
-        id: newUser.user.id,
-        email: newUser.user.email,
+        id: targetUserId,
+        email: email,
         username: email.split('@')[0],
         full_name: email.split('@')[0]
       });
