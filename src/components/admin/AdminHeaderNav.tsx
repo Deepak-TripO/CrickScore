@@ -114,8 +114,8 @@ export default function AdminHeaderNav({ user }: AdminHeaderNavProps) {
         </div>
       </div>
 
-      {/* 2. CLEAN VERTICAL GAP & ANCHORED TOGGLE BUTTON WITH SMOOTH LEFT ↔ RIGHT SLIDING ANIMATION */}
-      <div className="px-4 sm:px-6 pt-3 pb-3 bg-slate-950/80 flex items-center justify-start sm:justify-between gap-4 h-16">
+      {/* 2. MOBILE ONLY: CLEAN VERTICAL GAP & ANCHORED TOGGLE BUTTON WITH SMOOTH LEFT ↔ RIGHT SLIDING ANIMATION (COMPLETELY HIDDEN ON DESKTOP & LAPTOP) */}
+      <div className="lg:hidden px-4 sm:px-6 pt-3 pb-3 bg-slate-950/80 flex items-center justify-start gap-4 h-16 border-t border-slate-900">
         
         {/* TOGGLE BUTTON BAR WITH ULTRA-SMOOTH LEFT ↔ RIGHT SLIDING PILL */}
         <div className="relative grid grid-cols-2 gap-1 bg-slate-900 p-1.5 border border-slate-800 rounded-2xl w-full sm:w-[380px] shadow-lg shadow-purple-950/20 overflow-hidden">
