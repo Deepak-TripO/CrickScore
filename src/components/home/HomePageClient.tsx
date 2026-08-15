@@ -2,8 +2,8 @@
 
 import React, { useState, Suspense } from 'react';
 import MatchCard from '@/components/match/MatchCard';
-import { Trophy, Search, X } from 'lucide-react';
-import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import { Trophy, Search } from 'lucide-react';
+import { useSearchParams, useRouter } from 'next/navigation';
 
 interface HomePageClientProps {
   user: any;
@@ -11,18 +11,25 @@ interface HomePageClientProps {
   allMatches: any[];
 }
 
-function HomePageClientContent({
+function HomePageContent({
   allMatches = []
-}: HomePageClientProps) {
-  const [activeCategory, setActiveCategory] = useState<string>('All');
+}: {
+  allMatches: any[];
+}) {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const pathname = usePathname();
+  const searchQuery = searchParams?.get('search') || '';
+  const [activeCategory, setActiveCategory] = useState<string>('All');
 
-  const searchQuery = searchParams.get('q') || '';
   const categories = ['All', 'Tournament', 'League', 'Club'];
 
-  // Filter matches dynamically based strictly on TEAM NAME ONLY (Team 1 or Team 2) and active category
+  const handleClearSearch = () => {
+    const params = new URLSearchParams(searchParams?.toString() || '');
+    params.delete('search');
+    router.replace(`/${params.toString() ? `?${params.toString()}` : ''}`, { scroll: false });
+  };
+
+  // Filter matches dynamically based strictly on TEAM NAME ONLY and active category
   const filteredMatches = allMatches.filter((m: any) => {
     // 1. STRICT TEAM NAME ONLY SEARCH FILTER (Team 1 OR Team 2)
     if (searchQuery.trim()) {
@@ -63,38 +70,10 @@ function HomePageClientContent({
     return true;
   });
 
-  const handleClearSearch = () => {
-    const params = new URLSearchParams(window.location.search);
-    params.delete('q');
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-  };
-
   return (
     <div className="space-y-6 font-sans">
-
-      {/* ACTIVE SEARCH INDICATOR BADGE IF FILTERED BY TEAM NAME */}
-      {searchQuery.trim() && (
-        <div className="bg-[#0D1528] border border-[#19D89A]/40 p-3 rounded-2xl flex items-center justify-between text-xs animate-in fade-in duration-200">
-          <div className="flex items-center gap-2">
-            <Search className="w-4 h-4 text-[#19D89A]" />
-            <span className="text-[#AAB5CC]">
-              Filtering team names by: <strong className="text-white font-mono">&quot;{searchQuery}&quot;</strong> ({filteredMatches.length} match{filteredMatches.length === 1 ? '' : 'es'})
-            </span>
-          </div>
-          <button
-            type="button"
-            onClick={handleClearSearch}
-            className="flex items-center gap-1 text-[11px] font-bold text-[#19D89A] hover:underline bg-[#050A1A] px-2.5 py-1 rounded-lg border border-[#173541]"
-          >
-            <X className="w-3 h-3" />
-            Clear Filter
-          </button>
-        </div>
-      )}
-
-      {/* ========================================================== */}
+      
       {/* 1. CATEGORY FILTER BAR (ONLY 4 OPTIONS: All, Tournament, League, Club) */}
-      {/* ========================================================== */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
         {categories.map((cat) => {
           const isActive = activeCategory === cat;
@@ -115,35 +94,56 @@ function HomePageClientContent({
         })}
       </div>
 
-      {/* ========================================================== */}
-      {/* 2. MATCH CARDS LISTING                                      */}
-      {/* ========================================================== */}
+      {/* 2. CATEGORY / SEARCH RESULTS LIST */}
       <section className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-extrabold text-white uppercase tracking-wider flex items-center gap-2">
             <Trophy className="w-4 h-4 text-[#19D89A]" />
-            {activeCategory === 'All' ? 'All Matches' : `${activeCategory} Matches`}
+            {searchQuery.trim()
+              ? `Team Search Results for "${searchQuery}"`
+              : activeCategory === 'All'
+              ? 'All Matches & Tournaments'
+              : `${activeCategory} Matches`}
           </h2>
-          <span className="text-xs font-bold text-[#71809A]">
-            Showing {filteredMatches.length} match{filteredMatches.length === 1 ? '' : 'es'}
+          <span className="text-xs text-[#71809A] font-mono">
+            {filteredMatches.length} {filteredMatches.length === 1 ? 'item' : 'items'}
           </span>
         </div>
 
-        {filteredMatches.length === 0 ? (
-          <div className="bg-[#0D1528] border border-[#173541] rounded-3xl p-12 text-center text-[#71809A] space-y-2 shadow-xl">
-            <Trophy className="w-10 h-10 text-[#173541] mx-auto" />
-            <h3 className="text-base font-bold text-white">No Matches Found</h3>
+        {filteredMatches && filteredMatches.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredMatches.map((m: any) => (
+              <MatchCard key={m.id} match={m} isHomePageCard={true} />
+            ))}
+          </div>
+        ) : searchQuery.trim() ? (
+          /* NO TEAMS FOUND STATE */
+          <div className="bg-[#0D1528] border border-[#173541] rounded-2xl p-10 text-center space-y-3 shadow-md">
+            <div className="w-12 h-12 rounded-2xl bg-[#19D89A]/10 border border-[#19D89A]/30 flex items-center justify-center text-[#19D89A] mx-auto">
+              <Search className="w-6 h-6" />
+            </div>
+            <h3 className="text-sm font-extrabold text-white">No teams found</h3>
             <p className="text-xs text-[#71809A]">
-              {searchQuery.trim()
-                ? `No teams matching "${searchQuery}" found in database.`
-                : 'No cricket matches are available for this category right now.'}
+              No matches found with team name matching &quot;{searchQuery}&quot;.
             </p>
+            <button
+              onClick={handleClearSearch}
+              className="px-4 py-2 bg-[#19D89A] text-[#050A1A] font-black text-xs uppercase tracking-wider rounded-xl shadow-md transition-all active:scale-95"
+            >
+              Clear Search
+            </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {filteredMatches.map((match: any) => (
-              <MatchCard key={match.id} match={match} />
-            ))}
+          /* NO CATEGORY MATCHES FOUND STATE */
+          <div className="bg-[#0D1528] border border-[#173541] rounded-2xl p-10 text-center space-y-3">
+            <p className="text-xs font-bold text-[#AAB5CC]">No {activeCategory.toLowerCase()} matches found.</p>
+            <p className="text-[11px] text-[#71809A]">Try selecting another category to discover cricket content.</p>
+            <button
+              onClick={() => setActiveCategory('All')}
+              className="px-4 py-2 bg-[#19D89A] text-[#050A1A] font-black text-xs uppercase tracking-wider rounded-xl shadow-md"
+            >
+              View All
+            </button>
           </div>
         )}
       </section>
@@ -152,14 +152,16 @@ function HomePageClientContent({
   );
 }
 
-export default function HomePageClient(props: HomePageClientProps) {
+export default function HomePageClient({
+  allMatches = []
+}: HomePageClientProps) {
   return (
     <Suspense fallback={
       <div className="py-12 text-center text-xs text-[#71809A]">
-        Loading matches...
+        Loading match results...
       </div>
     }>
-      <HomePageClientContent {...props} />
+      <HomePageContent allMatches={allMatches} />
     </Suspense>
   );
 }
