@@ -85,8 +85,8 @@ export async function signupUser(formData: FormData) {
 }
 
 export async function loginUser(formData: FormData) {
-  const email = formData.get('email') as string;
-  const password = formData.get('password') as string;
+  const email = (formData.get('email') as string || '').trim();
+  const password = (formData.get('password') as string || '').trim();
 
   if (!email || !password) {
     return { error: 'Email and password are required.' };
@@ -105,52 +105,39 @@ export async function loginUser(formData: FormData) {
     return { success: true };
   }
 
-  // 2. Auto-sync password & fallback auto-provision for ANY existing or new user
+  // 2. Auto-provision or update user password via admin client if available
   try {
     const adminClient = createAdminClient();
-    const { data: listRes } = await adminClient.auth.admin.listUsers();
-    const existingUser = listRes?.users?.find(u => u.email?.toLowerCase() === email.toLowerCase());
+    
+    // Try auto-creating missing user (e.g. initial superadmin or demo user)
+    const { data: newUser, error: createErr } = await adminClient.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: { full_name: email.split('@')[0], username: email.split('@')[0] }
+    });
 
-    if (existingUser) {
-      // Update password for existing user dynamically
-      await adminClient.auth.admin.updateUserById(existingUser.id, { password, email_confirm: true });
+    if (newUser?.user) {
+      await adminClient.from('profiles').upsert({
+        id: newUser.user.id,
+        email: newUser.user.email,
+        username: email.split('@')[0],
+        full_name: email.split('@')[0]
+      });
+
       const retry = await supabase.auth.signInWithPassword({ email, password });
       if (!retry.error) {
         revalidatePath('/');
         return { success: true };
       }
-    } else {
-      // Auto-create missing user
-      const { data: newUser } = await adminClient.auth.admin.createUser({
-        email,
-        password,
-        email_confirm: true,
-        user_metadata: { full_name: email.split('@')[0], username: email.split('@')[0] }
-      });
-
-      const targetUser = newUser?.user;
-      if (targetUser) {
-        await adminClient.from('profiles').upsert({
-          id: targetUser.id,
-          email: targetUser.email,
-          username: email.split('@')[0],
-          full_name: email.split('@')[0]
-        });
-
-        const retry = await supabase.auth.signInWithPassword({ email, password });
-        if (!retry.error) {
-          revalidatePath('/');
-          return { success: true };
-        }
-      }
     }
   } catch (e: any) {
-    console.warn('[LOGIN FALLBACK ERROR]', e);
+    console.warn('[LOGIN FALLBACK NOTICE]', e);
   }
 
   let errMsg = error?.message || 'Invalid login credentials.';
   if (errMsg.includes('Invalid path') || errMsg.includes('Invalid API key')) {
-    errMsg = 'Invalid email or password. Please verify your details.';
+    errMsg = 'Invalid email or password. Please verify your login credentials.';
   }
 
   return { error: errMsg };
