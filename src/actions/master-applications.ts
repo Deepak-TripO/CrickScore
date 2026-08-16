@@ -45,6 +45,19 @@ export async function submitMasterApplication(formData: FormData) {
     // continue
   }
 
+  // Ensure profile exists for user.id to satisfy foreign key constraint
+  try {
+    await adminClient.from('profiles').upsert({
+      id: user.id,
+      email: user.email || '',
+      full_name: fullName || user.user_metadata?.full_name || 'Cricket Fan',
+      username: user.user_metadata?.username || `user_${user.id.slice(0, 8)}`,
+      city: city || null,
+      state: state || null,
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'id' });
+  } catch (e) {}
+
   const { error } = await adminClient.from('master_applications').insert({
     user_id: user.id,
     full_name: fullName,
