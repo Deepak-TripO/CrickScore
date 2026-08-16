@@ -32,7 +32,7 @@ export interface PlayerInput {
 interface CreateMatchFormProps {
   initialMatch?: any;
   onCancel?: () => void;
-  onSuccess?: () => void;
+  onSuccess?: (createdMatchId?: string) => void;
 }
 
 // Generate default 11-player squad with balanced roles (1 WK, 5 BAT, 2 AR, 3 BOWL)
@@ -513,7 +513,7 @@ export default function CreateMatchForm({ initialMatch, onCancel, onSuccess }: C
         setErrorMsg('');
         setTimeout(() => {
           if (onSuccess) {
-            onSuccess();
+            onSuccess(res?.matchId);
           } else {
             router.push('/master/dashboard?tab=overview');
             router.refresh();

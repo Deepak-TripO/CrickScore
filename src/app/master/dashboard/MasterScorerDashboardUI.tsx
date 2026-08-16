@@ -127,9 +127,38 @@ export default function MasterScorerDashboardUI({
     setDeletingMatch(null);
     setIsDeleting(false);
   };  const [currentMatches, setCurrentMatches] = useState(matches);
+  const [latestCreatedMatchId, setLatestCreatedMatchId] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('batscore_latest_created_match_id');
+    }
+    return null;
+  });
+
+  const [isLatestMatchDeleted, setIsLatestMatchDeleted] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('batscore_latest_match_deleted') === 'true';
+    }
+    return false;
+  });
 
   React.useEffect(() => {
     setCurrentMatches(matches);
+    if (typeof window !== 'undefined' && Array.isArray(matches) && matches.length > 0) {
+      const storedId = localStorage.getItem('batscore_latest_created_match_id');
+      const deletedFlag = localStorage.getItem('batscore_latest_match_deleted');
+      if (!storedId && deletedFlag !== 'true') {
+        const sorted = [...matches].sort((a, b) => {
+          const timeA = new Date(a.created_at || a.scheduled_start || a.scheduled_at || 0).getTime();
+          const timeB = new Date(b.created_at || b.scheduled_start || b.scheduled_at || 0).getTime();
+          return timeB - timeA;
+        });
+        const activeMatch = sorted.find((m: any) => m.status !== 'DELETED');
+        if (activeMatch?.id) {
+          setLatestCreatedMatchId(activeMatch.id);
+          localStorage.setItem('batscore_latest_created_match_id', activeMatch.id);
+        }
+      }
+    }
   }, [matches]);
 
   const navItems = [
@@ -164,27 +193,68 @@ export default function MasterScorerDashboardUI({
     }
   };
 
-  const sortedMatches = React.useMemo(() => {
-    if (!Array.isArray(currentMatches)) return [];
-    return [...currentMatches].sort((a, b) => {
+  const handleMatchCreatedSuccess = (newMatchId?: string) => {
+    if (newMatchId) {
+      setLatestCreatedMatchId(newMatchId);
+      setIsLatestMatchDeleted(false);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('batscore_latest_created_match_id', newMatchId);
+        localStorage.removeItem('batscore_latest_match_deleted');
+      }
+    }
+    handleTabChange('overview');
+    router.refresh();
+  };
+
+  const latestMatch = React.useMemo(() => {
+    if (!Array.isArray(currentMatches) || currentMatches.length === 0) return null;
+    if (isLatestMatchDeleted && !latestCreatedMatchId) return null;
+
+    if (latestCreatedMatchId) {
+      const found = currentMatches.find((m: any) => m.id === latestCreatedMatchId && m.status !== 'DELETED');
+      return found || null;
+    }
+
+    const sorted = [...currentMatches].sort((a, b) => {
       const timeA = new Date(a.created_at || a.scheduled_start || a.scheduled_at || 0).getTime();
       const timeB = new Date(b.created_at || b.scheduled_start || b.scheduled_at || 0).getTime();
       return timeB - timeA;
     });
-  }, [currentMatches]);
+    return sorted.find((m: any) => m.status !== 'DELETED') || null;
+  }, [currentMatches, latestCreatedMatchId, isLatestMatchDeleted]);
 
-  const latestMatch = sortedMatches[0] || null;
+  const sortedMatches = React.useMemo(() => {
+    if (!Array.isArray(currentMatches)) return [];
+    return [...currentMatches]
+      .filter((m: any) => m.status !== 'DELETED')
+      .sort((a, b) => {
+        const timeA = new Date(a.created_at || a.scheduled_start || a.scheduled_at || 0).getTime();
+        const timeB = new Date(b.created_at || b.scheduled_start || b.scheduled_at || 0).getTime();
+        return timeB - timeA;
+      });
+  }, [currentMatches]);
 
   const handleConfirmDelete = async () => {
     if (!deletingMatch) return;
     setIsDeleting(true);
     try {
-      const res = await deleteMatch(deletingMatch.id);
+      const targetId = deletingMatch.id;
+      const res = await deleteMatch(targetId);
       if (res.error) {
         showToast(`Error: ${res.error}`);
       } else {
         showToast('✓ Match deleted successfully.');
-        setCurrentMatches(prev => prev.filter((m: any) => m.id !== deletingMatch.id));
+        setCurrentMatches(prev => prev.filter((m: any) => m.id !== targetId));
+
+        if (latestCreatedMatchId === targetId || !latestCreatedMatchId) {
+          setLatestCreatedMatchId(null);
+          setIsLatestMatchDeleted(true);
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('batscore_latest_created_match_id');
+            localStorage.setItem('batscore_latest_match_deleted', 'true');
+          }
+        }
+
         setIsDeleteModalOpen(false);
         setDeletingMatch(null);
         router.refresh();
@@ -220,7 +290,7 @@ export default function MasterScorerDashboardUI({
                 <span className="text-[11px] font-bold uppercase tracking-wider">Total Matches</span>
                 <Trophy className="w-4 h-4 text-[#19D89A]" />
               </div>
-              <div className="text-3xl font-black text-white font-mono">{matches?.length || 0}</div>
+              <div className="text-3xl font-black text-white font-mono">{sortedMatches?.length || 0}</div>
             </div>
           </div>
 
@@ -258,7 +328,7 @@ export default function MasterScorerDashboardUI({
       {/* ============================================================ */}
       {activeTab === 'create' && (
         <div className="animate-in fade-in duration-200">
-          <CreateMatchForm onSuccess={() => handleTabChange('overview')} />
+          <CreateMatchForm onSuccess={handleMatchCreatedSuccess} />
         </div>
       )}
 
@@ -389,14 +459,14 @@ export default function MasterScorerDashboardUI({
       )}
 
       {/* ============================================================ */}
-      {/* 🧭 FIXED BOTTOM NAVIGATION BAR FOR MASTER SCORE DASHBOARD   */}
+      {/* 🧭 PREMIUM GLASSMORPHISM BOTTOM NAVIGATION BAR               */}
       {/* ============================================================ */}
       <nav 
         aria-label="Master Dashboard Bottom Navigation"
-        className="fixed bottom-0 left-0 right-0 z-50 bg-[#0D1528]/95 backdrop-blur-xl border-t border-[#173541] shadow-[0_-8px_30px_rgba(0,0,0,0.6)] py-2 px-2 sm:px-4 transform-gpu"
+        className="fixed bottom-0 left-0 right-0 z-50 bg-[#070D1D]/90 backdrop-blur-2xl border-t border-[#19D89A]/20 shadow-[0_-12px_40px_rgba(0,0,0,0.85)] py-2.5 px-3 sm:px-6 transform-gpu"
         style={{ position: 'fixed', bottom: 0, left: 0, right: 0, transform: 'translateZ(0)' }}
       >
-        <div className="max-w-2xl mx-auto flex items-center justify-around gap-1 sm:gap-3">
+        <div className="max-w-2xl mx-auto flex items-center justify-around gap-1.5 sm:gap-4">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -405,23 +475,23 @@ export default function MasterScorerDashboardUI({
                 key={item.id}
                 type="button"
                 onClick={() => handleTabChange(item.id)}
-                className={`flex-1 flex flex-col items-center justify-center py-2 px-1 sm:px-3 rounded-2xl transition-colors duration-300 ease-out relative group ${
+                className={`flex-1 flex flex-col items-center justify-center py-2 px-1 sm:px-3 rounded-2xl transition-all duration-300 ease-out relative group ${
                   isActive
-                    ? 'bg-[#19D89A]/15 text-[#19D89A] font-extrabold shadow-sm border border-[#19D89A]/30'
-                    : 'text-[#AAB5CC] hover:text-white hover:bg-[#111A2D] font-medium border border-transparent'
+                    ? 'bg-gradient-to-b from-[#19D89A]/20 to-[#19D89A]/5 text-[#19D89A] font-extrabold shadow-[0_4px_20px_rgba(25,216,154,0.15)] border border-[#19D89A]/40 scale-102'
+                    : 'text-[#8F9BB3] hover:text-white hover:bg-[#111A2D]/80 font-medium border border-transparent'
                 }`}
               >
-                {/* Active Indicator Top Line */}
+                {/* Active Indicator Top Glowing Bar */}
                 {isActive && (
-                  <span className="absolute -top-2 w-8 h-1 bg-[#19D89A] rounded-full shadow-[0_0_10px_#19D89A] transition-all duration-300 ease-out animate-in fade-in zoom-in-75" />
+                  <span className="absolute -top-2.5 w-10 h-1 bg-gradient-to-r from-[#19D89A] via-emerald-300 to-[#19D89A] rounded-full shadow-[0_0_12px_#19D89A] transition-all duration-300 ease-out" />
                 )}
                 
-                <Icon className={`w-5 h-5 transition-colors duration-300 ease-out ${
-                  isActive ? 'text-[#19D89A]' : 'text-[#AAB5CC] group-hover:text-white'
+                <Icon className={`w-5 h-5 transition-all duration-300 ease-out ${
+                  isActive ? 'text-[#19D89A] scale-110 drop-shadow-[0_0_8px_rgba(25,216,154,0.5)]' : 'text-[#8F9BB3] group-hover:text-white'
                 }`} />
 
-                <span className={`text-[10px] sm:text-xs tracking-tight mt-1 text-center whitespace-nowrap transition-colors duration-300 ease-out ${
-                  isActive ? 'text-[#19D89A] font-extrabold' : 'text-[#AAB5CC]'
+                <span className={`text-[10px] sm:text-xs tracking-wider mt-1 text-center whitespace-nowrap transition-all duration-300 ease-out ${
+                  isActive ? 'text-[#19D89A] font-black' : 'text-[#8F9BB3]'
                 }`}>
                   {item.label}
                 </span>
