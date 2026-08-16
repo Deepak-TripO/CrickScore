@@ -67,7 +67,7 @@ export default function MatchCard({
   // Format Scheduled Date cleanly
   const rawDate = match.scheduled_start || match.scheduled_at || match.scheduled_date || match.created_at;
   const formattedDate = rawDate && !isNaN(new Date(rawDate).getTime())
-    ? new Date(rawDate).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
+    ? new Date(rawDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
     : 'Today';
 
   // Handle clicking anywhere on the card to open Scorecard (Home Page / History)
@@ -112,7 +112,7 @@ export default function MatchCard({
           {/* Top Right: Match Date */}
           <div className="flex items-center gap-1.5 text-[#AAB5CC] text-xs font-semibold">
             <Calendar className="w-3.5 h-3.5 text-[#19D89A]" />
-            <span>{formattedDate}</span>
+            <span suppressHydrationWarning>{formattedDate}</span>
           </div>
         </div>
 

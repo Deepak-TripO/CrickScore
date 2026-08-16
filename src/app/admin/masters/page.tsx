@@ -67,7 +67,7 @@ export default async function AdminMastersPage() {
           {masters.map((master: any) => {
             const masterMatchCount = matchCounts[master.id] || 0;
             const createdDate = master.created_at
-              ? new Date(master.created_at).toLocaleDateString()
+              ? new Date(master.created_at).toLocaleDateString('en-GB')
               : 'Unknown';
 
             return (
@@ -114,7 +114,7 @@ export default async function AdminMastersPage() {
                 </div>
 
                 <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
-                  <span className="flex items-center gap-1 text-[11px]">
+                  <span className="flex items-center gap-1 text-[11px]" suppressHydrationWarning>
                     <Calendar className="w-3.5 h-3.5 text-slate-500" />
                     Joined {createdDate}
                   </span>

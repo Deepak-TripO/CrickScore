@@ -104,6 +104,12 @@ export async function reviewMasterApplication(
 
     if (appError) return { error: appError.message };
 
+    // Update profile role to MASTER permanently
+    await adminClient
+      .from('profiles')
+      .update({ role: 'MASTER', updated_at: new Date().toISOString() })
+      .eq('id', userId);
+
     const { data: masterRole } = await adminClient
       .from('roles')
       .select('id')
@@ -137,6 +143,11 @@ export async function reviewMasterApplication(
       .eq('id', applicationId);
 
     if (appError) return { error: appError.message };
+
+    await adminClient
+      .from('profiles')
+      .update({ role: 'USER', updated_at: new Date().toISOString() })
+      .eq('id', userId);
 
     await adminClient.from('notifications').insert({
       user_id: userId,

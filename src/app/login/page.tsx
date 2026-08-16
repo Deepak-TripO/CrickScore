@@ -23,10 +23,11 @@ export default function LoginPage() {
     const res = await loginUser(formData);
     setLoading(false);
 
-    if (res?.error) {
+    if (res && 'error' in res && res.error) {
       setErrorMsg(res.error);
     } else {
-      router.push('/');
+      const targetUrl = res && 'redirectUrl' in res ? res.redirectUrl : '/';
+      router.push(targetUrl || '/');
       router.refresh();
     }
   };

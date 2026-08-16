@@ -16,8 +16,8 @@ export default function MobileNav({ userRole = 'USER' }: MobileNavProps) {
   const masterHref = isMasterOrAdmin ? '/master/dashboard' : '/apply-master';
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0D1528] border-t border-[#173541] py-1.5 px-1 shadow-2xl w-full">
-      <div className="grid grid-cols-4 w-full items-center">
+    <nav className="md:hidden fixed bottom-0 inset-x-0 z-50 bg-[#0D1528] border-t border-[#173541] pt-1.5 pb-[calc(0.5rem+env(safe-area-inset-bottom))] px-1 shadow-2xl w-full max-w-full">
+      <div className="grid grid-cols-4 w-full justify-items-stretch items-center">
         
         {/* 1. HOME */}
         <Link 

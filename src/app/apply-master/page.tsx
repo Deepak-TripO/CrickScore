@@ -78,7 +78,7 @@ export default async function ApplyMasterPage() {
             </div>
 
             <div className="text-xs text-slate-400 pt-2 border-t border-slate-800 space-y-1">
-              <p>Submitted on: <strong>{new Date(existingApp.created_at).toLocaleDateString()}</strong></p>
+              <p suppressHydrationWarning>Submitted on: <strong>{new Date(existingApp.created_at).toLocaleDateString('en-GB')}</strong></p>
             </div>
           </div>
         ) : (

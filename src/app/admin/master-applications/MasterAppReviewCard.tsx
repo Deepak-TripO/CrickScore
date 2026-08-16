@@ -76,7 +76,7 @@ export default function MasterAppReviewCard({ application }: { application: any 
 
           <div>
             <span className="text-slate-500 block font-semibold">Application Date</span>
-            <strong className="text-slate-100">{new Date(application.created_at).toLocaleDateString()}</strong>
+            <strong className="text-slate-100" suppressHydrationWarning>{new Date(application.created_at).toLocaleDateString('en-GB')}</strong>
           </div>
 
           <div>
@@ -226,7 +226,7 @@ export default function MasterAppReviewCard({ application }: { application: any 
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-slate-400">Submitted On:</span>
-                  <strong className="text-slate-200">{new Date(application.created_at).toLocaleString()}</strong>
+                  <strong className="text-slate-200" suppressHydrationWarning>{new Date(application.created_at).toLocaleString('en-GB')}</strong>
                 </div>
               </div>
 
@@ -244,7 +244,7 @@ export default function MasterAppReviewCard({ application }: { application: any 
               {application.reviewed_at && (
                 <div className="bg-slate-950 p-3 rounded-2xl border border-slate-800 space-y-1">
                   <span className="text-slate-500 font-semibold block">Review Audit</span>
-                  <p className="text-slate-300">Reviewed at: {new Date(application.reviewed_at).toLocaleString()}</p>
+                  <p className="text-slate-300" suppressHydrationWarning>Reviewed at: {new Date(application.reviewed_at).toLocaleString('en-GB')}</p>
                   {application.rejection_reason && (
                     <p className="text-red-400">Rejection reason: {application.rejection_reason}</p>
                   )}

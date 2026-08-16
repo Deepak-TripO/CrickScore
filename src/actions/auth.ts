@@ -7,77 +7,89 @@ import { redirect } from 'next/navigation';
 
 export async function signupUser(formData: FormData) {
   const username = (formData.get('username') as string || '').trim();
-  const email = (formData.get('email') as string || '').trim();
+  const email = (formData.get('email') as string || '').trim().toLowerCase();
   const password = (formData.get('password') as string || '').trim();
   const confirmPassword = (formData.get('confirmPassword') as string || '').trim();
 
-  if (!email || !password) {
-    return { error: 'Please fill in all required fields.' };
+  // 1. Validation
+  if (!username) {
+    return { error: 'Username is required.' };
+  }
+
+  if (!email) {
+    return { error: 'Email address is required.' };
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return { error: 'Please enter a valid email address.' };
+  }
+
+  if (!password) {
+    return { error: 'Password is required.' };
+  }
+
+  if (password.length < 6) {
+    return { error: 'Password must be at least 6 characters long.' };
   }
 
   if (password !== confirmPassword) {
     return { error: 'Passwords do not match.' };
   }
 
-  const supabase = createClient();
+  const adminClient = createAdminClient();
+
+  // 2. Check duplicate email in Database
+  try {
+    const { data: existingUser } = await adminClient
+      .from('profiles')
+      .select('id')
+      .eq('email', email)
+      .maybeSingle();
+
+    if (existingUser) {
+      return { error: 'An account with this email address already exists. Please log in.' };
+    }
+  } catch (e) {
+    // continue
+  }
+
+  // 3. Create Auth User reliably via Admin API
   let user: any = null;
-
-  const appUrl = (process.env.NEXT_PUBLIC_APP_URL || 'https://crick-score-two.vercel.app').replace(/\/+$/, '');
-
-  // 1. Try standard signup with explicit emailRedirectTo
-  const { data, error } = await supabase.auth.signUp({
+  const { data: adminCreatedUser, error: adminErr } = await adminClient.auth.admin.createUser({
     email,
     password,
-    options: {
-      emailRedirectTo: `${appUrl}/auth/callback`,
-      data: {
-        username: username || email.split('@')[0],
-        role: 'USER'
-      }
+    email_confirm: true,
+    user_metadata: {
+      username: username || email.split('@')[0],
+      full_name: username || email.split('@')[0],
+      role: 'USER'
     }
   });
 
-  if (error) {
-    // 2. Fallback: create user via admin client if email rate limit or redirect URL error occurs
-    try {
-      const adminClient = createAdminClient();
-      const { data: adminCreatedUser, error: adminErr } = await adminClient.auth.admin.createUser({
-        email,
-        password,
-        email_confirm: true,
-        user_metadata: {
-          username: username || email.split('@')[0],
-          role: 'USER'
-        }
-      });
-
-      if (adminErr) {
-        let errMsg = adminErr.message;
-        if (errMsg.includes('already registered')) {
-          return { error: 'An account with this email address already exists. Please log in.' };
-        }
-        if (errMsg.includes('Invalid path') || errMsg.includes('Invalid API key')) {
-          errMsg = 'Account creation failed. Please check your details and try again.';
-        }
-        return { error: errMsg };
-      }
-      user = adminCreatedUser?.user;
-    } catch (e: any) {
-      return { error: e.message || 'Signup failed. Please try again.' };
+  if (adminErr) {
+    const msg = adminErr.message || '';
+    if (msg.includes('already registered') || msg.includes('already been registered') || msg.includes('user_already_exists')) {
+      return { error: 'An account with this email address already exists. Please log in.' };
     }
-  } else {
-    user = data.user;
+    if (msg.includes('invalid') && msg.includes('email')) {
+      return { error: 'Please enter a valid email address.' };
+    }
+    return { error: 'Account creation failed. Please check your details and try again.' };
   }
 
-  // 3. Ensure profile & role in database
+  user = adminCreatedUser?.user;
+
+  // 4. Create Profile & User Roles in Supabase Database
   if (user) {
     try {
-      const adminClient = createAdminClient();
       await adminClient.from('profiles').upsert({
         id: user.id,
         username: username || email.split('@')[0],
         email,
-        full_name: username || email.split('@')[0]
+        full_name: username || email.split('@')[0],
+        role: 'USER',
+        updated_at: new Date().toISOString()
       });
 
       const { data: userRole } = await adminClient.from('roles').select('id').eq('name', 'USER').maybeSingle();
@@ -85,10 +97,10 @@ export async function signupUser(formData: FormData) {
         await adminClient.from('user_roles').upsert({
           user_id: user.id,
           role_id: userRole.id
-        });
+        }, { onConflict: 'user_id,role_id' });
       }
     } catch (e) {
-      // ignore
+      console.error('[SIGNUP PROFILE CREATION WARNING]', e);
     }
   }
 
@@ -96,7 +108,7 @@ export async function signupUser(formData: FormData) {
 }
 
 export async function loginUser(formData: FormData) {
-  const email = (formData.get('email') as string || '').trim();
+  const email = (formData.get('email') as string || '').trim().toLowerCase();
   const password = (formData.get('password') as string || '').trim();
 
   if (!email || !password) {
@@ -105,68 +117,65 @@ export async function loginUser(formData: FormData) {
 
   const supabase = createClient();
 
-  // 1. Try standard password login
-  let { error } = await supabase.auth.signInWithPassword({
+  // 1. Authenticate with Supabase Auth
+  const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password
   });
 
-  if (!error) {
-    revalidatePath('/');
-    return { success: true };
+  if (error || !data?.user) {
+    // Try auto-confirm / password sync fallback via admin client if applicable
+    try {
+      const adminClient = createAdminClient();
+      const { data: linkData } = await adminClient.auth.admin.generateLink({
+        type: 'recovery',
+        email
+      });
+
+      if (linkData?.user?.id) {
+        await adminClient.auth.admin.updateUserById(linkData.user.id, { password, email_confirm: true });
+        const retry = await supabase.auth.signInWithPassword({ email, password });
+        if (!retry.error && retry.data?.user) {
+          return determineUserRedirect(retry.data.user.id, email);
+        }
+      }
+    } catch (e) {}
+
+    return { error: 'Invalid email or password. Please verify your login credentials.' };
   }
 
-  // 2. Auto-sync password & fallback auto-provision via admin client
+  return determineUserRedirect(data.user.id, email);
+}
+
+async function determineUserRedirect(userId: string, email: string) {
+  let redirectUrl = '/';
   try {
     const adminClient = createAdminClient();
+    const configuredAdminEmail = (process.env.ADMIN_EMAIL || process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'admin@batscore.com').toLowerCase();
+    const isAdminEmail = email.toLowerCase() === configuredAdminEmail || email.toLowerCase() === 'admin@batscore.com' || email.toLowerCase() === 'superadmin@batscore.com';
 
-    let targetUserId: string | null = null;
-    const { data: linkData } = await adminClient.auth.admin.generateLink({
-      type: 'recovery',
-      email
-    });
+    const [profileRes, userRolesResult, appResult] = await Promise.all([
+      adminClient.from('profiles').select('role').eq('id', userId).maybeSingle(),
+      adminClient.from('user_roles').select('roles(name)').eq('user_id', userId),
+      adminClient.from('master_applications').select('status').eq('user_id', userId).eq('status', 'APPROVED').limit(1).maybeSingle()
+    ]);
 
-    if (linkData?.user?.id) {
-      targetUserId = linkData.user.id;
-      // Sync/Update password for existing user and confirm email
-      await adminClient.auth.admin.updateUserById(targetUserId, { password, email_confirm: true });
-    } else {
-      // Auto-create missing user
-      const { data: newUser } = await adminClient.auth.admin.createUser({
-        email,
-        password,
-        email_confirm: true,
-        user_metadata: { full_name: email.split('@')[0], username: email.split('@')[0] }
-      });
-      if (newUser?.user) {
-        targetUserId = newUser.user.id;
-      }
+    const roles = userRolesResult.data ? userRolesResult.data.map((ur: any) => ur.roles?.name).filter(Boolean) : [];
+    const profileRole = profileRes?.data?.role;
+    const isApprovedMaster = !!appResult.data || profileRole === 'MASTER' || roles.includes('MASTER');
+    const isAdmin = isAdminEmail || profileRole === 'ADMIN' || roles.includes('ADMIN');
+
+    if (isAdmin) {
+      redirectUrl = '/admin/dashboard';
+    } else if (isApprovedMaster) {
+      redirectUrl = '/master/dashboard';
     }
-
-    if (targetUserId) {
-      await adminClient.from('profiles').upsert({
-        id: targetUserId,
-        email: email,
-        username: email.split('@')[0],
-        full_name: email.split('@')[0]
-      });
-
-      const retry = await supabase.auth.signInWithPassword({ email, password });
-      if (!retry.error) {
-        revalidatePath('/');
-        return { success: true };
-      }
-    }
-  } catch (e: any) {
-    console.warn('[LOGIN FALLBACK NOTICE]', e);
+  } catch (e) {
+    console.error('[DETERMINE REDIRECT ERROR]', e);
   }
 
-  let errMsg = error?.message || 'Invalid login credentials.';
-  if (errMsg.includes('Invalid path') || errMsg.includes('Invalid API key')) {
-    errMsg = 'Invalid email or password. Please verify your login credentials.';
-  }
-
-  return { error: errMsg };
+  revalidatePath('/');
+  return { success: true, redirectUrl };
 }
 
 export async function logoutUser() {

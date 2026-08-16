@@ -68,7 +68,7 @@ export default function AdminTeamsTable({ teams }: { teams: any[] }) {
 
                 <div className="flex justify-between">
                   <span className="text-slate-500">Created Date:</span>
-                  <span className="text-slate-400">{new Date(team.created_at).toLocaleDateString()}</span>
+                  <span className="text-slate-400" suppressHydrationWarning>{team.created_at ? new Date(team.created_at).toLocaleDateString('en-GB') : 'N/A'}</span>
                 </div>
               </div>
 

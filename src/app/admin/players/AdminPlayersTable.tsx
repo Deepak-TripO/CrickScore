@@ -98,8 +98,8 @@ export default function AdminPlayersTable({ players }: { players: any[] }) {
                       #{p.jersey_number || 'N/A'}
                     </td>
 
-                    <td className="p-4 text-slate-400">
-                      {new Date(p.created_at).toLocaleDateString()}
+                    <td className="p-4 text-slate-400" suppressHydrationWarning>
+                      {p.created_at ? new Date(p.created_at).toLocaleDateString('en-GB') : 'N/A'}
                     </td>
                   </tr>
                 ))

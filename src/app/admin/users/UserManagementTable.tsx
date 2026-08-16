@@ -138,8 +138,8 @@ export default function UserManagementTable({ profiles }: { profiles: any[] }) {
                       {p.city ? `${p.city}, ${p.state || ''}` : 'Not specified'}
                     </td>
 
-                    <td className="p-4 text-slate-400">
-                      {new Date(p.created_at || Date.now()).toLocaleDateString()}
+                    <td className="p-4 text-slate-400" suppressHydrationWarning>
+                      {p.created_at ? new Date(p.created_at).toLocaleDateString('en-GB') : 'N/A'}
                     </td>
 
                     <td className="p-4 text-right space-x-2">

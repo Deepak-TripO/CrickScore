@@ -82,7 +82,7 @@ function HomePageContent({
               key={cat}
               type="button"
               onClick={() => setActiveCategory(cat)}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold tracking-wide uppercase transition-all shrink-0 border ${
+              className={`px-3 py-1 rounded-lg text-[11px] font-bold tracking-wider uppercase transition-all shrink-0 border ${
                 isActive
                   ? 'bg-[#19D89A] text-[#050A1A] border-[#19D89A] shadow-md'
                   : 'bg-[#0D1528] text-[#AAB5CC] border-[#173541] hover:text-white hover:border-[#19D89A]/40'

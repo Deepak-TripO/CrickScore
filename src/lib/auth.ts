@@ -80,7 +80,12 @@ export async function getUserAndRole(): Promise<{ user: any; role: 'ADMIN' | 'MA
     userEmail === 'admin@batscore.com'
   );
 
-  const [userRolesResult, appResult] = await Promise.all([
+  const [profileResult, userRolesResult, appResult] = await Promise.all([
+    db
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .maybeSingle(),
     db
       .from('user_roles')
       .select('roles(name)')
@@ -95,11 +100,12 @@ export async function getUserAndRole(): Promise<{ user: any; role: 'ADMIN' | 'MA
   ]);
 
   const roles = userRolesResult.data ? userRolesResult.data.map((ur: any) => ur.roles?.name).filter(Boolean) : [];
-  const isApprovedMaster = !!appResult.data;
+  const profileRole = profileResult.data?.role;
+  const isApprovedMaster = !!appResult.data || profileRole === 'MASTER' || roles.includes('MASTER');
 
   let role: 'ADMIN' | 'MASTER' | 'USER' = 'USER';
-  if (roles.includes('ADMIN') || isAdminEmail) role = 'ADMIN';
-  else if (roles.includes('MASTER') || isApprovedMaster) role = 'MASTER';
+  if (roles.includes('ADMIN') || isAdminEmail || profileRole === 'ADMIN') role = 'ADMIN';
+  else if (isApprovedMaster) role = 'MASTER';
 
   return { user, role };
 }
