@@ -2,7 +2,7 @@
 
 import React, { useState, Suspense } from 'react';
 import MatchCard from '@/components/match/MatchCard';
-import { Trophy, Search } from 'lucide-react';
+import { Trophy, Search, Filter, X } from 'lucide-react';
 import { useSearchParams, useRouter } from 'next/navigation';
 
 interface HomePageClientProps {
@@ -20,6 +20,8 @@ function HomePageContent({
   const router = useRouter();
   const searchQuery = searchParams?.get('search') || '';
   const [activeCategory, setActiveCategory] = useState<string>('ALL MATCHS');
+  const [statusToggle, setStatusToggle] = useState<'LIVE' | 'COMPLETED'>('LIVE');
+  const [isFilterOpen, setIsFilterOpen] = useState<boolean>(false);
 
   const categories = ['ALL MATCHS', 'TOURNAMENT', 'LEAGUE', 'CLUB'];
 
@@ -29,7 +31,7 @@ function HomePageContent({
     router.replace(`/${params.toString() ? `?${params.toString()}` : ''}`, { scroll: false });
   };
 
-  // Filter matches dynamically based strictly on TEAM NAME ONLY and active category
+  // Filter matches dynamically based strictly on TEAM NAME ONLY, status toggle, and active category
   const filteredMatches = allMatches.filter((m: any) => {
     // 1. STRICT TEAM NAME ONLY SEARCH FILTER (Team 1 OR Team 2)
     if (searchQuery.trim()) {
@@ -51,7 +53,15 @@ function HomePageContent({
       }
     }
 
-    // 2. Category Filter
+    // 2. Status Filter (LIVE vs COMPLETED)
+    const mStatus = (m.status || '').toString().toUpperCase();
+    if (statusToggle === 'LIVE') {
+      if (mStatus === 'COMPLETED' || mStatus === 'FINISHED') return false;
+    } else if (statusToggle === 'COMPLETED') {
+      if (mStatus !== 'COMPLETED' && mStatus !== 'FINISHED') return false;
+    }
+
+    // 3. Category Filter
     if (activeCategory === 'ALL MATCHS' || activeCategory === 'All') return true;
 
     const matchCategory = (m.category || m.format || m.match_type || '').toString().toLowerCase();
@@ -73,27 +83,94 @@ function HomePageContent({
   return (
     <div className="space-y-6 font-sans">
       
-      {/* 1. COMPACT SINGLE ROW CATEGORY FILTER BAR (NO SCROLLING, NO SECOND ROW, NO COUNTS, 100% WIDTH FIT) */}
-      <div className="w-full bg-[#0D1528] border border-[#173541] rounded-2xl p-1.5 sm:p-2.5 shadow-md">
-        <div className="grid grid-cols-4 gap-1 sm:gap-2 w-full items-center">
-          {categories.map((cat) => {
-            const isActive = activeCategory === cat;
-            return (
-              <button
-                key={cat}
-                type="button"
-                onClick={() => setActiveCategory(cat)}
-                className={`w-full py-2 px-1 sm:px-3 rounded-xl text-[9px] min-[380px]:text-[10px] sm:text-xs font-black tracking-tight sm:tracking-wider uppercase transition-all duration-200 text-center truncate ${
-                  isActive
-                    ? 'bg-[#19D89A] text-[#050A1A] shadow-md shadow-[#19D89A]/20 font-extrabold scale-[1.01]'
-                    : 'bg-[#050A1A]/80 text-[#AAB5CC] hover:text-white hover:bg-[#111A2D] border border-[#173541]/50'
-                }`}
-              >
-                {cat}
-              </button>
-            );
-          })}
+      {/* HOME PAGE CONTROL ROW: STATUS TOGGLE ON LEFT, ICON-ONLY FILTER ON FAR RIGHT */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between gap-2 w-full">
+          {/* SEGMENTED TOGGLE BUTTON [ LIVE ] [ COMPLETED ] */}
+          <div className="flex items-center bg-[#0D1528] border border-[#173541] rounded-xl p-1 shadow-md">
+            <button
+              type="button"
+              onClick={() => setStatusToggle('LIVE')}
+              className={`py-1.5 px-3 sm:px-4 rounded-lg text-xs font-black tracking-wider uppercase transition-all duration-200 ${
+                statusToggle === 'LIVE'
+                  ? 'bg-[#19D89A] text-[#050A1A] shadow-md shadow-[#19D89A]/20'
+                  : 'text-[#AAB5CC] hover:text-white hover:bg-[#111A2D]'
+              }`}
+            >
+              LIVE
+            </button>
+            <button
+              type="button"
+              onClick={() => setStatusToggle('COMPLETED')}
+              className={`py-1.5 px-3 sm:px-4 rounded-lg text-xs font-black tracking-wider uppercase transition-all duration-200 ${
+                statusToggle === 'COMPLETED'
+                  ? 'bg-[#19D89A] text-[#050A1A] shadow-md shadow-[#19D89A]/20'
+                  : 'text-[#AAB5CC] hover:text-white hover:bg-[#111A2D]'
+              }`}
+            >
+              COMPLETED
+            </button>
+          </div>
+
+          {/* ICON-ONLY FILTER BUTTON ON FAR RIGHT */}
+          <button
+            type="button"
+            onClick={() => setIsFilterOpen(!isFilterOpen)}
+            className={`p-2.5 rounded-xl transition-all duration-200 shadow-md active:scale-95 border flex items-center justify-center relative ${
+              isFilterOpen || (activeCategory !== 'ALL MATCHS' && activeCategory !== 'All')
+                ? 'bg-[#0D1528] border-[#19D89A] text-[#19D89A] shadow-[#19D89A]/10'
+                : 'bg-[#0D1528] border-[#173541] text-[#AAB5CC] hover:text-white hover:border-[#19D89A]/50'
+            }`}
+            title="Filter Categories"
+            aria-label="Filter Categories"
+          >
+            <Filter className="w-4 h-4" />
+            {activeCategory !== 'ALL MATCHS' && activeCategory !== 'All' && (
+              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-[#19D89A] rounded-full border border-[#050A1A]" />
+            )}
+          </button>
         </div>
+
+        {/* EXPANDABLE FILTER PANEL CONTAINING CATEGORY OPTIONS */}
+        {isFilterOpen && (
+          <div className="w-full bg-[#0D1528] border border-[#173541] rounded-2xl p-3 sm:p-4 shadow-xl space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="flex items-center justify-between pb-2 border-b border-[#173541]/60">
+              <div className="flex items-center gap-2 text-xs font-extrabold uppercase text-white tracking-wider">
+                <Filter className="w-3.5 h-3.5 text-[#19D89A]" />
+                <span>Select Category Filter</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsFilterOpen(false)}
+                className="p-1 text-[#71809A] hover:text-white rounded-lg hover:bg-[#173541]/50 transition-colors"
+                title="Close Filter"
+                aria-label="Close Filter"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full items-center">
+              {categories.map((cat) => {
+                const isActive = activeCategory === cat;
+                return (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => setActiveCategory(cat)}
+                    className={`w-full py-2.5 px-2 rounded-xl text-[10px] sm:text-xs font-black tracking-tight sm:tracking-wider uppercase transition-all duration-200 text-center truncate ${
+                      isActive
+                        ? 'bg-[#19D89A] text-[#050A1A] shadow-md shadow-[#19D89A]/20 font-extrabold scale-[1.01]'
+                        : 'bg-[#050A1A]/80 text-[#AAB5CC] hover:text-white hover:bg-[#111A2D] border border-[#173541]/50'
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* 2. CATEGORY / SEARCH RESULTS LIST */}
@@ -104,8 +181,8 @@ function HomePageContent({
             {searchQuery.trim()
               ? `Team Search Results for "${searchQuery}"`
               : activeCategory === 'ALL MATCHS' || activeCategory === 'All'
-              ? 'ALL MATCHS'
-              : `${activeCategory} MATCHES`}
+              ? `${statusToggle} MATCHES`
+              : `${statusToggle} ${activeCategory} MATCHES`}
           </h2>
           <span className="text-xs text-[#71809A] font-mono">
             {filteredMatches.length} {filteredMatches.length === 1 ? 'item' : 'items'}
