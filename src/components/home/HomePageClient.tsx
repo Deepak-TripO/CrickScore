@@ -137,17 +137,8 @@ function HomePageContent({
             <div className="flex items-center justify-between pb-2 border-b border-[#173541]/60">
               <div className="flex items-center gap-2 text-xs font-extrabold uppercase text-white tracking-wider">
                 <Filter className="w-3.5 h-3.5 text-[#19D89A]" />
-                <span>Select Category Filter</span>
+                <span>Select Category</span>
               </div>
-              <button
-                type="button"
-                onClick={() => setIsFilterOpen(false)}
-                className="p-1 text-[#71809A] hover:text-white rounded-lg hover:bg-[#173541]/50 transition-colors"
-                title="Close Filter"
-                aria-label="Close Filter"
-              >
-                <X className="w-4 h-4" />
-              </button>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full items-center">
@@ -157,7 +148,10 @@ function HomePageContent({
                   <button
                     key={cat}
                     type="button"
-                    onClick={() => setActiveCategory(cat)}
+                    onClick={() => {
+                      setActiveCategory(cat);
+                      setIsFilterOpen(false);
+                    }}
                     className={`w-full py-2.5 px-2 rounded-xl text-[10px] sm:text-xs font-black tracking-tight sm:tracking-wider uppercase transition-all duration-200 text-center truncate ${
                       isActive
                         ? 'bg-[#19D89A] text-[#050A1A] shadow-md shadow-[#19D89A]/20 font-extrabold scale-[1.01]'
@@ -180,13 +174,10 @@ function HomePageContent({
             <Trophy className="w-4 h-4 text-[#19D89A]" />
             {searchQuery.trim()
               ? `Team Search Results for "${searchQuery}"`
-              : activeCategory === 'ALL MATCHS' || activeCategory === 'All'
-              ? `${statusToggle} MATCHES`
-              : `${statusToggle} ${activeCategory} MATCHES`}
+              : activeCategory !== 'ALL MATCHS' && activeCategory !== 'All'
+              ? activeCategory
+              : statusToggle}
           </h2>
-          <span className="text-xs text-[#71809A] font-mono">
-            {filteredMatches.length} {filteredMatches.length === 1 ? 'item' : 'items'}
-          </span>
         </div>
 
         {filteredMatches && filteredMatches.length > 0 ? (
