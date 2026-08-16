@@ -19,9 +19,29 @@ function HomePageContent({
   const searchParams = useSearchParams();
   const router = useRouter();
   const searchQuery = searchParams?.get('search') || '';
-  const [activeCategory, setActiveCategory] = useState<string>('All');
+  const [activeCategory, setActiveCategory] = useState<string>('ALL MATCHS');
 
-  const categories = ['All', 'Tournament', 'League', 'Club'];
+  const categories = ['ALL MATCHS', 'TOURNAMENT', 'LEAGUE', 'CLUB'];
+
+  // Calculate dynamic item counts for each category
+  const getCategoryCount = (catName: string) => {
+    if (catName === 'ALL MATCHS') return allMatches.length;
+
+    const targetCategory = catName.toLowerCase();
+    return allMatches.filter((m: any) => {
+      const matchCategory = (m.category || m.format || m.match_type || '').toString().toLowerCase();
+      if (targetCategory === 'tournament') {
+        return matchCategory.includes('tournament') || matchCategory.includes('t20');
+      }
+      if (targetCategory === 'league') {
+        return matchCategory.includes('league') || matchCategory.includes('premier');
+      }
+      if (targetCategory === 'club') {
+        return matchCategory.includes('club') || matchCategory.includes('friendly');
+      }
+      return true;
+    }).length;
+  };
 
   const handleClearSearch = () => {
     const params = new URLSearchParams(searchParams?.toString() || '');
@@ -52,7 +72,7 @@ function HomePageContent({
     }
 
     // 2. Category Filter
-    if (activeCategory === 'All') return true;
+    if (activeCategory === 'ALL MATCHS' || activeCategory === 'All') return true;
 
     const matchCategory = (m.category || m.format || m.match_type || '').toString().toLowerCase();
     const targetCategory = activeCategory.toLowerCase();
@@ -73,25 +93,33 @@ function HomePageContent({
   return (
     <div className="space-y-6 font-sans">
       
-      {/* 1. CATEGORY FILTER BAR (ONLY 4 OPTIONS: All, Tournament, League, Club) */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-        {categories.map((cat) => {
-          const isActive = activeCategory === cat;
-          return (
-            <button
-              key={cat}
-              type="button"
-              onClick={() => setActiveCategory(cat)}
-              className={`px-3 py-1 rounded-lg text-[11px] font-bold tracking-wider uppercase transition-all shrink-0 border ${
-                isActive
-                  ? 'bg-[#19D89A] text-[#050A1A] border-[#19D89A] shadow-md'
-                  : 'bg-[#0D1528] text-[#AAB5CC] border-[#173541] hover:text-white hover:border-[#19D89A]/40'
-              }`}
-            >
-              {cat}
-            </button>
-          );
-        })}
+      {/* 1. CATEGORY FILTER BAR (PERFECT FULL WIDTH GRID, NO EXTRA RIGHT GAP, EXACT DYNAMIC COUNTS) */}
+      <div className="w-full bg-[#0D1528] border border-[#173541] rounded-2xl p-2.5 shadow-md">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full">
+          {categories.map((cat) => {
+            const isActive = activeCategory === cat;
+            const count = getCategoryCount(cat);
+            return (
+              <button
+                key={cat}
+                type="button"
+                onClick={() => setActiveCategory(cat)}
+                className={`w-full py-2.5 px-3 rounded-xl text-[11px] sm:text-xs font-black tracking-wider uppercase transition-all duration-200 flex items-center justify-center gap-1.5 ${
+                  isActive
+                    ? 'bg-[#19D89A] text-[#050A1A] shadow-lg shadow-[#19D89A]/20 scale-[1.02]'
+                    : 'bg-[#050A1A]/80 text-[#AAB5CC] hover:text-white hover:bg-[#111A2D] border border-[#173541]/50'
+                }`}
+              >
+                <span>{cat}</span>
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-md font-mono ${
+                  isActive ? 'bg-[#050A1A]/25 text-[#050A1A]' : 'bg-[#173541]/60 text-[#71809A]'
+                }`}>
+                  ({count})
+                </span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* 2. CATEGORY / SEARCH RESULTS LIST */}
@@ -101,9 +129,9 @@ function HomePageContent({
             <Trophy className="w-4 h-4 text-[#19D89A]" />
             {searchQuery.trim()
               ? `Team Search Results for "${searchQuery}"`
-              : activeCategory === 'All'
-              ? 'All Matches & Tournaments'
-              : `${activeCategory} Matches`}
+              : activeCategory === 'ALL MATCHS' || activeCategory === 'All'
+              ? 'ALL MATCHS'
+              : `${activeCategory} MATCHES`}
           </h2>
           <span className="text-xs text-[#71809A] font-mono">
             {filteredMatches.length} {filteredMatches.length === 1 ? 'item' : 'items'}
@@ -139,10 +167,10 @@ function HomePageContent({
             <p className="text-xs font-bold text-[#AAB5CC]">No {activeCategory.toLowerCase()} matches found.</p>
             <p className="text-[11px] text-[#71809A]">Try selecting another category to discover cricket content.</p>
             <button
-              onClick={() => setActiveCategory('All')}
+              onClick={() => setActiveCategory('ALL MATCHS')}
               className="px-4 py-2 bg-[#19D89A] text-[#050A1A] font-black text-xs uppercase tracking-wider rounded-xl shadow-md"
             >
-              View All
+              View ALL MATCHS
             </button>
           </div>
         )}

@@ -43,13 +43,25 @@ export async function middleware(request: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser();
     const path = request.nextUrl.pathname;
 
+    const isPublicPath = path === '/login' || path === '/signup' || path === '/forgot-password' || path.startsWith('/auth/callback');
+
+    // 1. UNAUTHENTICATED USERS: ALWAYS redirect to /login first
+    if (!user) {
+      if (!isPublicPath) {
+        return NextResponse.redirect(new URL('/login', request.url));
+      }
+      return response;
+    }
+
+    // 2. AUTHENTICATED USERS: Prevent visiting auth pages (login/signup)
+    if (user && isPublicPath) {
+      return NextResponse.redirect(new URL('/', request.url));
+    }
+
+    // 3. ROLE CHECKS FOR PROTECTED MASTER AND ADMIN ROUTES
     const needsRoleCheck = path.startsWith('/master') || path.startsWith('/admin');
     
     if (needsRoleCheck) {
-      if (!user) {
-        return NextResponse.redirect(new URL('/login', request.url));
-      }
-
       const [userRolesResult, appResult] = await Promise.all([
         supabase
           .from('user_roles')
@@ -103,5 +115,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/master', '/master/:path*', '/admin', '/admin/:path*', '/profile', '/profile/:path*', '/apply-master', '/apply-master/:path*'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
 };

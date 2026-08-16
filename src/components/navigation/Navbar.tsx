@@ -54,7 +54,7 @@ function NavSearchControl() {
 
   if (searchOpen) {
     return (
-      <div className="flex items-center gap-2 bg-[#0D1528] border border-[#19D89A] rounded-xl px-3 py-1.5 transition-all duration-200 w-44 sm:w-60 shadow-lg">
+      <div className="hidden md:flex items-center gap-2 bg-[#0D1528] border border-[#19D89A] rounded-xl px-3 py-1.5 transition-all duration-200 w-44 sm:w-60 shadow-lg">
         <Search className="w-3.5 h-3.5 text-[#19D89A] shrink-0" />
         <input
           type="text"
@@ -80,12 +80,86 @@ function NavSearchControl() {
     <button 
       type="button"
       onClick={() => setSearchOpen(true)}
-      className="p-2 rounded-xl text-[#AAB5CC] hover:text-white hover:bg-[#0D1528] transition-colors" 
+      className="hidden md:flex p-2 rounded-xl text-[#AAB5CC] hover:text-white hover:bg-[#0D1528] transition-colors" 
       title="Search by Team Name"
       aria-label="Search by Team Name"
     >
       <Search className="w-4 h-4" />
     </button>
+  );
+}
+
+function MobileNavSearch() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const currentSearch = searchParams?.get('search') || '';
+
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(!!currentSearch);
+  const [searchValue, setSearchValue] = useState(currentSearch);
+
+  useEffect(() => {
+    setSearchValue(currentSearch);
+  }, [currentSearch]);
+
+  const handleSearchChange = (val: string) => {
+    setSearchValue(val);
+    const params = new URLSearchParams(searchParams?.toString() || '');
+    if (val.trim()) {
+      params.set('search', val.trim());
+    } else {
+      params.delete('search');
+    }
+    router.replace(`/${params.toString() ? `?${params.toString()}` : ''}`, { scroll: false });
+  };
+
+  const handleCloseSearch = () => {
+    setSearchValue('');
+    setMobileSearchOpen(false);
+    const params = new URLSearchParams(searchParams?.toString() || '');
+    params.delete('search');
+    router.replace(`/${params.toString() ? `?${params.toString()}` : ''}`, { scroll: false });
+  };
+
+  return (
+    <>
+      {/* MOBILE SEARCH ICON BUTTON IN TOP NAV */}
+      <button 
+        type="button"
+        onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
+        className="md:hidden p-2 rounded-xl text-[#AAB5CC] hover:text-white hover:bg-[#0D1528] transition-colors" 
+        title="Search by Team Name"
+        aria-label="Search by Team Name"
+      >
+        {mobileSearchOpen ? <X className="w-4 h-4 text-[#19D89A]" /> : <Search className="w-4 h-4" />}
+      </button>
+
+      {/* MOBILE EXPANDED SEARCH BAR (APPEARS DIRECTLY BELOW TOP NAV ONLY ON MOBILE) */}
+      {mobileSearchOpen && (
+        <div className="md:hidden border-t border-[#173541] bg-[#0A1224] px-4 py-3 shadow-2xl animate-in slide-in-from-top-2">
+          <div className="flex items-center gap-2 bg-[#0D1528] border border-[#19D89A] rounded-xl px-3 py-2 w-full shadow-inner">
+            <Search className="w-4 h-4 text-[#19D89A] shrink-0" />
+            <input
+              type="text"
+              autoFocus
+              value={searchValue}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              placeholder="Search team name..."
+              className="w-full bg-transparent text-white text-xs outline-none placeholder-[#71809A] font-medium"
+            />
+            {searchValue && (
+              <button
+                type="button"
+                onClick={handleCloseSearch}
+                className="p-1 text-[#AAB5CC] hover:text-white rounded transition-colors shrink-0"
+                title="Clear search"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -175,13 +249,22 @@ export default function Navbar({ user, userRole = 'USER' }: NavbarProps) {
           {/* 3. RIGHT HEADER ACTIONS: [ SEARCH ICON 🔍 ] [ NOTIFICATION 🔔 ] [ LOGOUT 🚪 ] */}
           <div className="flex items-center gap-2 sm:gap-3">
             
-            {/* TOP NAVIGATION SEARCH CONTROL (EXPANDS ON CLICK) */}
+            {/* DESKTOP SEARCH CONTROL */}
             <Suspense fallback={
-              <button className="p-2 rounded-xl text-[#AAB5CC]" title="Search">
+              <button className="hidden md:flex p-2 rounded-xl text-[#AAB5CC]" title="Search">
                 <Search className="w-4 h-4" />
               </button>
             }>
               <NavSearchControl />
+            </Suspense>
+
+            {/* MOBILE SEARCH CONTROL */}
+            <Suspense fallback={
+              <button className="md:hidden p-2 rounded-xl text-[#AAB5CC]" title="Search">
+                <Search className="w-4 h-4" />
+              </button>
+            }>
+              <MobileNavSearch />
             </Suspense>
 
             {/* NOTIFICATION BELL BUTTON */}

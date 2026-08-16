@@ -4,13 +4,19 @@ import MobileNav from '@/components/navigation/MobileNav';
 import HomePageClient from '@/components/home/HomePageClient';
 import { getUserAndRole, getCurrentUserProfile } from '@/lib/auth';
 import { fetchMatchesSafely } from '@/lib/fetchMatches';
+import { redirect } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export default async function HomePage() {
   const { user, role: userRole } = await getUserAndRole();
-  const profile = user ? await getCurrentUserProfile(user) : null;
+
+  if (!user) {
+    redirect('/login');
+  }
+
+  const profile = await getCurrentUserProfile(user);
   const allMatches = await fetchMatchesSafely({ limit: 20 });
 
   return (
