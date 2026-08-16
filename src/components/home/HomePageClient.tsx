@@ -23,26 +23,6 @@ function HomePageContent({
 
   const categories = ['ALL MATCHS', 'TOURNAMENT', 'LEAGUE', 'CLUB'];
 
-  // Calculate dynamic item counts for each category
-  const getCategoryCount = (catName: string) => {
-    if (catName === 'ALL MATCHS') return allMatches.length;
-
-    const targetCategory = catName.toLowerCase();
-    return allMatches.filter((m: any) => {
-      const matchCategory = (m.category || m.format || m.match_type || '').toString().toLowerCase();
-      if (targetCategory === 'tournament') {
-        return matchCategory.includes('tournament') || matchCategory.includes('t20');
-      }
-      if (targetCategory === 'league') {
-        return matchCategory.includes('league') || matchCategory.includes('premier');
-      }
-      if (targetCategory === 'club') {
-        return matchCategory.includes('club') || matchCategory.includes('friendly');
-      }
-      return true;
-    }).length;
-  };
-
   const handleClearSearch = () => {
     const params = new URLSearchParams(searchParams?.toString() || '');
     params.delete('search');
@@ -93,29 +73,23 @@ function HomePageContent({
   return (
     <div className="space-y-6 font-sans">
       
-      {/* 1. CATEGORY FILTER BAR (PERFECT FULL WIDTH GRID, NO EXTRA RIGHT GAP, EXACT DYNAMIC COUNTS) */}
-      <div className="w-full bg-[#0D1528] border border-[#173541] rounded-2xl p-2.5 shadow-md">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full">
+      {/* 1. CATEGORY FILTER BAR (ONE SINGLE HORIZONTAL LINE, NO MATCH COUNTS) */}
+      <div className="w-full bg-[#0D1528] border border-[#173541] rounded-2xl p-2 sm:p-2.5 shadow-md overflow-x-auto scrollbar-none">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-max">
           {categories.map((cat) => {
             const isActive = activeCategory === cat;
-            const count = getCategoryCount(cat);
             return (
               <button
                 key={cat}
                 type="button"
                 onClick={() => setActiveCategory(cat)}
-                className={`w-full py-2.5 px-3 rounded-xl text-[11px] sm:text-xs font-black tracking-wider uppercase transition-all duration-200 flex items-center justify-center gap-1.5 ${
+                className={`py-2 px-4 rounded-xl text-[11px] sm:text-xs font-black tracking-wider uppercase transition-all duration-200 whitespace-nowrap shrink-0 ${
                   isActive
-                    ? 'bg-[#19D89A] text-[#050A1A] shadow-lg shadow-[#19D89A]/20 scale-[1.02]'
+                    ? 'bg-[#19D89A] text-[#050A1A] shadow-md shadow-[#19D89A]/20 font-extrabold'
                     : 'bg-[#050A1A]/80 text-[#AAB5CC] hover:text-white hover:bg-[#111A2D] border border-[#173541]/50'
                 }`}
               >
-                <span>{cat}</span>
-                <span className={`text-[10px] px-1.5 py-0.5 rounded-md font-mono ${
-                  isActive ? 'bg-[#050A1A]/25 text-[#050A1A]' : 'bg-[#173541]/60 text-[#71809A]'
-                }`}>
-                  ({count})
-                </span>
+                {cat}
               </button>
             );
           })}
