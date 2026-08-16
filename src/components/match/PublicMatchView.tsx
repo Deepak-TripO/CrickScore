@@ -214,10 +214,10 @@ export default function PublicMatchView({
 
   // Separate scores and overs calculation for Team 1 and Team 2
   const team1ScoreStr = team1LiveState ? `${team1LiveState.totalRuns}/${team1LiveState.totalWickets}` : (match.current_score || '0/0');
-  const team1OversStr = team1LiveState ? `${team1LiveState.oversFormatted} Ov` : (match.current_over ? `${match.current_over} Ov` : '0.0 Ov');
+  const team1OversStr = team1LiveState ? team1LiveState.oversFormatted : (match.current_over ? `${match.current_over}` : '0.0');
 
   const team2ScoreStr = team2LiveState ? `${team2LiveState.totalRuns}/${team2LiveState.totalWickets}` : '0/0';
-  const team2OversStr = team2LiveState ? `${team2LiveState.oversFormatted} Ov` : '0.0 Ov';
+  const team2OversStr = team2LiveState ? team2LiveState.oversFormatted : '0.0';
 
   // Target team for Scorecard tab
   const targetScorecardState = selectedScorecardTeam === 'TEAM1' ? team1LiveState : team2LiveState;

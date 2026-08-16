@@ -39,15 +39,11 @@ export default async function ApplyMasterPage() {
 
       <div className="flex-1 max-w-2xl w-full mx-auto px-4 py-8 space-y-6">
         
-        <div className="text-center space-y-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-bold">
-            <Trophy className="w-3.5 h-3.5" />
-            <span>Master Scorer Application</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">Become a BatScore Master</h1>
-          <p className="text-xs text-slate-400 max-w-md mx-auto">
-            Masters can create playgrounds, form teams, schedule matches, and manage live ball-by-ball scoring.
-          </p>
+        <div className="text-center">
+          <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-white flex items-center justify-center gap-2">
+            <Trophy className="w-5 h-5 text-amber-400" />
+            <span>Master Application</span>
+          </h1>
         </div>
 
         {existingApp ? (
