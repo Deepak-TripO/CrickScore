@@ -38,18 +38,6 @@ export interface CommunityItem {
   membersCount?: number;
 }
 
-const DEFAULT_COMMUNITIES: CommunityItem[] = [
-  {
-    id: 'comm_1',
-    name: 'Premier Cricket Club',
-    bio: 'Official local cricket community for organizing weekend league matches, player recruitment, and ground reservations.',
-    profileImage: 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&w=300&q=80',
-    coverImage: 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?auto=format&fit=crop&w=1200&q=80',
-    createdAt: new Date().toISOString(),
-    membersCount: 42
-  }
-];
-
 export default function CommunityCreateSection() {
   const [communities, setCommunities] = useState<CommunityItem[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -87,13 +75,13 @@ export default function CommunityCreateSection() {
     const loadData = async () => {
       try {
         const dbList = await getPublicCommunities();
-        if (Array.isArray(dbList) && dbList.length > 0) {
+        if (Array.isArray(dbList)) {
           setCommunities(dbList);
         } else {
-          setCommunities(DEFAULT_COMMUNITIES);
+          setCommunities([]);
         }
       } catch {
-        setCommunities(DEFAULT_COMMUNITIES);
+        setCommunities([]);
       }
     };
 

@@ -211,19 +211,8 @@ export default function MasterScorerDashboardUI({
       {/* SECTION 1: OVERVIEW TAB (SHOWS ONLY LATEST CREATED MATCH)    */}
       {/* ============================================================ */}
       {activeTab === 'overview' && (
-        <div className="space-y-8 animate-in fade-in duration-200">
+        <div className="space-y-6 animate-in fade-in duration-200">
           
-          {/* REAL STATS CARDS */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="bg-[#0D1528] border border-[#173541] rounded-2xl p-4 space-y-1 shadow-lg">
-              <div className="flex items-center justify-between text-[#AAB5CC]">
-                <span className="text-[11px] font-bold uppercase tracking-wider">Total Matches</span>
-                <Trophy className="w-4 h-4 text-[#19D89A]" />
-              </div>
-              <div className="text-3xl font-black text-white font-mono">{matches?.length || 0}</div>
-            </div>
-          </div>
-
           {/* CREATED MATCHES - SHOWS ONLY 1 LATEST CREATED MATCH */}
           <div className="space-y-4">
             <div className="flex items-center justify-between border-b border-[#173541] pb-3">
@@ -231,9 +220,6 @@ export default function MasterScorerDashboardUI({
                 <Trophy className="w-5 h-5 text-[#19D89A]" />
                 Latest Created Match
               </h2>
-              <span className="text-xs font-bold text-[#19D89A] bg-[#19D89A]/10 border border-[#19D89A]/30 px-3 py-1 rounded-full">
-                Latest Match (1 of {matches?.length || 0})
-              </span>
             </div>
 
             {!latestMatch ? (
@@ -406,7 +392,7 @@ export default function MasterScorerDashboardUI({
       {/* ============================================================ */}
       <nav 
         aria-label="Master Dashboard Bottom Navigation"
-        className="fixed bottom-0 left-0 right-0 z-40 bg-[#0D1528]/95 backdrop-blur-xl border-t border-[#173541] shadow-[0_-8px_30px_rgba(0,0,0,0.6)] py-2 px-2 sm:px-4"
+        className="fixed bottom-0 left-0 right-0 z-50 bg-[#0D1528]/95 backdrop-blur-xl border-t border-[#173541] shadow-[0_-8px_30px_rgba(0,0,0,0.6)] py-2.5 px-2 sm:px-4 transform-gpu touch-manipulation"
       >
         <div className="max-w-2xl mx-auto flex items-center justify-around gap-1 sm:gap-3">
           {navItems.map((item) => {
@@ -417,22 +403,22 @@ export default function MasterScorerDashboardUI({
                 key={item.id}
                 type="button"
                 onClick={() => handleTabChange(item.id)}
-                className={`flex-1 flex flex-col items-center justify-center py-2 px-1 sm:px-3 rounded-2xl transition-all duration-200 relative group active:scale-95 ${
+                className={`flex-1 flex flex-col items-center justify-center py-2 px-1 sm:px-3 rounded-2xl transition-all duration-300 ease-out relative group active:scale-95 ${
                   isActive
-                    ? 'bg-[#19D89A]/15 text-[#19D89A] font-extrabold shadow-sm border border-[#19D89A]/30'
-                    : 'text-[#AAB5CC] hover:text-white hover:bg-[#111A2D] font-medium border border-transparent'
+                    ? 'bg-[#19D89A]/15 text-[#19D89A] font-extrabold shadow-sm border border-[#19D89A]/30 scale-102'
+                    : 'text-[#AAB5CC] hover:text-white hover:bg-[#111A2D] font-medium border border-transparent opacity-80 hover:opacity-100'
                 }`}
               >
-                {/* Active Indicator Top Line */}
+                {/* Active Indicator Top Line with smooth pulse glow */}
                 {isActive && (
-                  <span className="absolute -top-2 w-8 h-1 bg-[#19D89A] rounded-full shadow-[0_0_10px_#19D89A]" />
+                  <span className="absolute -top-2.5 w-8 h-1 bg-[#19D89A] rounded-full shadow-[0_0_10px_#19D89A] animate-in fade-in zoom-in duration-200" />
                 )}
                 
-                <Icon className={`w-5 h-5 transition-transform duration-200 group-hover:scale-110 ${
-                  isActive ? 'text-[#19D89A]' : 'text-[#AAB5CC] group-hover:text-white'
+                <Icon className={`w-5 h-5 transition-transform duration-300 group-hover:scale-110 ${
+                  isActive ? 'text-[#19D89A] scale-110' : 'text-[#AAB5CC] group-hover:text-white'
                 }`} />
 
-                <span className={`text-[10px] sm:text-xs tracking-tight mt-1 text-center whitespace-nowrap ${
+                <span className={`text-[10px] sm:text-xs tracking-tight mt-1 text-center whitespace-nowrap transition-colors duration-200 ${
                   isActive ? 'text-[#19D89A] font-extrabold' : 'text-[#AAB5CC]'
                 }`}>
                   {item.label}
