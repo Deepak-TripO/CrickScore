@@ -10,7 +10,8 @@ import {
   Star,
   ShieldAlert,
   LogOut,
-  X
+  X,
+  ArrowLeft
 } from 'lucide-react';
 import { logoutUser } from '@/actions/auth';
 
@@ -103,7 +104,7 @@ function MobileNavSearch() {
     setSearchValue(currentSearch);
   }, [currentSearch]);
 
-  // Automatically close mobile search bar on outside click/touch
+  // Automatically close mobile search view on outside click/touch
   useEffect(() => {
     if (!mobileSearchOpen) return;
 
@@ -139,6 +140,13 @@ function MobileNavSearch() {
     router.replace(`/${params.toString() ? `?${params.toString()}` : ''}`, { scroll: false });
   };
 
+  const handleClearInput = () => {
+    setSearchValue('');
+    const params = new URLSearchParams(searchParams?.toString() || '');
+    params.delete('search');
+    router.replace(`/${params.toString() ? `?${params.toString()}` : ''}`, { scroll: false });
+  };
+
   const handleCloseSearch = () => {
     setSearchValue('');
     setMobileSearchOpen(false);
@@ -161,33 +169,48 @@ function MobileNavSearch() {
         {mobileSearchOpen ? <X className="w-4 h-4 text-[#19D89A]" /> : <Search className="w-4 h-4" />}
       </button>
 
-      {/* MOBILE EXPANDED SEARCH CARD (MATCHES REFERENCE IMAGE STYLING EXACTLY BELOW TOP NAV) */}
+      {/* DEDICATED MOBILE SEARCH VIEW (APPEARS DIRECTLY BELOW TOP NAV ONLY ON MOBILE) */}
       {mobileSearchOpen && (
         <div 
           ref={containerRef}
-          className="md:hidden bg-[#1E1F24] border border-[#2B2C34] rounded-3xl p-4 shadow-2xl animate-in slide-in-from-top-2 my-2 mx-3 relative z-50"
+          className="md:hidden border-t border-[#173541] bg-[#050A1A]/98 backdrop-blur-xl px-4 py-3 shadow-2xl animate-in slide-in-from-top-2 space-y-2"
         >
-          {/* SEARCH INPUT ROW WITH AMBER/ORANGE ACCENT BORDER & RIGHT CLOSE ICON */}
-          <div className="flex items-center justify-between gap-3 w-full">
-            <div className="flex-1 flex items-center gap-2.5 bg-[#282930] border-2 border-amber-500/90 rounded-full px-3.5 py-2 shadow-inner focus-within:border-amber-400 focus-within:ring-2 focus-within:ring-amber-500/30 transition-all">
-              <Search className="w-4 h-4 text-gray-400 shrink-0" />
-              <input
-                type="text"
-                autoFocus
-                value={searchValue}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                placeholder="Search team name..."
-                className="w-full bg-transparent text-white text-xs outline-none placeholder-gray-500 font-medium"
-              />
-            </div>
-
+          <div className="flex items-center gap-2 bg-[#0D1528] border border-[#19D89A] rounded-xl px-3 py-2 w-full shadow-inner">
             <button
               type="button"
               onClick={handleCloseSearch}
-              className="p-1 text-gray-400 hover:text-white rounded-full transition-colors shrink-0"
-              title="Close search"
+              className="p-1 text-[#19D89A] hover:text-white rounded-lg transition-colors shrink-0"
+              title="Return to Home"
             >
-              <X className="w-5 h-5" />
+              <ArrowLeft className="w-4 h-4" />
+            </button>
+            <input
+              type="text"
+              autoFocus
+              value={searchValue}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              placeholder="Search team name..."
+              className="w-full bg-transparent text-white text-xs outline-none placeholder-[#71809A] font-medium"
+            />
+            {searchValue && (
+              <button
+                type="button"
+                onClick={handleClearInput}
+                className="p-1 text-[#AAB5CC] hover:text-white rounded transition-colors shrink-0"
+                title="Clear input"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+          <div className="flex items-center justify-between text-[11px] text-[#71809A] px-1">
+            <span>{searchValue ? `Searching team: "${searchValue}"` : 'Type team name to filter matches'}</span>
+            <button 
+              type="button"
+              onClick={() => setMobileSearchOpen(false)}
+              className="text-[#19D89A] font-bold text-[11px]"
+            >
+              Done
             </button>
           </div>
         </div>
