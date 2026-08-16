@@ -161,32 +161,34 @@ function MobileNavSearch() {
         {mobileSearchOpen ? <X className="w-4 h-4 text-[#19D89A]" /> : <Search className="w-4 h-4" />}
       </button>
 
-      {/* MOBILE EXPANDED SEARCH BAR (APPEARS DIRECTLY BELOW TOP NAV ONLY ON MOBILE) */}
+      {/* MOBILE EXPANDED SEARCH CARD (MATCHES REFERENCE IMAGE STYLING EXACTLY BELOW TOP NAV) */}
       {mobileSearchOpen && (
         <div 
           ref={containerRef}
-          className="md:hidden border-t border-[#173541] bg-[#0A1224] px-4 py-2.5 shadow-2xl animate-in slide-in-from-top-2"
+          className="md:hidden bg-[#1E1F24] border border-[#2B2C34] rounded-3xl p-4 shadow-2xl animate-in slide-in-from-top-2 my-2 mx-3 relative z-50"
         >
-          <div className="flex items-center gap-2 bg-[#0D1528] border border-[#19D89A] rounded-xl px-3 py-2 w-full shadow-inner">
-            <Search className="w-4 h-4 text-[#19D89A] shrink-0" />
-            <input
-              type="text"
-              autoFocus
-              value={searchValue}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              placeholder="Search team name..."
-              className="w-full bg-transparent text-white text-xs outline-none placeholder-[#71809A] font-medium"
-            />
-            {searchValue && (
-              <button
-                type="button"
-                onClick={handleCloseSearch}
-                className="p-1 text-[#AAB5CC] hover:text-white rounded transition-colors shrink-0"
-                title="Clear search"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
+          {/* SEARCH INPUT ROW WITH AMBER/ORANGE ACCENT BORDER & RIGHT CLOSE ICON */}
+          <div className="flex items-center justify-between gap-3 w-full">
+            <div className="flex-1 flex items-center gap-2.5 bg-[#282930] border-2 border-amber-500/90 rounded-full px-3.5 py-2 shadow-inner focus-within:border-amber-400 focus-within:ring-2 focus-within:ring-amber-500/30 transition-all">
+              <Search className="w-4 h-4 text-gray-400 shrink-0" />
+              <input
+                type="text"
+                autoFocus
+                value={searchValue}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                placeholder="Search team name..."
+                className="w-full bg-transparent text-white text-xs outline-none placeholder-gray-500 font-medium"
+              />
+            </div>
+
+            <button
+              type="button"
+              onClick={handleCloseSearch}
+              className="p-1 text-gray-400 hover:text-white rounded-full transition-colors shrink-0"
+              title="Close search"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
         </div>
       )}
