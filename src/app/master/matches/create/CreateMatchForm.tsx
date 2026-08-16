@@ -292,7 +292,7 @@ export default function CreateMatchForm({ initialMatch, onCancel, onSuccess }: C
       return;
     }
     if (!yourTeamPreview && !yourTeamFile) {
-      setErrorMsg('Please upload a Team 1 Logo.');
+      setErrorMsg('Please upload a Team Logo for Team 1.');
       return;
     }
     if (!oppositeTeamName.trim()) {
@@ -300,7 +300,7 @@ export default function CreateMatchForm({ initialMatch, onCancel, onSuccess }: C
       return;
     }
     if (!oppositeTeamPreview && !oppositeTeamFile) {
-      setErrorMsg('Please upload a Team 2 Logo.');
+      setErrorMsg('Please upload a Team Logo for Team 2.');
       return;
     }
     if (!category) {
@@ -354,7 +354,7 @@ export default function CreateMatchForm({ initialMatch, onCancel, onSuccess }: C
     return compressedUrl;
   };
 
-  // Final Step 2 Submission with 11-Player Validation
+  // Final Step 2 Submission with 11-Player Validation (Role checks removed as per requirements)
   const handleSubmitFinal = async () => {
     if (loading) return;
     setErrorMsg('');
@@ -366,7 +366,7 @@ export default function CreateMatchForm({ initialMatch, onCancel, onSuccess }: C
       return;
     }
     if (!yourTeamPreview && !yourTeamFile) {
-      setErrorMsg('Step 1 Error: Please upload a Team 1 Logo.');
+      setErrorMsg('Step 1 Error: Please upload Team 1 Logo.');
       setStep(1);
       return;
     }
@@ -376,7 +376,7 @@ export default function CreateMatchForm({ initialMatch, onCancel, onSuccess }: C
       return;
     }
     if (!oppositeTeamPreview && !oppositeTeamFile) {
-      setErrorMsg('Step 1 Error: Please upload a Team 2 Logo.');
+      setErrorMsg('Step 1 Error: Please upload Team 2 Logo.');
       setStep(1);
       return;
     }
@@ -512,7 +512,7 @@ export default function CreateMatchForm({ initialMatch, onCancel, onSuccess }: C
         </button>
       )}
 
-      {/* 2-STEP PROGRESS INDICATOR (ONLY STEP 1 AND STEP 2) */}
+      {/* 2-STEP PROGRESS INDICATOR */}
       <div className="flex items-center justify-between border-b border-[#173541] pb-4 pr-8">
         {[
           { num: 1, label: 'Step 1' },
@@ -587,7 +587,7 @@ export default function CreateMatchForm({ initialMatch, onCancel, onSuccess }: C
                   ) : (
                     <div className="flex flex-col items-center gap-1 text-[#AAB5CC]">
                       <Camera className="w-5 h-5" />
-                      <span className="text-[8px] font-bold">Logo</span>
+                      <span className="text-[8px] font-bold">Logo *</span>
                     </div>
                   )}
                   <div className="absolute inset-0 bg-[#050A1A]/80 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-opacity text-white text-[9px] font-bold">
@@ -638,7 +638,7 @@ export default function CreateMatchForm({ initialMatch, onCancel, onSuccess }: C
                   ) : (
                     <div className="flex flex-col items-center gap-1 text-[#AAB5CC]">
                       <Camera className="w-5 h-5" />
-                      <span className="text-[8px] font-bold">Logo</span>
+                      <span className="text-[8px] font-bold">Logo *</span>
                     </div>
                   )}
                   <div className="absolute inset-0 bg-[#050A1A]/80 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-opacity text-white text-[9px] font-bold">
@@ -675,18 +675,18 @@ export default function CreateMatchForm({ initialMatch, onCancel, onSuccess }: C
 
           </div>
 
-          {/* SELECT MATCH CATEGORY (EXACTLY 3 OPTIONS IN ONE SINGLE ROW) */}
+          {/* SELECT MATCH CATEGORY */}
           <div className="bg-[#050A1A] border border-[#173541] rounded-2xl p-5 space-y-3 shadow-lg">
             <label className="text-xs font-black text-[#19D89A] uppercase tracking-wider block">
               Select Match Category *
             </label>
-            <div className="flex flex-row items-center gap-2 w-full">
+            <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
               {categoryOptions.map((cat) => (
                 <button
                   key={cat}
                   type="button"
                   onClick={() => setCategory(cat)}
-                  className={`flex-1 py-2.5 px-2 text-[11px] sm:text-xs font-bold text-center truncate select-none whitespace-nowrap min-w-0 rounded-xl transition-all border ${
+                  className={`py-2 px-2.5 sm:py-2.5 sm:px-3 rounded-xl text-[11px] sm:text-xs font-bold transition-all border text-center ${
                     category === cat
                       ? 'bg-[#19D89A] text-[#050A1A] border-[#19D89A] shadow-md shadow-[#19D89A]/20 scale-102 font-black'
                       : 'bg-[#0D1528] text-[#AAB5CC] border-[#173541] hover:text-white hover:border-[#19D89A]/50'
@@ -713,9 +713,9 @@ export default function CreateMatchForm({ initialMatch, onCancel, onSuccess }: C
             <button
               type="button"
               onClick={handleProceedToStep2}
-              className="px-8 py-3 bg-[#19D89A] hover:bg-emerald-400 text-[#050A1A] font-black rounded-xl text-xs flex items-center gap-2 shadow-lg shadow-[#19D89A]/20 transition-all uppercase tracking-wider ml-auto"
+              className="px-8 py-3 bg-[#19D89A] hover:bg-emerald-400 text-[#050A1A] font-black rounded-xl text-xs flex items-center gap-2 shadow-lg shadow-[#19D89A]/20 transition-all uppercase tracking-wider"
             >
-              <span>Next</span>
+              <span>Next (Step 2)</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
@@ -724,7 +724,7 @@ export default function CreateMatchForm({ initialMatch, onCancel, onSuccess }: C
       )}
 
       {/* ============================================================ */}
-      {/* STEP 2 — PLAYER DETAILS                                       */}
+      {/* STEP 2 — PLAYER DETAILS (EXACTLY 11 PLAYERS PER TEAM)        */}
       {/* ============================================================ */}
       {step === 2 && (
         <div className="space-y-8">
@@ -741,29 +741,31 @@ export default function CreateMatchForm({ initialMatch, onCancel, onSuccess }: C
             {/* TEAM 1 SQUAD */}
             <div className="bg-[#050A1A] border border-[#173541] rounded-2xl p-5 space-y-4 shadow-xl">
               
-              {/* TEAM 1 HEADER & PLAYER COUNT */}
-              <div className="flex items-center justify-between border-b border-[#173541] pb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl overflow-hidden bg-[#0D1528] border border-[#19D89A]/40 flex items-center justify-center shrink-0">
-                    {yourTeamPreview ? (
-                      <img src={yourTeamPreview} alt={yourTeamName} className="w-full h-full object-cover" />
-                    ) : (
-                      <Shield className="w-5 h-5 text-[#19D89A]" />
-                    )}
+              {/* TEAM 1 HEADER & LIVE VALIDATION STATS */}
+              <div className="space-y-3 border-b border-[#173541] pb-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl overflow-hidden bg-[#0D1528] border border-[#19D89A]/40 flex items-center justify-center shrink-0">
+                      {yourTeamPreview ? (
+                        <img src={yourTeamPreview} alt={yourTeamName} className="w-full h-full object-cover" />
+                      ) : (
+                        <Shield className="w-5 h-5 text-[#19D89A]" />
+                      )}
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-bold text-[#19D89A] uppercase tracking-wider">Team 1</span>
+                      <h4 className="text-base font-extrabold text-white">{yourTeamName || 'Team 1'}</h4>
+                    </div>
                   </div>
-                  <div>
-                    <span className="text-[10px] font-bold text-[#19D89A] uppercase tracking-wider">Team 1</span>
-                    <h4 className="text-base font-extrabold text-white">{yourTeamName || 'Team 1'}</h4>
-                  </div>
-                </div>
 
-                <span className={`px-3 py-1 rounded-full text-xs font-black border ${
-                  t1Stats.isValidCount 
-                    ? 'bg-[#19D89A]/20 text-[#19D89A] border-[#19D89A]/40' 
-                    : 'bg-amber-500/20 text-amber-400 border-amber-500/40'
-                }`}>
-                  {t1Stats.totalNamed} / 11 Players {t1Stats.isValidCount ? '✓' : ''}
-                </span>
+                  <span className={`px-3 py-1 rounded-full text-xs font-black border ${
+                    t1Stats.isValidCount 
+                      ? 'bg-[#19D89A]/20 text-[#19D89A] border-[#19D89A]/40' 
+                      : 'bg-amber-500/20 text-amber-400 border-amber-500/40'
+                  }`}>
+                    {t1Stats.totalNamed} / 11 Players {t1Stats.isValidCount ? '✓' : ''}
+                  </span>
+                </div>
               </div>
 
               {/* TEAM 1 PLAYER CARDS */}
@@ -842,29 +844,31 @@ export default function CreateMatchForm({ initialMatch, onCancel, onSuccess }: C
             {/* TEAM 2 SQUAD */}
             <div className="bg-[#050A1A] border border-[#173541] rounded-2xl p-5 space-y-4 shadow-xl">
               
-              {/* TEAM 2 HEADER & PLAYER COUNT */}
-              <div className="flex items-center justify-between border-b border-[#173541] pb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl overflow-hidden bg-[#0D1528] border border-[#19D89A]/40 flex items-center justify-center shrink-0">
-                    {oppositeTeamPreview ? (
-                      <img src={oppositeTeamPreview} alt={oppositeTeamName} className="w-full h-full object-cover" />
-                    ) : (
-                      <Shield className="w-5 h-5 text-[#19D89A]" />
-                    )}
+              {/* TEAM 2 HEADER & LIVE VALIDATION STATS */}
+              <div className="space-y-3 border-b border-[#173541] pb-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl overflow-hidden bg-[#0D1528] border border-[#19D89A]/40 flex items-center justify-center shrink-0">
+                      {oppositeTeamPreview ? (
+                        <img src={oppositeTeamPreview} alt={oppositeTeamName} className="w-full h-full object-cover" />
+                      ) : (
+                        <Shield className="w-5 h-5 text-[#19D89A]" />
+                      )}
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-bold text-[#19D89A] uppercase tracking-wider">Team 2</span>
+                      <h4 className="text-base font-extrabold text-[#ffffff]">{oppositeTeamName || 'Team 2'}</h4>
+                    </div>
                   </div>
-                  <div>
-                    <span className="text-[10px] font-bold text-[#19D89A] uppercase tracking-wider">Team 2</span>
-                    <h4 className="text-base font-extrabold text-[#ffffff]">{oppositeTeamName || 'Team 2'}</h4>
-                  </div>
-                </div>
 
-                <span className={`px-3 py-1 rounded-full text-xs font-black border ${
-                  t2Stats.isValidCount 
-                    ? 'bg-[#19D89A]/20 text-[#19D89A] border-[#19D89A]/40' 
-                    : 'bg-amber-500/20 text-amber-400 border-amber-500/40'
-                }`}>
-                  {t2Stats.totalNamed} / 11 Players {t2Stats.isValidCount ? '✓' : ''}
-                </span>
+                  <span className={`px-3 py-1 rounded-full text-xs font-black border ${
+                    t2Stats.isValidCount 
+                      ? 'bg-[#19D89A]/20 text-[#19D89A] border-[#19D89A]/40' 
+                      : 'bg-amber-500/20 text-amber-400 border-amber-500/40'
+                  }`}>
+                    {t2Stats.totalNamed} / 11 Players {t2Stats.isValidCount ? '✓' : ''}
+                  </span>
+                </div>
               </div>
 
               {/* TEAM 2 PLAYER CARDS */}
@@ -975,8 +979,8 @@ export default function CreateMatchForm({ initialMatch, onCancel, onSuccess }: C
             </div>
           </div>
 
-          {/* STEP 2 ACTION BUTTONS (PROPER BALANCED SPACING) */}
-          <div className="pt-4 flex items-center justify-between border-t border-[#173541] w-full">
+          {/* STEP 2 ACTION BUTTONS */}
+          <div className="pt-4 flex items-center justify-between gap-4 border-t border-[#173541]">
             <button
               type="button"
               onClick={() => setStep(1)}

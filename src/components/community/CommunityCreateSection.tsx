@@ -70,7 +70,7 @@ export default function CommunityCreateSection() {
   const profileInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
 
-  // Load communities from Supabase database on mount
+  // Load communities from Supabase database on mount (Only user-created communities, no defaults)
   useEffect(() => {
     const loadData = async () => {
       try {
