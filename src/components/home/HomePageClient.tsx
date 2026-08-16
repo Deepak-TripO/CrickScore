@@ -73,9 +73,9 @@ function HomePageContent({
   return (
     <div className="space-y-6 font-sans">
       
-      {/* 1. CATEGORY FILTER BAR (ONE SINGLE HORIZONTAL LINE, NO MATCH COUNTS) */}
-      <div className="w-full bg-[#0D1528] border border-[#173541] rounded-2xl p-2 sm:p-2.5 shadow-md overflow-x-auto scrollbar-none">
-        <div className="flex items-center gap-2 sm:gap-3 min-w-max">
+      {/* 1. COMPACT SINGLE ROW CATEGORY FILTER BAR (NO SCROLLING, NO SECOND ROW, NO COUNTS, 100% WIDTH FIT) */}
+      <div className="w-full bg-[#0D1528] border border-[#173541] rounded-2xl p-1.5 sm:p-2.5 shadow-md">
+        <div className="grid grid-cols-4 gap-1 sm:gap-2 w-full items-center">
           {categories.map((cat) => {
             const isActive = activeCategory === cat;
             return (
@@ -83,9 +83,9 @@ function HomePageContent({
                 key={cat}
                 type="button"
                 onClick={() => setActiveCategory(cat)}
-                className={`py-2 px-4 rounded-xl text-[11px] sm:text-xs font-black tracking-wider uppercase transition-all duration-200 whitespace-nowrap shrink-0 ${
+                className={`w-full py-2 px-1 sm:px-3 rounded-xl text-[9px] min-[380px]:text-[10px] sm:text-xs font-black tracking-tight sm:tracking-wider uppercase transition-all duration-200 text-center truncate ${
                   isActive
-                    ? 'bg-[#19D89A] text-[#050A1A] shadow-md shadow-[#19D89A]/20 font-extrabold'
+                    ? 'bg-[#19D89A] text-[#050A1A] shadow-md shadow-[#19D89A]/20 font-extrabold scale-[1.01]'
                     : 'bg-[#050A1A]/80 text-[#AAB5CC] hover:text-white hover:bg-[#111A2D] border border-[#173541]/50'
                 }`}
               >
