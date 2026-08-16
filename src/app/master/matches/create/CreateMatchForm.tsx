@@ -562,13 +562,6 @@ export default function CreateMatchForm({ initialMatch, onCancel, onSuccess }: C
       {/* ============================================================ */}
       {step === 1 && (
         <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-black text-[#19D89A] uppercase tracking-wider flex items-center gap-2">
-              <Trophy className="w-4 h-4" />
-              Step 1
-            </h3>
-          </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             
             {/* TEAM 1 NAME & LOGO */}
@@ -728,12 +721,6 @@ export default function CreateMatchForm({ initialMatch, onCancel, onSuccess }: C
       {/* ============================================================ */}
       {step === 2 && (
         <div className="space-y-8">
-          <div className="flex items-center justify-between border-b border-[#173541] pb-3">
-            <h3 className="text-sm font-black text-[#19D89A] uppercase tracking-wider flex items-center gap-2">
-              <Users className="w-4 h-4" />
-              Step 2
-            </h3>
-          </div>
 
           {/* TEAM SQUAD LISTS GRID */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

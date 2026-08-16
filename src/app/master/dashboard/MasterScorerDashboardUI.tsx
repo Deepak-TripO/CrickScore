@@ -257,17 +257,7 @@ export default function MasterScorerDashboardUI({
       {/* SECTION 2: CREATE MATCHES TAB                                */}
       {/* ============================================================ */}
       {activeTab === 'create' && (
-        <div className="space-y-6 animate-in fade-in duration-200">
-          <div className="flex items-center justify-between border-b border-[#173541] pb-3">
-            <div>
-              <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                <PlusCircle className="w-5 h-5 text-[#19D89A]" />
-                Create New Match
-              </h2>
-              <p className="text-xs text-[#AAB5CC]">Configure match teams, overs, format, playground, and officials.</p>
-            </div>
-          </div>
-
+        <div className="animate-in fade-in duration-200">
           <CreateMatchForm onSuccess={() => handleTabChange('overview')} />
         </div>
       )}
@@ -403,7 +393,8 @@ export default function MasterScorerDashboardUI({
       {/* ============================================================ */}
       <nav 
         aria-label="Master Dashboard Bottom Navigation"
-        className="fixed bottom-0 left-0 right-0 z-50 bg-[#0D1528]/95 backdrop-blur-xl border-t border-[#173541] shadow-[0_-8px_30px_rgba(0,0,0,0.6)] py-2 px-2 sm:px-4"
+        className="fixed bottom-0 left-0 right-0 z-50 bg-[#0D1528]/95 backdrop-blur-xl border-t border-[#173541] shadow-[0_-8px_30px_rgba(0,0,0,0.6)] py-2 px-2 sm:px-4 transform-gpu"
+        style={{ position: 'fixed', bottom: 0, left: 0, right: 0, transform: 'translateZ(0)' }}
       >
         <div className="max-w-2xl mx-auto flex items-center justify-around gap-1 sm:gap-3">
           {navItems.map((item) => {
@@ -414,7 +405,7 @@ export default function MasterScorerDashboardUI({
                 key={item.id}
                 type="button"
                 onClick={() => handleTabChange(item.id)}
-                className={`flex-1 flex flex-col items-center justify-center py-2 px-1 sm:px-3 rounded-2xl transition-all duration-200 relative group active:scale-95 ${
+                className={`flex-1 flex flex-col items-center justify-center py-2 px-1 sm:px-3 rounded-2xl transition-colors duration-300 ease-out relative group ${
                   isActive
                     ? 'bg-[#19D89A]/15 text-[#19D89A] font-extrabold shadow-sm border border-[#19D89A]/30'
                     : 'text-[#AAB5CC] hover:text-white hover:bg-[#111A2D] font-medium border border-transparent'
@@ -422,14 +413,14 @@ export default function MasterScorerDashboardUI({
               >
                 {/* Active Indicator Top Line */}
                 {isActive && (
-                  <span className="absolute -top-2 w-8 h-1 bg-[#19D89A] rounded-full shadow-[0_0_10px_#19D89A]" />
+                  <span className="absolute -top-2 w-8 h-1 bg-[#19D89A] rounded-full shadow-[0_0_10px_#19D89A] transition-all duration-300 ease-out animate-in fade-in zoom-in-75" />
                 )}
                 
-                <Icon className={`w-5 h-5 transition-transform duration-200 group-hover:scale-110 ${
+                <Icon className={`w-5 h-5 transition-colors duration-300 ease-out ${
                   isActive ? 'text-[#19D89A]' : 'text-[#AAB5CC] group-hover:text-white'
                 }`} />
 
-                <span className={`text-[10px] sm:text-xs tracking-tight mt-1 text-center whitespace-nowrap ${
+                <span className={`text-[10px] sm:text-xs tracking-tight mt-1 text-center whitespace-nowrap transition-colors duration-300 ease-out ${
                   isActive ? 'text-[#19D89A] font-extrabold' : 'text-[#AAB5CC]'
                 }`}>
                   {item.label}
