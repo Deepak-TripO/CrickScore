@@ -335,23 +335,21 @@ export default function PublicMatchView({
       {/* STREAMLINED TABS NAVIGATION (LIVE, SCORECARD, TEAMS) */}
       <div className="flex gap-2 bg-slate-900 p-1.5 rounded-2xl border border-slate-800">
         {[
-          { id: 'LIVE', label: 'Live', icon: Activity },
-          { id: 'SCORECARD', label: 'Scorecard', icon: ListOrdered },
-          { id: 'TEAMS', label: 'Teams', icon: Users },
+          { id: 'LIVE', label: 'LIVE' },
+          { id: 'SCORECARD', label: 'SCORECARD' },
+          { id: 'TEAMS', label: 'TEAMS' },
         ].map((tab) => {
-          const Icon = tab.icon;
           const isActive = activeTab === tab.id;
           return (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-extrabold text-xs transition-all uppercase tracking-wider ${
+              className={`flex-1 flex items-center justify-center py-2.5 rounded-xl font-extrabold text-xs transition-all uppercase tracking-wider ${
                 isActive
                   ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
                   : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
               }`}
             >
-              <Icon className="w-4 h-4" />
               <span>{tab.label}</span>
             </button>
           );
@@ -390,15 +388,15 @@ export default function PublicMatchView({
             <div className="px-4 py-3 bg-slate-950/60 border-b border-slate-800 text-xs font-bold text-slate-400 uppercase tracking-wider">
               Batting
             </div>
-            <table className="w-full text-left text-xs">
+            <table className="w-full text-left text-xs table-fixed">
               <thead className="bg-slate-950/40 text-slate-500 font-semibold border-b border-slate-800/60">
                 <tr>
-                  <th className="p-3">Batter</th>
-                  <th className="p-3 text-right">R</th>
-                  <th className="p-3 text-right">B</th>
-                  <th className="p-3 text-right">4s</th>
-                  <th className="p-3 text-right">6s</th>
-                  <th className="p-3 text-right">SR</th>
+                  <th className="p-2 sm:p-3 w-[38%]">Name</th>
+                  <th className="p-2 sm:p-3 text-right w-[12%]">R</th>
+                  <th className="p-2 sm:p-3 text-right w-[12%]">B</th>
+                  <th className="p-2 sm:p-3 text-right w-[12%]">4s</th>
+                  <th className="p-2 sm:p-3 text-right w-[12%]">6s</th>
+                  <th className="p-2 sm:p-3 text-right w-[14%]">SR</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/50">
@@ -408,15 +406,15 @@ export default function PublicMatchView({
                   const isStriker = index === 0;
                   return (
                     <tr key={id || index} className={isStriker ? 'bg-emerald-950/20 font-bold text-white' : 'text-slate-300'}>
-                      <td className="p-3 flex items-center gap-2">
-                        <span>{playerInfo?.full_name || playerInfo?.display_name || 'Batter'}</span>
-                        {isStriker && <span className="text-emerald-400 font-bold">🏏 *</span>}
+                      <td className="p-2 sm:p-3 flex items-center gap-2 truncate w-[38%]">
+                        <span className="truncate">{playerInfo?.full_name || playerInfo?.display_name || 'Batter'}</span>
+                        {isStriker && <span className="text-emerald-400 font-bold shrink-0">🏏 *</span>}
                       </td>
-                      <td className="p-3 text-right font-mono text-emerald-400 font-bold">{b?.runs || 0}</td>
-                      <td className="p-3 text-right font-mono">{b?.balls || 0}</td>
-                      <td className="p-3 text-right font-mono">{b?.fours || 0}</td>
-                      <td className="p-3 text-right font-mono">{b?.sixes || 0}</td>
-                      <td className="p-3 text-right font-mono">{b?.strikeRate || 0}</td>
+                      <td className="p-2 sm:p-3 text-right font-mono text-emerald-400 font-bold w-[12%]">{b?.runs || 0}</td>
+                      <td className="p-2 sm:p-3 text-right font-mono w-[12%]">{b?.balls || 0}</td>
+                      <td className="p-2 sm:p-3 text-right font-mono w-[12%]">{b?.fours || 0}</td>
+                      <td className="p-2 sm:p-3 text-right font-mono w-[12%]">{b?.sixes || 0}</td>
+                      <td className="p-2 sm:p-3 text-right font-mono w-[14%]">{b?.strikeRate || 0}</td>
                     </tr>
                   );
                 })}
@@ -494,17 +492,17 @@ export default function PublicMatchView({
             </button>
           </div>
 
-          {/* BATTING SCORECARD TABLE FOR SELECTED TEAM */}
-          <div className="overflow-x-auto rounded-xl border border-slate-800/80">
-            <table className="w-full text-left text-xs">
+          {/* BATTING SCORECARD TABLE FOR SELECTED TEAM - NO HORIZONTAL SCROLL ON MOBILE */}
+          <div className="w-full rounded-xl border border-slate-800/80 overflow-hidden">
+            <table className="w-full text-left text-[11px] sm:text-xs table-fixed">
               <thead className="bg-slate-950/60 text-slate-400 font-extrabold border-b border-slate-800 uppercase tracking-wider">
                 <tr>
-                  <th className="p-3">Player Name</th>
-                  <th className="p-3 text-right">Runs</th>
-                  <th className="p-3 text-right">Balls</th>
-                  <th className="p-3 text-right">4s</th>
-                  <th className="p-3 text-right">6s</th>
-                  <th className="p-3 text-right">SR</th>
+                  <th className="p-2 sm:p-3 w-[38%]">Name</th>
+                  <th className="p-2 sm:p-3 text-right w-[12%]">R</th>
+                  <th className="p-2 sm:p-3 text-right w-[12%]">B</th>
+                  <th className="p-2 sm:p-3 text-right w-[12%]">4s</th>
+                  <th className="p-2 sm:p-3 text-right w-[12%]">6s</th>
+                  <th className="p-2 sm:p-3 text-right w-[14%]">SR</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60">
@@ -514,19 +512,19 @@ export default function PublicMatchView({
                     const sr = b.balls > 0 ? ((b.runs / b.balls) * 100).toFixed(1) : '0.0';
                     return (
                       <tr key={b.playerId} className="hover:bg-slate-800/30 transition-colors">
-                        <td className="p-3">
-                          <div className="font-extrabold text-white">
+                        <td className="p-2 sm:p-3 w-[38%] truncate">
+                          <div className="font-extrabold text-white truncate">
                             {playerInfo?.full_name || playerInfo?.display_name || 'Batter'}
                           </div>
-                          <div className="text-[10px] text-slate-400 font-medium mt-0.5">
+                          <div className="text-[10px] text-slate-400 font-medium mt-0.5 truncate">
                             {b.isOut ? `b ${b.dismissalInfo || 'out'}` : <span className="text-emerald-400 font-bold">not out</span>}
                           </div>
                         </td>
-                        <td className="p-3 text-right font-mono font-black text-emerald-400 text-sm">{b.runs}</td>
-                        <td className="p-3 text-right font-mono text-slate-300 font-semibold">{b.balls}</td>
-                        <td className="p-3 text-right font-mono text-slate-300 font-semibold">{b.fours}</td>
-                        <td className="p-3 text-right font-mono text-slate-300 font-semibold">{b.sixes}</td>
-                        <td className="p-3 text-right font-mono text-slate-300 font-semibold">{sr}</td>
+                        <td className="p-2 sm:p-3 text-right font-mono font-black text-emerald-400 text-xs sm:text-sm w-[12%]">{b.runs}</td>
+                        <td className="p-2 sm:p-3 text-right font-mono text-slate-300 font-semibold w-[12%]">{b.balls}</td>
+                        <td className="p-2 sm:p-3 text-right font-mono text-slate-300 font-semibold w-[12%]">{b.fours}</td>
+                        <td className="p-2 sm:p-3 text-right font-mono text-slate-300 font-semibold w-[12%]">{b.sixes}</td>
+                        <td className="p-2 sm:p-3 text-right font-mono text-slate-300 font-semibold w-[14%]">{sr}</td>
                       </tr>
                     );
                   })
