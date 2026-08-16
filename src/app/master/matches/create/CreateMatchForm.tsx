@@ -530,22 +530,22 @@ export default function CreateMatchForm({ initialMatch, onCancel, onSuccess }: C
   const t2Stats = countTeamRoles(oppositeTeamPlayers);
 
   return (
-    <div className="bg-[#0D1528] border border-[#173541] rounded-3xl p-5 sm:p-8 space-y-6 shadow-2xl relative text-white">
+    <div className="bg-[#0D1528] border border-[#173541] rounded-3xl p-3.5 sm:p-8 space-y-3 sm:space-y-6 shadow-2xl relative text-white">
       
       {/* CANCEL BUTTON IF RENDERED IN MODAL */}
       {onCancel && (
         <button 
           type="button" 
           onClick={onCancel}
-          className="absolute top-6 right-6 p-2 text-[#AAB5CC] hover:text-white bg-[#111A2D] hover:bg-[#173541] rounded-xl transition-all"
+          className="absolute top-3.5 right-3.5 sm:top-6 sm:right-6 p-1.5 sm:p-2 text-[#AAB5CC] hover:text-white bg-[#111A2D] hover:bg-[#173541] rounded-xl transition-all"
           title="Cancel"
         >
-          <X className="w-5 h-5" />
+          <X className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
       )}
 
       {/* 2-STEP PROGRESS INDICATOR */}
-      <div className="flex items-center justify-between border-b border-[#173541] pb-4 pr-8">
+      <div className="flex items-center justify-between border-b border-[#173541] pb-2 sm:pb-4 pr-6 sm:pr-8">
         {[
           { num: 1, label: 'Step 1' },
           { num: 2, label: 'Step 2' },
@@ -553,15 +553,15 @@ export default function CreateMatchForm({ initialMatch, onCancel, onSuccess }: C
           const isDone = step > s.num;
           const isActive = step === s.num;
           return (
-            <div key={s.num} className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-sm transition-all ${
+            <div key={s.num} className="flex items-center gap-2 sm:gap-3">
+              <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-black text-xs sm:text-sm transition-all ${
                 isActive 
                   ? 'bg-[#19D89A] text-[#050A1A] shadow-lg shadow-[#19D89A]/30 scale-105' 
                   : isDone 
                   ? 'bg-[#19D89A]/20 text-[#19D89A] border border-[#19D89A]/40' 
                   : 'bg-[#111A2D] text-[#AAB5CC] border border-[#173541]'
               }`}>
-                {isDone ? <Check className="w-5 h-5 stroke-[3]" /> : s.num}
+                {isDone ? <Check className="w-4 h-4 sm:w-5 sm:h-5 stroke-[3]" /> : s.num}
               </div>
               <div className="flex flex-col">
                 <span className={`text-xs sm:text-sm font-black uppercase tracking-wider ${isActive ? 'text-[#19D89A]' : 'text-[#AAB5CC]'}`}>
@@ -575,16 +575,16 @@ export default function CreateMatchForm({ initialMatch, onCancel, onSuccess }: C
 
       {/* INLINE VALIDATION ERROR MESSAGE */}
       {errorMsg && (
-        <div className="p-4 bg-[#E5232F]/15 border border-[#E5232F]/50 rounded-2xl text-red-200 text-xs flex items-center gap-3 font-semibold animate-in fade-in">
-          <AlertCircle className="w-5 h-5 text-[#E5232F] shrink-0" />
+        <div className="p-3 sm:p-4 bg-[#E5232F]/15 border border-[#E5232F]/50 rounded-2xl text-red-200 text-xs flex items-center gap-2.5 font-semibold animate-in fade-in">
+          <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-[#E5232F] shrink-0" />
           <span>{errorMsg}</span>
         </div>
       )}
 
       {/* SUCCESS MESSAGE */}
       {successMsg && (
-        <div className="p-4 bg-[#19D89A]/20 border border-[#19D89A]/60 rounded-2xl text-[#19D89A] text-sm flex items-center gap-3 font-extrabold shadow-lg shadow-[#19D89A]/20 animate-in fade-in">
-          <Check className="w-5 h-5 text-[#19D89A] shrink-0" />
+        <div className="p-3 sm:p-4 bg-[#19D89A]/20 border border-[#19D89A]/60 rounded-2xl text-[#19D89A] text-xs sm:text-sm flex items-center gap-2.5 font-extrabold shadow-lg shadow-[#19D89A]/20 animate-in fade-in">
+          <Check className="w-4 h-4 sm:w-5 sm:h-5 text-[#19D89A] shrink-0" />
           <span>{successMsg}</span>
         </div>
       )}
@@ -593,41 +593,41 @@ export default function CreateMatchForm({ initialMatch, onCancel, onSuccess }: C
       {/* STEP 1 — MATCH DETAILS                                       */}
       {/* ============================================================ */}
       {step === 1 && (
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-3 sm:space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-6">
             
             {/* TEAM 1 NAME & LOGO */}
-            <div className="bg-[#050A1A] border border-[#173541] rounded-2xl p-5 space-y-4 shadow-lg">
-              <label className="text-xs font-black text-[#19D89A] uppercase tracking-wider block">
+            <div className="bg-[#050A1A] border border-[#173541] rounded-2xl p-3 sm:p-5 space-y-2 sm:space-y-4 shadow-lg">
+              <label className="text-[10px] sm:text-xs font-black text-[#19D89A] uppercase tracking-wider block">
                 Team 1 Name *
               </label>
               
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3 sm:gap-4">
                 <div 
                   onClick={() => yourTeamInputRef.current?.click()}
-                  className="relative group cursor-pointer w-16 h-16 rounded-2xl bg-[#0D1528] border-2 border-dashed border-[#173541] flex flex-col items-center justify-center overflow-hidden hover:border-[#19D89A] transition-all shrink-0"
+                  className="relative group cursor-pointer w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-[#0D1528] border-2 border-dashed border-[#173541] flex flex-col items-center justify-center overflow-hidden hover:border-[#19D89A] transition-all shrink-0"
                 >
                   {yourTeamPreview ? (
                     <img src={yourTeamPreview} alt="Team 1 Logo" className="w-full h-full object-cover" />
                   ) : (
-                    <div className="flex flex-col items-center gap-1 text-[#AAB5CC]">
-                      <Camera className="w-5 h-5" />
+                    <div className="flex flex-col items-center gap-0.5 text-[#AAB5CC]">
+                      <Camera className="w-4 h-4 sm:w-5 sm:h-5" />
                       <span className="text-[8px] font-bold">Logo *</span>
                     </div>
                   )}
                   <div className="absolute inset-0 bg-[#050A1A]/80 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-opacity text-white text-[9px] font-bold">
-                    <Camera className="w-4 h-4 text-[#19D89A]" />
+                    <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#19D89A]" />
                     <span>Upload</span>
                   </div>
                 </div>
 
-                <div className="flex-1 space-y-1.5">
+                <div className="flex-1 space-y-1 sm:space-y-1.5">
                   <input 
                     type="text" 
                     value={yourTeamName}
                     onChange={(e) => setYourTeamName(e.target.value)}
                     placeholder="Enter Team 1 Name (e.g. Royal Strikers)"
-                    className="w-full bg-[#0D1528] border border-[#173541] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-[#AAB5CC]/50 focus:outline-none focus:border-[#19D89A]"
+                    className="w-full bg-[#0D1528] border border-[#173541] rounded-xl px-3 py-1.5 sm:px-3.5 sm:py-2.5 text-xs text-white placeholder-[#AAB5CC]/50 focus:outline-none focus:border-[#19D89A]"
                   />
                   <input 
                     ref={yourTeamInputRef}
@@ -648,37 +648,37 @@ export default function CreateMatchForm({ initialMatch, onCancel, onSuccess }: C
             </div>
 
             {/* TEAM 2 NAME & LOGO */}
-            <div className="bg-[#050A1A] border border-[#173541] rounded-2xl p-5 space-y-4 shadow-lg">
-              <label className="text-xs font-black text-[#19D89A] uppercase tracking-wider block">
+            <div className="bg-[#050A1A] border border-[#173541] rounded-2xl p-3 sm:p-5 space-y-2 sm:space-y-4 shadow-lg">
+              <label className="text-[10px] sm:text-xs font-black text-[#19D89A] uppercase tracking-wider block">
                 Team 2 Name *
               </label>
               
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3 sm:gap-4">
                 <div 
                   onClick={() => oppositeTeamInputRef.current?.click()}
-                  className="relative group cursor-pointer w-16 h-16 rounded-2xl bg-[#0D1528] border-2 border-dashed border-[#173541] flex flex-col items-center justify-center overflow-hidden hover:border-[#19D89A] transition-all shrink-0"
+                  className="relative group cursor-pointer w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-[#0D1528] border-2 border-dashed border-[#173541] flex flex-col items-center justify-center overflow-hidden hover:border-[#19D89A] transition-all shrink-0"
                 >
                   {oppositeTeamPreview ? (
                     <img src={oppositeTeamPreview} alt="Team 2 Logo" className="w-full h-full object-cover" />
                   ) : (
-                    <div className="flex flex-col items-center gap-1 text-[#AAB5CC]">
-                      <Camera className="w-5 h-5" />
+                    <div className="flex flex-col items-center gap-0.5 text-[#AAB5CC]">
+                      <Camera className="w-4 h-4 sm:w-5 sm:h-5" />
                       <span className="text-[8px] font-bold">Logo *</span>
                     </div>
                   )}
                   <div className="absolute inset-0 bg-[#050A1A]/80 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-opacity text-white text-[9px] font-bold">
-                    <Camera className="w-4 h-4 text-[#19D89A]" />
+                    <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#19D89A]" />
                     <span>Upload</span>
                   </div>
                 </div>
 
-                <div className="flex-1 space-y-1.5">
+                <div className="flex-1 space-y-1 sm:space-y-1.5">
                   <input 
                     type="text" 
                     value={oppositeTeamName}
                     onChange={(e) => setOppositeTeamName(e.target.value)}
                     placeholder="Enter Team 2 Name (e.g. Mumbai Kings)"
-                    className="w-full bg-[#0D1528] border border-[#173541] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-[#AAB5CC]/50 focus:outline-none focus:border-[#19D89A]"
+                    className="w-full bg-[#0D1528] border border-[#173541] rounded-xl px-3 py-1.5 sm:px-3.5 sm:py-2.5 text-xs text-white placeholder-[#AAB5CC]/50 focus:outline-none focus:border-[#19D89A]"
                   />
                   <input 
                     ref={oppositeTeamInputRef}
@@ -701,17 +701,17 @@ export default function CreateMatchForm({ initialMatch, onCancel, onSuccess }: C
           </div>
 
           {/* SELECT MATCH CATEGORY */}
-          <div className="bg-[#050A1A] border border-[#173541] rounded-2xl p-5 space-y-3 shadow-lg">
-            <label className="text-xs font-black text-[#19D89A] uppercase tracking-wider block">
+          <div className="bg-[#050A1A] border border-[#173541] rounded-2xl p-3 sm:p-5 space-y-2 sm:space-y-3 shadow-lg">
+            <label className="text-[10px] sm:text-xs font-black text-[#19D89A] uppercase tracking-wider block">
               Select Match Category *
             </label>
-            <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
+            <div className="grid grid-cols-3 gap-2 sm:gap-3">
               {categoryOptions.map((cat) => (
                 <button
                   key={cat}
                   type="button"
                   onClick={() => setCategory(cat)}
-                  className={`py-2 px-2.5 sm:py-2.5 sm:px-3 rounded-xl text-[11px] sm:text-xs font-bold transition-all border text-center ${
+                  className={`py-1.5 px-2 sm:py-2.5 sm:px-3 rounded-xl text-[10px] sm:text-xs font-bold transition-all border text-center ${
                     category === cat
                       ? 'bg-[#19D89A] text-[#050A1A] border-[#19D89A] shadow-md shadow-[#19D89A]/20 scale-102 font-black'
                       : 'bg-[#0D1528] text-[#AAB5CC] border-[#173541] hover:text-white hover:border-[#19D89A]/50'
@@ -724,12 +724,12 @@ export default function CreateMatchForm({ initialMatch, onCancel, onSuccess }: C
           </div>
 
           {/* STEP 1 NEXT / CONTINUE ACTION */}
-          <div className="pt-4 flex items-center justify-between border-t border-[#173541]">
+          <div className="pt-2 sm:pt-4 flex items-center justify-between border-t border-[#173541]">
             {onCancel ? (
               <button
                 type="button"
                 onClick={onCancel}
-                className="px-5 py-2.5 bg-[#111A2D] hover:bg-[#173541] text-[#AAB5CC] hover:text-white font-bold rounded-xl text-xs"
+                className="px-4 py-2 sm:px-5 sm:py-2.5 bg-[#111A2D] hover:bg-[#173541] text-[#AAB5CC] hover:text-white font-bold rounded-xl text-xs"
               >
                 Cancel
               </button>
@@ -738,7 +738,7 @@ export default function CreateMatchForm({ initialMatch, onCancel, onSuccess }: C
             <button
               type="button"
               onClick={handleProceedToStep2}
-              className="px-8 py-3 bg-[#19D89A] hover:bg-emerald-400 text-[#050A1A] font-black rounded-xl text-xs flex items-center gap-2 shadow-lg shadow-[#19D89A]/20 transition-all uppercase tracking-wider"
+              className="px-6 py-2.5 sm:px-8 sm:py-3 bg-[#19D89A] hover:bg-emerald-400 text-[#050A1A] font-black rounded-xl text-xs flex items-center gap-2 shadow-lg shadow-[#19D89A]/20 transition-all uppercase tracking-wider"
             >
               <span>Next Step</span>
               <ArrowRight className="w-4 h-4" />

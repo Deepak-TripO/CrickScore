@@ -309,7 +309,7 @@ export default function MasterScorerDashboardUI({
       {/* ✏️ EDIT MATCH FORM MODAL (REUSES CREATEMATCHFORM INTERFACE)  */}
       {/* ============================================================ */}
       {isEditModalOpen && editingMatch && (
-        <div className="fixed inset-0 z-50 bg-[#050A1A]/90 backdrop-blur-md flex items-start justify-center p-3 sm:p-6 overflow-y-auto">
+        <div className="fixed inset-0 z-[60] bg-[#050A1A]/90 backdrop-blur-md flex items-center justify-center p-2 sm:p-6 pb-20 sm:pb-6 overflow-y-auto">
           <div className="w-full max-w-4xl my-auto animate-in zoom-in-95 duration-200">
             {loadingEdit || !fullEditingMatch ? (
               <div className="bg-[#0D1528] border border-[#173541] rounded-3xl p-12 flex flex-col items-center justify-center space-y-4 shadow-2xl">
