@@ -96,10 +96,37 @@ function MobileNavSearch() {
 
   const [mobileSearchOpen, setMobileSearchOpen] = useState(!!currentSearch);
   const [searchValue, setSearchValue] = useState(currentSearch);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     setSearchValue(currentSearch);
   }, [currentSearch]);
+
+  // Automatically close mobile search bar on outside click/touch
+  useEffect(() => {
+    if (!mobileSearchOpen) return;
+
+    const handleOutsideClick = (e: MouseEvent | TouchEvent) => {
+      const target = e.target as Node;
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(target) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(target)
+      ) {
+        setMobileSearchOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleOutsideClick);
+    document.addEventListener('touchstart', handleOutsideClick);
+
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+      document.removeEventListener('touchstart', handleOutsideClick);
+    };
+  }, [mobileSearchOpen]);
 
   const handleSearchChange = (val: string) => {
     setSearchValue(val);
@@ -124,6 +151,7 @@ function MobileNavSearch() {
     <>
       {/* MOBILE SEARCH ICON BUTTON IN TOP NAV */}
       <button 
+        ref={buttonRef}
         type="button"
         onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
         className="md:hidden p-2 rounded-xl text-[#AAB5CC] hover:text-white hover:bg-[#0D1528] transition-colors" 
@@ -135,7 +163,10 @@ function MobileNavSearch() {
 
       {/* MOBILE EXPANDED SEARCH BAR (APPEARS DIRECTLY BELOW TOP NAV ONLY ON MOBILE) */}
       {mobileSearchOpen && (
-        <div className="md:hidden border-t border-[#173541] bg-[#0A1224] px-4 py-3 shadow-2xl animate-in slide-in-from-top-2">
+        <div 
+          ref={containerRef}
+          className="md:hidden border-t border-[#173541] bg-[#0A1224] px-4 py-2.5 shadow-2xl animate-in slide-in-from-top-2"
+        >
           <div className="flex items-center gap-2 bg-[#0D1528] border border-[#19D89A] rounded-xl px-3 py-2 w-full shadow-inner">
             <Search className="w-4 h-4 text-[#19D89A] shrink-0" />
             <input

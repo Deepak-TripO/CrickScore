@@ -107,9 +107,6 @@ function HomePageContent({
               ? 'ALL MATCHS'
               : `${activeCategory} MATCHES`}
           </h2>
-          <span className="text-xs text-[#71809A] font-mono">
-            {filteredMatches.length} {filteredMatches.length === 1 ? 'item' : 'items'}
-          </span>
         </div>
 
         {filteredMatches && filteredMatches.length > 0 ? (
