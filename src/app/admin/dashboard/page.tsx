@@ -9,6 +9,8 @@ import {
   ArrowRight
 } from 'lucide-react';
 
+import PendingMasterApplicationsList from '@/components/admin/PendingMasterApplicationsList';
+
 export default async function AdminDashboardPage() {
   const supabase = createClient();
   let db: any = supabase;
@@ -41,7 +43,7 @@ export default async function AdminDashboardPage() {
     db.from('matches').select('*', { count: 'exact', head: true }).eq('status', 'COMPLETED'),
     db.from('matches').select('*', { count: 'exact', head: true }).eq('status', 'DELETED'),
     db.from('profiles').select('*', { count: 'exact', head: true }),
-    db.from('master_applications').select('id, full_name, city, state, organization, created_at').eq('status', 'PENDING').order('created_at', { ascending: false }).limit(5),
+    db.from('master_applications').select('id, user_id, full_name, city, state, organization, created_at').eq('status', 'PENDING').order('created_at', { ascending: false }).limit(5),
     db.from('matches').select('id, title, status, team1:teams!matches_team1_id_fkey(name), team2:teams!matches_team2_id_fkey(name)').neq('status', 'DELETED').order('created_at', { ascending: false }).limit(5),
   ]);
 
@@ -82,41 +84,11 @@ export default async function AdminDashboardPage() {
       {/* TWO COLUMN GRID FOR PENDING APPLICATIONS & RECENT MATCHES */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
-        {/* PENDING APPLICATIONS PREVIEW */}
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4 shadow-xl">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-            <h2 className="text-base font-bold text-white flex items-center gap-2">
-              <FileCheck className="w-4 h-4 text-amber-400" />
-              Pending Master Applications ({pendingApps || 0})
-            </h2>
-            <Link href="/admin/master-applications" className="text-xs font-bold text-purple-400 hover:underline flex items-center gap-1">
-              View All <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-
-          {!pendingApplications || pendingApplications.length === 0 ? (
-            <div className="py-8 text-center text-slate-500 text-xs italic">
-              No pending Master applications.
-            </div>
-          ) : (
-            <div className="divide-y divide-slate-800 text-xs space-y-3">
-              {pendingApplications.map((app: any) => (
-                <div key={app.id} className="pt-3 first:pt-0 flex items-center justify-between gap-3">
-                  <div>
-                    <span className="font-bold text-white text-sm block">{app.full_name}</span>
-                    <span className="text-slate-400">{app.city}, {app.state} • {app.organization || 'Independent'}</span>
-                  </div>
-                  <Link
-                    href="/admin/master-applications"
-                    className="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-lg text-xs transition-colors shrink-0"
-                  >
-                    Action
-                  </Link>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        {/* PENDING APPLICATIONS PREVIEW WITH ACCEPT & REJECT ACTIONS */}
+        <PendingMasterApplicationsList
+          initialApplications={pendingApplications}
+          initialCount={pendingApps}
+        />
 
         {/* RECENT MATCHES PREVIEW */}
         <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4 shadow-xl">
