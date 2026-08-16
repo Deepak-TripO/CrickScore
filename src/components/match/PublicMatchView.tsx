@@ -234,93 +234,98 @@ export default function PublicMatchView({
   return (
     <div className="max-w-5xl mx-auto px-4 py-6 space-y-6 font-sans">
       
-      {/* HEADER MATCH BANNER */}
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-4">
-        {/* TOP STATUS BAR */}
-        <div className="flex items-center justify-between border-b border-slate-800 pb-3 text-xs text-slate-400">
-          <div className="flex items-center gap-2">
-            {displayStatus === 'LIVE' ? (
-              <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold uppercase text-[10px] flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                LIVE
-              </span>
-            ) : (
-              <span className="px-2.5 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300 font-bold text-[10px] uppercase">
-                COMPLETED
-              </span>
-            )}
-            <span>{match.format || 'ODI'} • {match.category || 'Tournament'}</span>
-          </div>
-
-          <div className="flex items-center gap-1.5 text-slate-300 font-semibold bg-slate-950 px-3 py-1 rounded-full border border-slate-800">
-            <Eye className="w-3.5 h-3.5 text-emerald-400" />
-            <span>{viewerCount} watching</span>
+      {/* HEADER MATCH BANNER - EXACT REFERENCE IMAGE 2 DESIGN */}
+      <div className="bg-[#0A1224] border border-[#172D42] rounded-2xl p-4 sm:p-5 shadow-2xl text-white space-y-3">
+        {/* TOP ROW: CATEGORY NAME ON LEFT | DATE ON RIGHT */}
+        <div className="flex items-center justify-between pb-3 border-b border-[#172D42]/70">
+          <span className="text-[#19D89A] font-extrabold text-sm sm:text-base tracking-wider uppercase">
+            {(match.category || 'TOURNAMENT').toUpperCase()}
+          </span>
+          <div className="flex items-center gap-1.5 text-[#AAB5CC] text-xs sm:text-sm font-semibold">
+            <Calendar className="w-4 h-4 text-[#19D89A]" />
+            <span suppressHydrationWarning>
+              {match.scheduled_start || match.scheduled_at || match.scheduled_date || match.created_at
+                ? new Date(match.scheduled_start || match.scheduled_at || match.scheduled_date || match.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+                : 'Today'}
+            </span>
           </div>
         </div>
 
-        {/* TEAM 1 & TEAM 2 SEPARATE SCORES + OVERS DISPLAY */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center py-1">
-          {/* TEAM 1 SCORECARD BOX */}
-          <div className="bg-slate-950/80 border border-slate-800/80 rounded-2xl p-4 flex items-center justify-between shadow-inner">
+        {/* TEAMS & SCORES ROW */}
+        <div className="grid grid-cols-2 items-center gap-4 pt-1">
+          
+          {/* LEFT TEAM (TEAM 1) */}
+          <div className="space-y-1.5">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-slate-800 border border-slate-700 p-1.5 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-[#050A1A] border border-[#172D42] p-1 flex items-center justify-center overflow-hidden shrink-0">
                 {match.team1?.logo_url ? (
                   <img 
                     src={match.team1.logo_url.includes('/storage/v1/object/') && !match.team1.logo_url.includes('/storage/v1/object/public/') ? match.team1.logo_url.replace('/storage/v1/object/', '/storage/v1/object/public/') : match.team1.logo_url} 
                     alt={match.team1.name} 
-                    className="w-full h-full object-contain" 
+                    className="w-full h-full object-cover rounded-lg" 
                     onError={(e) => { (e.currentTarget as HTMLElement).style.display = 'none'; }}
                   />
                 ) : (
-                  <span className="font-black text-lg text-emerald-400">{match.team1?.short_name || 'T1'}</span>
+                  <span className="font-black text-sm text-[#19D89A] font-mono">{match.team1?.short_name || 'T1'}</span>
                 )}
               </div>
-              <div>
-                <h3 className="font-extrabold text-sm sm:text-base text-white truncate max-w-[120px] sm:max-w-[160px]">{match.team1?.name}</h3>
-                <span className="text-[11px] text-slate-400 font-mono font-bold">{team1OversStr}</span>
-              </div>
+              <span className="text-2xl sm:text-3xl font-black text-white font-mono tracking-tight">
+                {team1ScoreStr}
+              </span>
             </div>
-            <div className="text-right">
-              <span className="text-2xl sm:text-3xl font-black text-emerald-400 font-mono tracking-tight">{team1ScoreStr}</span>
+
+            <div className="flex items-center gap-2 pl-0.5 text-xs sm:text-sm">
+              <span className="font-extrabold text-white truncate max-w-[100px] sm:max-w-[160px]">
+                {match.team1?.name || match.team1?.short_name || 'Team 1'}
+              </span>
+              <span className="text-[#AAB5CC] font-mono font-medium text-xs sm:text-sm">
+                ({team1OversStr})
+              </span>
             </div>
           </div>
 
-          {/* TEAM 2 SCORECARD BOX */}
-          <div className="bg-slate-950/80 border border-slate-800/80 rounded-2xl p-4 flex items-center justify-between shadow-inner">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-slate-800 border border-slate-700 p-1.5 flex items-center justify-center shrink-0">
+          {/* RIGHT TEAM (TEAM 2) */}
+          <div className="space-y-1.5 text-right">
+            <div className="flex items-center justify-end gap-3">
+              <span className="text-2xl sm:text-3xl font-black text-white font-mono tracking-tight">
+                {team2ScoreStr}
+              </span>
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-[#050A1A] border border-[#172D42] p-1 flex items-center justify-center overflow-hidden shrink-0">
                 {match.team2?.logo_url ? (
                   <img 
                     src={match.team2.logo_url.includes('/storage/v1/object/') && !match.team2.logo_url.includes('/storage/v1/object/public/') ? match.team2.logo_url.replace('/storage/v1/object/', '/storage/v1/object/public/') : match.team2.logo_url} 
                     alt={match.team2.name} 
-                    className="w-full h-full object-contain" 
+                    className="w-full h-full object-cover rounded-lg" 
                     onError={(e) => { (e.currentTarget as HTMLElement).style.display = 'none'; }}
                   />
                 ) : (
-                  <span className="font-black text-lg text-emerald-400">{match.team2?.short_name || 'T2'}</span>
+                  <span className="font-black text-sm text-[#19D89A] font-mono">{match.team2?.short_name || 'T2'}</span>
                 )}
               </div>
-              <div>
-                <h3 className="font-extrabold text-sm sm:text-base text-white truncate max-w-[120px] sm:max-w-[160px]">{match.team2?.name}</h3>
-                <span className="text-[11px] text-slate-400 font-mono font-bold">{team2OversStr}</span>
-              </div>
             </div>
-            <div className="text-right">
-              <span className="text-2xl sm:text-3xl font-black text-emerald-400 font-mono tracking-tight">{team2ScoreStr}</span>
+
+            <div className="flex items-center justify-end gap-2 pr-0.5 text-xs sm:text-sm">
+              <span className="text-[#AAB5CC] font-mono font-medium text-xs sm:text-sm">
+                ({team2OversStr})
+              </span>
+              <span className="font-extrabold text-white truncate max-w-[100px] sm:max-w-[160px]">
+                {match.team2?.name || match.team2?.short_name || 'Team 2'}
+              </span>
             </div>
           </div>
+
         </div>
 
-        {/* SUMMARY / TARGET BADGE */}
+        {/* SUMMARY / TARGET BADGE IF APPLICABLE */}
         {match.result_summary ? (
-          <div className="text-center pt-1">
-            <span className="px-4 py-1.5 rounded-full bg-emerald-950 border border-emerald-500/30 text-emerald-300 font-bold text-xs">
+          <div className="text-center pt-2 border-t border-[#172D42]/40">
+            <span className="px-4 py-1.5 rounded-full bg-[#19D89A]/10 border border-[#19D89A]/30 text-[#19D89A] font-bold text-xs">
               🏆 {match.result_summary}
             </span>
           </div>
         ) : match.target ? (
-          <div className="text-center pt-1">
-            <span className="px-4 py-1 rounded-full bg-emerald-950/60 border border-emerald-500/20 text-emerald-300 font-bold text-xs">
+          <div className="text-center pt-2 border-t border-[#172D42]/40">
+            <span className="px-4 py-1 rounded-full bg-[#050A1A] border border-[#172D42] text-[#19D89A] font-bold text-xs">
               Target: {match.target} ({match.target - (liveState?.totalRuns || 0)} runs needed off {match.overs * 6 - (liveState?.legalBalls || 0)} balls)
             </span>
           </div>

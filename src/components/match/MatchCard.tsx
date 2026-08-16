@@ -81,7 +81,7 @@ export default function MatchCard({
   /* 🏏 HOME PAGE & HISTORY MATCH CARD VARIANT (EXACT SAME VISUAL DESIGN)      */
   /* ========================================================================= */
   if (isHomePageCard || isHistoryView) {
-    const categoryType = match.category || match.format || 'T20';
+    const categoryType = (match.category || 'TOURNAMENT').toUpperCase();
 
     const team1ScoreText = match.current_score || (isLive || isCompleted ? '142/6' : '0/0');
     const team1OversText = match.current_over ? `(${match.current_over} Ov)` : (isLive || isCompleted ? '(16.3 Ov)' : '(0.0 Ov)');
