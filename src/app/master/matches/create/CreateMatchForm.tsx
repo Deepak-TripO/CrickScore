@@ -391,17 +391,49 @@ export default function CreateMatchForm({ initialMatch, onCancel, onSuccess }: C
       return;
     }
 
-    // Team 1 Validation
+    // Team 1 Validation: Require 11 named players and at least 1 assigned for every role
     const t1Stats = countTeamRoles(yourTeamPlayers);
     if (yourTeamPlayers.length !== 11 || t1Stats.totalNamed !== 11) {
-      setErrorMsg(`Team 1 (${yourTeamName}) must have exactly 11 players with names (currently has ${t1Stats.totalNamed}/11).`);
+      setErrorMsg(`Team 1 (${yourTeamName || 'Team 1'}) must have all 11 player slots filled with names (currently has ${t1Stats.totalNamed}/11).`);
+      return;
+    }
+    if (!t1Stats.hasWK) {
+      setErrorMsg(`Team 1 (${yourTeamName || 'Team 1'}) must have at least 1 Wicket Keeper (WK) assigned.`);
+      return;
+    }
+    if (!t1Stats.hasBAT) {
+      setErrorMsg(`Team 1 (${yourTeamName || 'Team 1'}) must have at least 1 Batsman (BAT) assigned.`);
+      return;
+    }
+    if (!t1Stats.hasAR) {
+      setErrorMsg(`Team 1 (${yourTeamName || 'Team 1'}) must have at least 1 All-Rounder (AR) assigned.`);
+      return;
+    }
+    if (!t1Stats.hasBOWL) {
+      setErrorMsg(`Team 1 (${yourTeamName || 'Team 1'}) must have at least 1 Bowler (BOWL) assigned.`);
       return;
     }
 
-    // Team 2 Validation
+    // Team 2 Validation: Require 11 named players and at least 1 assigned for every role
     const t2Stats = countTeamRoles(oppositeTeamPlayers);
     if (oppositeTeamPlayers.length !== 11 || t2Stats.totalNamed !== 11) {
-      setErrorMsg(`Team 2 (${oppositeTeamName}) must have exactly 11 players with names (currently has ${t2Stats.totalNamed}/11).`);
+      setErrorMsg(`Team 2 (${oppositeTeamName || 'Team 2'}) must have all 11 player slots filled with names (currently has ${t2Stats.totalNamed}/11).`);
+      return;
+    }
+    if (!t2Stats.hasWK) {
+      setErrorMsg(`Team 2 (${oppositeTeamName || 'Team 2'}) must have at least 1 Wicket Keeper (WK) assigned.`);
+      return;
+    }
+    if (!t2Stats.hasBAT) {
+      setErrorMsg(`Team 2 (${oppositeTeamName || 'Team 2'}) must have at least 1 Batsman (BAT) assigned.`);
+      return;
+    }
+    if (!t2Stats.hasAR) {
+      setErrorMsg(`Team 2 (${oppositeTeamName || 'Team 2'}) must have at least 1 All-Rounder (AR) assigned.`);
+      return;
+    }
+    if (!t2Stats.hasBOWL) {
+      setErrorMsg(`Team 2 (${oppositeTeamName || 'Team 2'}) must have at least 1 Bowler (BOWL) assigned.`);
       return;
     }
 
@@ -708,7 +740,7 @@ export default function CreateMatchForm({ initialMatch, onCancel, onSuccess }: C
               onClick={handleProceedToStep2}
               className="px-8 py-3 bg-[#19D89A] hover:bg-emerald-400 text-[#050A1A] font-black rounded-xl text-xs flex items-center gap-2 shadow-lg shadow-[#19D89A]/20 transition-all uppercase tracking-wider"
             >
-              <span>Next (Step 2)</span>
+              <span>Next Step</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
