@@ -25,6 +25,7 @@ export interface PlayerInput {
   id: string;
   name: string;
   type: PlayerRoleType;
+  jerseyNumber?: string;
   imageFile: File | null;
   previewUrl: string;
 }
@@ -37,17 +38,17 @@ interface CreateMatchFormProps {
 
 // Generate default 11-player squad with balanced roles (1 WK, 5 BAT, 2 AR, 3 BOWL)
 const createDefaultSquad = (prefix: string): PlayerInput[] => [
-  { id: `${prefix}_wk1`, name: '', type: 'WK', imageFile: null, previewUrl: '' },
-  { id: `${prefix}_bat1`, name: '', type: 'Batsman', imageFile: null, previewUrl: '' },
-  { id: `${prefix}_bat2`, name: '', type: 'Batsman', imageFile: null, previewUrl: '' },
-  { id: `${prefix}_bat3`, name: '', type: 'Batsman', imageFile: null, previewUrl: '' },
-  { id: `${prefix}_bat4`, name: '', type: 'Batsman', imageFile: null, previewUrl: '' },
-  { id: `${prefix}_bat5`, name: '', type: 'Batsman', imageFile: null, previewUrl: '' },
-  { id: `${prefix}_all1`, name: '', type: 'Allrounder', imageFile: null, previewUrl: '' },
-  { id: `${prefix}_all2`, name: '', type: 'Allrounder', imageFile: null, previewUrl: '' },
-  { id: `${prefix}_bowl1`, name: '', type: 'Bowler', imageFile: null, previewUrl: '' },
-  { id: `${prefix}_bowl2`, name: '', type: 'Bowler', imageFile: null, previewUrl: '' },
-  { id: `${prefix}_bowl3`, name: '', type: 'Bowler', imageFile: null, previewUrl: '' },
+  { id: `${prefix}_wk1`, name: '', type: 'WK', jerseyNumber: '', imageFile: null, previewUrl: '' },
+  { id: `${prefix}_bat1`, name: '', type: 'Batsman', jerseyNumber: '', imageFile: null, previewUrl: '' },
+  { id: `${prefix}_bat2`, name: '', type: 'Batsman', jerseyNumber: '', imageFile: null, previewUrl: '' },
+  { id: `${prefix}_bat3`, name: '', type: 'Batsman', jerseyNumber: '', imageFile: null, previewUrl: '' },
+  { id: `${prefix}_bat4`, name: '', type: 'Batsman', jerseyNumber: '', imageFile: null, previewUrl: '' },
+  { id: `${prefix}_bat5`, name: '', type: 'Batsman', jerseyNumber: '', imageFile: null, previewUrl: '' },
+  { id: `${prefix}_ar1`, name: '', type: 'Allrounder', jerseyNumber: '', imageFile: null, previewUrl: '' },
+  { id: `${prefix}_ar2`, name: '', type: 'Allrounder', jerseyNumber: '', imageFile: null, previewUrl: '' },
+  { id: `${prefix}_bowl1`, name: '', type: 'Bowler', jerseyNumber: '', imageFile: null, previewUrl: '' },
+  { id: `${prefix}_bowl2`, name: '', type: 'Bowler', jerseyNumber: '', imageFile: null, previewUrl: '' },
+  { id: `${prefix}_bowl3`, name: '', type: 'Bowler', jerseyNumber: '', imageFile: null, previewUrl: '' },
 ];
 
 const mapPlayersToInput = (rawPlayers: any[], prefix: string): PlayerInput[] => {
@@ -76,11 +77,12 @@ const mapPlayersToInput = (rawPlayers: any[], prefix: string): PlayerInput[] => 
       (typeof p === 'string' ? p : '');
 
     return {
-      id: p.id || `${prefix}_p_${idx}_${Date.now()}`,
+      id: p.id || p.player_id || `${prefix}_p_${idx}_${Date.now()}`,
       name: pName,
       type,
+      jerseyNumber: p.jerseyNumber ? String(p.jerseyNumber) : p.jersey_number ? String(p.jersey_number) : '',
       imageFile: null,
-      previewUrl: p.avatar_url || p.image_url || p.profile_image || p.avatarUrl || ''
+      previewUrl: p.avatar_url || p.image_url || p.profile_image || p.avatarUrl || p.photo_url || ''
     };
   });
 
@@ -89,6 +91,7 @@ const mapPlayersToInput = (rawPlayers: any[], prefix: string): PlayerInput[] => 
       id: `${prefix}_pad_${mapped.length}_${Date.now()}`,
       name: '',
       type: 'Batsman',
+      jerseyNumber: '',
       imageFile: null,
       previewUrl: ''
     };
@@ -456,7 +459,7 @@ export default function CreateMatchForm({ initialMatch, onCancel, onSuccess }: C
           if (p.imageFile) {
             avatarUrl = await uploadFileToSupabase(p.imageFile, 'player1');
           }
-          return { id: p.id, name: p.name.trim(), type: p.type, avatarUrl };
+          return { id: p.id, name: p.name.trim(), type: p.type, avatarUrl, jerseyNumber: p.jerseyNumber };
         })
       );
 
@@ -466,7 +469,7 @@ export default function CreateMatchForm({ initialMatch, onCancel, onSuccess }: C
           if (p.imageFile) {
             avatarUrl = await uploadFileToSupabase(p.imageFile, 'player2');
           }
-          return { id: p.id, name: p.name.trim(), type: p.type, avatarUrl };
+          return { id: p.id, name: p.name.trim(), type: p.type, avatarUrl, jerseyNumber: p.jerseyNumber };
         })
       );
 
