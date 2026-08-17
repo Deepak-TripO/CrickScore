@@ -1,13 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import CreateMatchForm from '../matches/create/CreateMatchForm';
 import CommunityCreateSection from '@/components/community/CommunityCreateSection';
 import MatchCard from '@/components/match/MatchCard';
 import { getMatchDetailsForEdit, deleteMatch } from '@/actions/matches';
-import { createClient } from '@/lib/supabase/client';
 import { 
   LayoutDashboard, 
   PlusCircle, 
@@ -58,64 +57,12 @@ export default function MasterScorerDashboardUI({
   const [isDeleting, setIsDeleting] = useState(false);
 
   const [toastMsg, setToastMsg] = useState('');
-  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
-
-  useEffect(() => {
-    if (typeof window === 'undefined' || !window.visualViewport) return;
-    const handleResize = () => {
-      const vv = window.visualViewport;
-      if (!vv) return;
-      setIsKeyboardOpen(window.innerHeight - vv.height > 150);
-    };
-    window.visualViewport.addEventListener('resize', handleResize);
-    window.visualViewport.addEventListener('scroll', handleResize);
-    return () => {
-      window.visualViewport?.removeEventListener('resize', handleResize);
-      window.visualViewport?.removeEventListener('scroll', handleResize);
-    };
-  }, []);
-
-  const [currentMatches, setCurrentMatches] = useState(matches);
-  const [latestCreatedMatchId, setLatestCreatedMatchId] = useState<string | null>(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('batscore_latest_created_match_id');
-    }
-    return null;
-  });
-
-  const [isLatestMatchDeleted, setIsLatestMatchDeleted] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('batscore_latest_match_deleted') === 'true';
-    }
-    return false;
-  });
 
   React.useEffect(() => {
     if (initialTab) {
       setActiveTab(initialTab as any);
     }
   }, [initialTab]);
-
-  // Real-Time Database Subscriptions for automatic updates
-  useEffect(() => {
-    const supabase = createClient();
-    const channel = supabase
-      .channel('master-dashboard-realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'matches' }, () => {
-        router.refresh();
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'match_players' }, () => {
-        router.refresh();
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'players' }, () => {
-        router.refresh();
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [router]);
 
   const showToast = (msg: string) => {
     setToastMsg(msg);
@@ -160,22 +107,12 @@ export default function MasterScorerDashboardUI({
     setLoadingEdit(false);
   };
 
-  const handleEditSuccess = async () => {
-    const editId = editingMatch?.id;
+  const handleEditSuccess = () => {
     setIsEditModalOpen(false);
     setEditingMatch(null);
     setFullEditingMatch(null);
     setLoadingEdit(false);
     showToast('✓ Match updated successfully.');
-
-    if (editId) {
-      try {
-        const updated = await getMatchDetailsForEdit(editId);
-        if (updated) {
-          setCurrentMatches(prev => prev.map(m => m.id === editId ? { ...m, ...updated } : m));
-        }
-      } catch {}
-    }
     router.refresh();
   };
 
@@ -189,7 +126,20 @@ export default function MasterScorerDashboardUI({
     setIsDeleteModalOpen(false);
     setDeletingMatch(null);
     setIsDeleting(false);
-  };
+  };  const [currentMatches, setCurrentMatches] = useState(matches);
+  const [latestCreatedMatchId, setLatestCreatedMatchId] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('batscore_latest_created_match_id');
+    }
+    return null;
+  });
+
+  const [isLatestMatchDeleted, setIsLatestMatchDeleted] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('batscore_latest_match_deleted') === 'true';
+    }
+    return false;
+  });
 
   React.useEffect(() => {
     setCurrentMatches(matches);
@@ -243,7 +193,7 @@ export default function MasterScorerDashboardUI({
     }
   };
 
-  const handleMatchCreatedSuccess = async (newMatchId?: string) => {
+  const handleMatchCreatedSuccess = (newMatchId?: string) => {
     if (newMatchId) {
       setLatestCreatedMatchId(newMatchId);
       setIsLatestMatchDeleted(false);
@@ -251,12 +201,6 @@ export default function MasterScorerDashboardUI({
         localStorage.setItem('batscore_latest_created_match_id', newMatchId);
         localStorage.removeItem('batscore_latest_match_deleted');
       }
-      try {
-        const fullDetails = await getMatchDetailsForEdit(newMatchId);
-        if (fullDetails) {
-          setCurrentMatches(prev => [fullDetails, ...prev.filter(m => m.id !== newMatchId)]);
-        }
-      } catch {}
     }
     handleTabChange('overview');
     router.refresh();
@@ -517,47 +461,45 @@ export default function MasterScorerDashboardUI({
       {/* ============================================================ */}
       {/* 🧭 PREMIUM GLASSMORPHISM BOTTOM NAVIGATION BAR               */}
       {/* ============================================================ */}
-      {!isKeyboardOpen && (
-        <nav 
-          aria-label="Master Dashboard Bottom Navigation"
-          className="fixed bottom-0 left-0 right-0 z-50 bg-[#070D1D]/90 backdrop-blur-2xl border-t border-[#19D89A]/20 shadow-[0_-12px_40px_rgba(0,0,0,0.85)] py-2.5 pb-[calc(0.6rem+env(safe-area-inset-bottom))] px-3 sm:px-6 transform-gpu"
-          style={{ position: 'fixed', bottom: 0, left: 0, right: 0, transform: 'translateZ(0)' }}
-        >
-          <div className="max-w-2xl mx-auto flex items-center justify-around gap-1.5 sm:gap-4">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = activeTab === item.id;
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => handleTabChange(item.id)}
-                  className={`flex-1 flex flex-col items-center justify-center py-2 px-1 sm:px-3 rounded-2xl transition-all duration-300 ease-out relative group ${
-                    isActive
-                      ? 'bg-gradient-to-b from-[#19D89A]/20 to-[#19D89A]/5 text-[#19D89A] font-extrabold shadow-[0_4px_20px_rgba(25,216,154,0.15)] border border-[#19D89A]/40 scale-102'
-                      : 'text-[#8F9BB3] hover:text-white hover:bg-[#111A2D]/80 font-medium border border-transparent'
-                  }`}
-                >
-                  {/* Active Indicator Top Glowing Bar */}
-                  {isActive && (
-                    <span className="absolute -top-2.5 w-10 h-1 bg-gradient-to-r from-[#19D89A] via-emerald-300 to-[#19D89A] rounded-full shadow-[0_0_12px_#19D89A] transition-all duration-300 ease-out" />
-                  )}
-                  
-                  <Icon className={`w-5 h-5 transition-all duration-300 ease-out ${
-                    isActive ? 'text-[#19D89A] scale-110 drop-shadow-[0_0_8px_rgba(25,216,154,0.5)]' : 'text-[#8F9BB3] group-hover:text-white'
-                  }`} />
+      <nav 
+        aria-label="Master Dashboard Bottom Navigation"
+        className="fixed bottom-0 left-0 right-0 z-50 bg-[#070D1D]/90 backdrop-blur-2xl border-t border-[#19D89A]/20 shadow-[0_-12px_40px_rgba(0,0,0,0.85)] py-2.5 px-3 sm:px-6 transform-gpu"
+        style={{ position: 'fixed', bottom: 0, left: 0, right: 0, transform: 'translateZ(0)' }}
+      >
+        <div className="max-w-2xl mx-auto flex items-center justify-around gap-1.5 sm:gap-4">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeTab === item.id;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => handleTabChange(item.id)}
+                className={`flex-1 flex flex-col items-center justify-center py-2 px-1 sm:px-3 rounded-2xl transition-all duration-300 ease-out relative group ${
+                  isActive
+                    ? 'bg-gradient-to-b from-[#19D89A]/20 to-[#19D89A]/5 text-[#19D89A] font-extrabold shadow-[0_4px_20px_rgba(25,216,154,0.15)] border border-[#19D89A]/40 scale-102'
+                    : 'text-[#8F9BB3] hover:text-white hover:bg-[#111A2D]/80 font-medium border border-transparent'
+                }`}
+              >
+                {/* Active Indicator Top Glowing Bar */}
+                {isActive && (
+                  <span className="absolute -top-2.5 w-10 h-1 bg-gradient-to-r from-[#19D89A] via-emerald-300 to-[#19D89A] rounded-full shadow-[0_0_12px_#19D89A] transition-all duration-300 ease-out" />
+                )}
+                
+                <Icon className={`w-5 h-5 transition-all duration-300 ease-out ${
+                  isActive ? 'text-[#19D89A] scale-110 drop-shadow-[0_0_8px_rgba(25,216,154,0.5)]' : 'text-[#8F9BB3] group-hover:text-white'
+                }`} />
 
-                  <span className={`text-[10px] sm:text-xs tracking-wider mt-1 text-center whitespace-nowrap transition-all duration-300 ease-out ${
-                    isActive ? 'text-[#19D89A] font-black' : 'text-[#8F9BB3]'
-                  }`}>
-                    {item.label}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </nav>
-      )}
+                <span className={`text-[10px] sm:text-xs tracking-wider mt-1 text-center whitespace-nowrap transition-all duration-300 ease-out ${
+                  isActive ? 'text-[#19D89A] font-black' : 'text-[#8F9BB3]'
+                }`}>
+                  {item.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </nav>
 
     </div>
   );

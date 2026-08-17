@@ -4,20 +4,6 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { revalidatePath } from 'next/cache';
 
-const safeRevalidatePath = (path: string) => {
-  try {
-    revalidatePath(path);
-  } catch {}
-};
-
-const mapRoleForDb = (type: string): 'BATTER' | 'BOWLER' | 'ALL_ROUNDER' | 'WICKETKEEPER' => {
-  const rUpper = String(type).toUpperCase();
-  if (rUpper.includes('WICKET') || rUpper === 'WK' || rUpper.includes('KEEPER')) return 'WICKETKEEPER';
-  if (rUpper.includes('BOWLER') || rUpper === 'BOWL') return 'BOWLER';
-  if (rUpper.includes('ALL') || rUpper === 'AR' || rUpper.includes('ROUND')) return 'ALL_ROUNDER';
-  return 'BATTER';
-};
-
 // Helper for Inserting Match safely by dynamically stripping missing schema columns if PostgREST errors
 async function insertMatchSafely(db: any, initialPayload: Record<string, any>) {
   let currentPayload = { ...initialPayload };
@@ -237,41 +223,27 @@ export async function createFullTwoStepMatch(payload: {
   category: 'League' | 'Tournament' | 'Club Match';
   scheduledDate: string;
   overs: number;
-  yourTeamPlayers: { id?: string; name: string; type: 'WK' | 'Batsman' | 'Allrounder' | 'Bowler'; avatarUrl?: string }[];
-  oppositeTeamPlayers: { id?: string; name: string; type: 'WK' | 'Batsman' | 'Allrounder' | 'Bowler'; avatarUrl?: string }[];
+  yourTeamPlayers: { name: string; type: 'WK' | 'Batsman' | 'Allrounder' | 'Bowler'; avatarUrl?: string }[];
+  oppositeTeamPlayers: { name: string; type: 'WK' | 'Batsman' | 'Allrounder' | 'Bowler'; avatarUrl?: string }[];
 }) {
-  let db: any;
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) return { error: 'Unauthorized: Master Scorer login required.' };
+
+  let db: any = supabase;
   try {
     db = createAdminClient();
   } catch {
-    try {
-      db = createClient();
-    } catch {}
+    db = supabase;
   }
-
-  let userId: string | null = null;
-  try {
-    const { data: authUser } = await db.auth.getUser();
-    if (authUser?.user?.id) userId = authUser.user.id;
-  } catch {}
-
-  if (!userId) {
-    try {
-      const { data: profs } = await db.from('profiles').select('id').limit(1);
-      if (profs && profs.length > 0) {
-        userId = profs[0].id;
-      }
-    } catch {}
-  }
-
-  if (!userId) return { error: 'Unauthorized: Master Scorer login required.' };
 
   const insertTeam = async (name: string, logoUrl?: string) => {
     const shortName = name.replace(/[^a-zA-Z0-9]/g, '').slice(0, 4).toUpperCase() || 'TEAM';
     
     let { data, error } = await db.from('teams').insert({
-      owner_id: userId,
-      manager_id: userId,
+      owner_id: user.id,
+      manager_id: user.id,
       name,
       short_name: shortName,
       logo_url: logoUrl || null
@@ -279,8 +251,8 @@ export async function createFullTwoStepMatch(payload: {
 
     if (error && error.message.includes('short_name')) {
       const resShort = await db.from('teams').insert({
-        owner_id: userId,
-        manager_id: userId,
+        owner_id: user.id,
+        manager_id: user.id,
         name,
         logo_url: logoUrl || null
       }).select().single();
@@ -290,7 +262,7 @@ export async function createFullTwoStepMatch(payload: {
 
     if (error && error.message.includes('manager_id')) {
       const res2 = await db.from('teams').insert({
-        owner_id: userId,
+        owner_id: user.id,
         name,
         logo_url: logoUrl || null
       }).select().single();
@@ -300,7 +272,7 @@ export async function createFullTwoStepMatch(payload: {
 
     if (error && error.message.includes('owner_id')) {
       const res3 = await db.from('teams').insert({
-        manager_id: userId,
+        manager_id: user.id,
         name,
         logo_url: logoUrl || null
       }).select().single();
@@ -320,43 +292,40 @@ export async function createFullTwoStepMatch(payload: {
     return { data, error };
   };
 
-  const insertPlayer = async (p: { name: string; type: string; jerseyNumber?: string; avatarUrl?: string }, teamId?: string) => {
-    const role = mapRoleForDb(p.type);
-    const jersey = p.jerseyNumber ? parseInt(p.jerseyNumber, 10) : null;
-    const jersey_number = isNaN(jersey as number) ? null : jersey;
+  const insertPlayer = async (p: { name: string; type: string; avatarUrl?: string }, teamId: string) => {
+    const roleMapping = p.type === 'WK' ? 'WICKETKEEPER' : p.type === 'Batsman' ? 'BATSMAN' : p.type === 'Bowler' ? 'BOWLER' : 'ALL_ROUNDER';
 
-    const payloads = [
-      { name: p.name, role, jersey_number, team_id: teamId || null },
-      { name: p.name, role, team_id: teamId || null },
-      { name: p.name, role },
-      { full_name: p.name, display_name: p.name, role }
-    ];
+    let { data, error } = await db.from('players').insert({
+      owner_id: user.id,
+      full_name: p.name,
+      display_name: p.name,
+      role: roleMapping,
+      photo_url: p.avatarUrl || null
+    }).select().single();
 
-    let playerRecord: any = null;
-    for (const payload of payloads) {
-      try {
-        const { data, error } = await db.from('players').insert(payload).select().single();
-        if (!error && data) {
-          playerRecord = data;
-          break;
-        }
-      } catch {}
+    if (error || !data) {
+      const res2 = await db.from('players').insert({
+        full_name: p.name,
+        display_name: p.name,
+        role: roleMapping
+      }).select().single();
+      data = res2.data;
     }
 
-    if (playerRecord && teamId) {
+    if (data && teamId) {
       try {
         await db.from('team_players').upsert({
           team_id: teamId,
-          player_id: playerRecord.id
+          player_id: data.id
         });
       } catch {}
 
       try {
-        await db.from('players').update({ team_id: teamId }).eq('id', playerRecord.id);
+        await db.from('players').update({ team_id: teamId }).eq('id', data.id);
       } catch {}
     }
 
-    return playerRecord;
+    return data;
   };
 
   const { data: team1, error: team1Err } = await insertTeam(payload.yourTeamName, payload.yourTeamLogoUrl);
@@ -365,38 +334,30 @@ export async function createFullTwoStepMatch(payload: {
   const { data: team2, error: team2Err } = await insertTeam(payload.oppositeTeamName, payload.oppositeTeamLogoUrl);
   if (team2Err || !team2) return { error: `Failed to create Opposite Team: ${team2Err?.message}` };
 
-  const yourTeamPlayersWithIds = await Promise.all(
-    payload.yourTeamPlayers.map(async (p) => {
-      if (p.name.trim()) {
-        const playerRecord = await insertPlayer(p, team1.id);
-        if (playerRecord?.id) {
-          return { ...p, id: playerRecord.id };
-        }
-      }
-      return p;
-    })
-  );
+  const team1PlayerIds: string[] = [];
+  for (const p of payload.yourTeamPlayers) {
+    if (p.name.trim()) {
+      const playerRecord = await insertPlayer(p, team1.id);
+      if (playerRecord?.id) team1PlayerIds.push(playerRecord.id);
+    }
+  }
 
-  const oppositeTeamPlayersWithIds = await Promise.all(
-    payload.oppositeTeamPlayers.map(async (p) => {
-      if (p.name.trim()) {
-        const playerRecord = await insertPlayer(p, team2.id);
-        if (playerRecord?.id) {
-          return { ...p, id: playerRecord.id };
-        }
-      }
-      return p;
-    })
-  );
+  const team2PlayerIds: string[] = [];
+  for (const p of payload.oppositeTeamPlayers) {
+    if (p.name.trim()) {
+      const playerRecord = await insertPlayer(p, team2.id);
+      if (playerRecord?.id) team2PlayerIds.push(playerRecord.id);
+    }
+  }
 
   const matchFormat = payload.overs <= 10 ? 'T10' : payload.overs <= 20 ? 'T20' : 'ODI';
   const matchTitle = `${payload.yourTeamName} vs ${payload.oppositeTeamName}`;
   const startTime = payload.scheduledDate || new Date().toISOString();
 
   const matchPayload: any = {
-    master_id: userId,
-    scorer_id: userId,
-    created_by: userId,
+    master_id: user.id,
+    scorer_id: user.id,
+    created_by: user.id,
     title: matchTitle,
     format: matchFormat,
     overs: payload.overs,
@@ -412,8 +373,8 @@ export async function createFullTwoStepMatch(payload: {
     opposite_team_name: payload.oppositeTeamName,
     your_team_logo_url: payload.yourTeamLogoUrl || null,
     opposite_team_logo_url: payload.oppositeTeamLogoUrl || null,
-    your_team_players: yourTeamPlayersWithIds,
-    opposite_team_players: oppositeTeamPlayersWithIds,
+    your_team_players: payload.yourTeamPlayers,
+    opposite_team_players: payload.oppositeTeamPlayers,
     toss_winner: team1.id,
     toss_decision: 'BAT',
     current_score: '0/0',
@@ -427,37 +388,31 @@ export async function createFullTwoStepMatch(payload: {
     return { error: matchError?.message || 'Failed to create match.' };
   }
 
-  const matchPlayersToInsert: any[] = [];
-  const isUuidStr = (str?: string) => !!str && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
-
-  for (const p of yourTeamPlayersWithIds) {
-    if (p.name.trim() && isUuidStr(p.id)) {
-      matchPlayersToInsert.push({
-        match_id: match.id,
-        team_id: team1.id,
-        player_id: p.id,
-        is_playing: true
-      });
-    }
-  }
-
-  for (const p of oppositeTeamPlayersWithIds) {
-    if (p.name.trim() && isUuidStr(p.id)) {
-      matchPlayersToInsert.push({
-        match_id: match.id,
-        team_id: team2.id,
-        player_id: p.id,
-        is_playing: true
-      });
-    }
-  }
+  const matchPlayersToInsert = [
+    ...payload.yourTeamPlayers.map((p, idx) => ({
+      match_id: match.id,
+      team_id: team1.id,
+      player_id: team1PlayerIds[idx] || null,
+      player_name: p.name,
+      name: p.name,
+      role: p.type,
+      is_playing: true
+    })),
+    ...payload.oppositeTeamPlayers.map((p, idx) => ({
+      match_id: match.id,
+      team_id: team2.id,
+      player_id: team2PlayerIds[idx] || null,
+      player_name: p.name,
+      name: p.name,
+      role: p.type,
+      is_playing: true
+    }))
+  ];
 
   if (matchPlayersToInsert.length > 0) {
     try {
       await db.from('match_players').insert(matchPlayersToInsert);
-    } catch (err) {
-      console.warn('[CREATE MATCH_PLAYERS ERROR]', err);
-    }
+    } catch {}
   }
 
   try {
@@ -473,18 +428,19 @@ export async function createFullTwoStepMatch(payload: {
     });
   } catch {}
 
-  safeRevalidatePath('/master/dashboard');
-  safeRevalidatePath('/master/matches');
-  safeRevalidatePath('/matches');
+  revalidatePath('/master/dashboard');
+  revalidatePath('/master/matches');
+  revalidatePath('/matches');
   return { success: true, matchId: match.id };
 }
 
 export async function getMatchDetailsForEdit(matchId: string) {
-  let db: any;
+  const supabase = createClient();
+  let db: any = supabase;
   try {
     db = createAdminClient();
   } catch {
-    db = createClient();
+    db = supabase;
   }
 
   const { data: match } = await db.from('matches').select('*').eq('id', matchId).maybeSingle();
@@ -525,62 +481,56 @@ export async function getMatchDetailsForEdit(matchId: string) {
         else if (rUpper.includes('ALL') || rUpper === 'AR' || rUpper.includes('ROUND')) type = 'Allrounder';
 
         allFoundPlayers.push({
-          id: p.id || p.player_id || `p_${nameKey}`,
+          id: p.id || `p_${nameKey}`,
           name: pName.trim(),
           type,
           role: type,
-          jerseyNumber: p.jersey_number || p.jerseyNumber || '',
-          jersey_number: p.jersey_number || p.jerseyNumber || null,
           avatar_url: p.avatar_url || p.image_url || p.profile_image || p.avatarUrl || p.photo_url || ''
         });
       }
     };
 
-    // Priority 1: Query match_players table for this match
-    if (matchId) {
-      try {
-        let query = db.from('match_players').select('*').eq('match_id', matchId);
-        if (teamId) {
-          query = query.eq('team_id', teamId);
-        }
-        const { data: mpRows } = await query;
-        if (mpRows && mpRows.length > 0) {
-          const pIds = mpRows.map((r: any) => r.player_id).filter(Boolean);
-          if (pIds.length > 0) {
-            const { data: pRecs } = await db.from('players').select('*').in('id', pIds);
-            if (pRecs && pRecs.length > 0) {
-              const pMap = new Map<string, any>();
-              pRecs.forEach((pr: any) => pMap.set(pr.id, pr));
-              for (const mp of mpRows) {
-                const pr = pMap.get(mp.player_id);
-                if (pr) {
-                  addPlayer({
-                    ...pr,
-                    name: pr.full_name || pr.display_name || pr.name
-                  });
-                }
-              }
+    // 1. Direct JSON arrays on match record
+    const jsonPlayers = isTeam1
+      ? (match.your_team_players || match.team1_players || match.team_1_players || match.players_a)
+      : (match.opposite_team_players || match.team2_players || match.team_2_players || match.players_b);
+
+    if (Array.isArray(jsonPlayers)) {
+      jsonPlayers.forEach(addPlayer);
+    }
+
+    // 2. Query match_players table for this match
+    try {
+      let query = db.from('match_players').select('*').eq('match_id', matchId);
+      if (teamId) {
+        query = query.eq('team_id', teamId);
+      }
+      const { data: mpRows } = await query;
+      if (mpRows && mpRows.length > 0) {
+        for (const row of mpRows) {
+          const pName = row.player_name || row.name || row.full_name || row.display_name;
+          if (pName) {
+            addPlayer({
+              id: row.player_id || row.id,
+              name: pName,
+              role: row.role || row.player_type || 'BATSMAN',
+              avatar_url: row.avatar_url || row.image_url || ''
+            });
+          } else if (row.player_id) {
+            const { data: pRec } = await db.from('players').select('*').eq('id', row.player_id).maybeSingle();
+            if (pRec) {
+              addPlayer({
+                ...pRec,
+                name: pRec.name || pRec.full_name || pRec.display_name
+              });
             }
           }
         }
-      } catch (err) {
-        console.warn('[FETCH MATCH PLAYERS ERR]', err);
       }
-    }
+    } catch {}
 
-    // Priority 2: Direct JSON arrays on match record
-    if (allFoundPlayers.length === 0) {
-      const jsonPlayers = isTeam1
-        ? (match.your_team_players || match.team1_players || match.team_1_players || match.players_a)
-        : (match.opposite_team_players || match.team2_players || match.team_2_players || match.players_b);
-
-      if (Array.isArray(jsonPlayers)) {
-        jsonPlayers.forEach(addPlayer);
-      }
-    }
-
-    // Priority 3: Query team_players join table
-    if (allFoundPlayers.length === 0 && teamId) {
+    // 3. Query team_players join table
+    if (teamId) {
       try {
         const { data: tp } = await db.from('team_players').select('player_id').eq('team_id', teamId);
         if (tp && tp.length > 0) {
@@ -597,18 +547,16 @@ export async function getMatchDetailsForEdit(matchId: string) {
         }
       } catch {}
 
-      // Priority 4: Query players table directly by team_id
-      if (allFoundPlayers.length === 0) {
-        try {
-          const { data: directPlayers } = await db.from('players').select('*').eq('team_id', teamId);
-          if (directPlayers && directPlayers.length > 0) {
-            directPlayers.forEach((p: any) => addPlayer({
-              ...p,
-              name: p.name || p.full_name || p.display_name
-            }));
-          }
-        } catch {}
-      }
+      // 4. Query players table directly by team_id
+      try {
+        const { data: directPlayers } = await db.from('players').select('*').eq('team_id', teamId);
+        if (directPlayers && directPlayers.length > 0) {
+          directPlayers.forEach((p: any) => addPlayer({
+            ...p,
+            name: p.name || p.full_name || p.display_name
+          }));
+        }
+      } catch {}
     }
 
     return allFoundPlayers;
@@ -618,6 +566,14 @@ export async function getMatchDetailsForEdit(matchId: string) {
     fetchPlayersForTeam(team1Id, true),
     fetchPlayersForTeam(team2Id, false)
   ]);
+
+  console.log(`[EDIT FETCH] Editing Match ID: ${matchId}`);
+  console.log(`[EDIT FETCH] Team 1 ID: ${team1Id}`);
+  console.log(`[EDIT FETCH] Team 1 Players: ${team1Players.length}`);
+  console.log(`[EDIT FETCH] Team 1 Player Names:`, team1Players.map((p: any) => p.name || p.full_name || p.display_name));
+  console.log(`[EDIT FETCH] Team 2 ID: ${team2Id}`);
+  console.log(`[EDIT FETCH] Team 2 Players: ${team2Players.length}`);
+  console.log(`[EDIT FETCH] Team 2 Player Names:`, team2Players.map((p: any) => p.name || p.full_name || p.display_name));
 
   const yourTeamName = match.your_team_name || team1Obj?.name || (match.title ? match.title.split(' vs ')[0] : '');
   const yourTeamLogoUrl = match.your_team_logo_url || team1Obj?.logo_url || '';
@@ -649,123 +605,30 @@ export async function updateFullMatch(payload: {
   venue?: string;
   status?: string;
   overs: number;
-  yourTeamPlayers: { id?: string; name: string; type: 'WK' | 'Batsman' | 'Allrounder' | 'Bowler'; avatarUrl?: string; jerseyNumber?: string }[];
-  oppositeTeamPlayers: { id?: string; name: string; type: 'WK' | 'Batsman' | 'Allrounder' | 'Bowler'; avatarUrl?: string; jerseyNumber?: string }[];
+  yourTeamPlayers: { id?: string; name: string; type: 'WK' | 'Batsman' | 'Allrounder' | 'Bowler'; avatarUrl?: string }[];
+  oppositeTeamPlayers: { id?: string; name: string; type: 'WK' | 'Batsman' | 'Allrounder' | 'Bowler'; avatarUrl?: string }[];
 }) {
-  let db: any;
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) return { error: 'Unauthorized: Master Scorer login required.' };
+
+  let db: any = supabase;
   try {
     db = createAdminClient();
   } catch {
-    try {
-      db = createClient();
-    } catch {}
+    db = supabase;
   }
-
-  let userId: string | null = null;
-  try {
-    const { data: authUser } = await db.auth.getUser();
-    if (authUser?.user?.id) userId = authUser.user.id;
-  } catch {}
-
-  if (!userId) {
-    try {
-      const { data: profs } = await db.from('profiles').select('id').limit(1);
-      if (profs && profs.length > 0) {
-        userId = profs[0].id;
-      }
-    } catch {}
-  }
-
-  if (!userId) return { error: 'Unauthorized: Master Scorer login required.' };
 
   const { data: match, error: fetchErr } = await db.from('matches').select('*').eq('id', payload.matchId).maybeSingle();
   if (!match || fetchErr) return { error: 'Match not found.' };
 
-  const isAuthorized = !match.master_id || match.master_id === userId || match.created_by === userId || match.scorer_id === userId;
+  const isAuthorized = match.master_id === user.id || match.created_by === user.id || match.scorer_id === user.id;
   if (!isAuthorized) return { error: 'Unauthorized: Only the match creator can update this match.' };
 
   const matchFormat = payload.format || (payload.overs <= 10 ? 'T10' : payload.overs <= 20 ? 'T20' : 'ODI');
   const matchTitle = `${payload.yourTeamName} vs ${payload.oppositeTeamName}`;
   const startTime = payload.scheduledDate || new Date().toISOString();
-
-  const isUuid = (str?: string) => !!str && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
-
-  const insertOrUpdatePlayer = async (p: { id?: string; name: string; type: string; avatarUrl?: string; jerseyNumber?: string }, teamId: string) => {
-    const role = mapRoleForDb(p.type);
-    const jersey = p.jerseyNumber ? parseInt(p.jerseyNumber, 10) : null;
-    const jersey_number = isNaN(jersey as number) ? null : jersey;
-
-    if (isUuid(p.id)) {
-      const updatePayloads = [
-        { name: p.name, role, jersey_number, team_id: teamId || null },
-        { name: p.name, role, team_id: teamId || null },
-        { name: p.name, role },
-        { full_name: p.name, display_name: p.name, role }
-      ];
-
-      for (const payload of updatePayloads) {
-        try {
-          const { data: updatedData, error } = await db.from('players').update(payload).eq('id', p.id).select().maybeSingle();
-          if (!error && updatedData) return updatedData.id;
-        } catch {}
-      }
-    }
-
-    const insertPayloads = [
-      { name: p.name, role, jersey_number, team_id: teamId || null },
-      { name: p.name, role, team_id: teamId || null },
-      { name: p.name, role },
-      { full_name: p.name, display_name: p.name, role }
-    ];
-
-    let createdData: any = null;
-    for (const payload of insertPayloads) {
-      try {
-        const { data, error } = await db.from('players').insert(payload).select().single();
-        if (!error && data) {
-          createdData = data;
-          break;
-        }
-      } catch {}
-    }
-
-    if (createdData && teamId) {
-      try {
-        await db.from('team_players').upsert({
-          team_id: teamId,
-          player_id: createdData.id
-        });
-      } catch {}
-
-      try {
-        await db.from('players').update({ team_id: teamId }).eq('id', createdData.id);
-      } catch {}
-    }
-
-    return createdData?.id || p.id;
-  };
-
-  const updatedYourTeamPlayers: any[] = [];
-  for (const p of payload.yourTeamPlayers) {
-    if (p.name.trim()) {
-      const pid = await insertOrUpdatePlayer(p, match.team1_id);
-      updatedYourTeamPlayers.push({
-        ...p,
-        id: pid || p.id
-      });
-    }
-  }
-
-  const updatedOppositeTeamPlayers: any[] = [];
-  for (const p of payload.oppositeTeamPlayers) {
-    if (p.name.trim()) {
-      const pid = await insertOrUpdatePlayer(p, match.team2_id);
-      updatedOppositeTeamPlayers.push({
-        ...p,
-        id: pid || p.id
-      });
-    }
-  }
 
   const updateMatchData: any = {
     title: matchTitle,
@@ -778,8 +641,8 @@ export async function updateFullMatch(payload: {
     status: payload.status || match.status,
     your_team_name: payload.yourTeamName,
     opposite_team_name: payload.oppositeTeamName,
-    your_team_players: updatedYourTeamPlayers,
-    opposite_team_players: updatedOppositeTeamPlayers,
+    your_team_players: payload.yourTeamPlayers,
+    opposite_team_players: payload.oppositeTeamPlayers,
     updated_at: new Date().toISOString()
   };
 
@@ -807,29 +670,85 @@ export async function updateFullMatch(payload: {
     } catch {}
   }
 
+  const insertOrUpdatePlayer = async (p: { id?: string; name: string; type: string; avatarUrl?: string }, teamId: string) => {
+    const roleMapping = p.type === 'WK' ? 'WICKETKEEPER' : p.type === 'Batsman' ? 'BATSMAN' : p.type === 'Bowler' ? 'BOWLER' : 'ALL_ROUNDER';
+
+    if (p.id && !p.id.startsWith('y_') && !p.id.startsWith('o_') && !p.id.startsWith('p_') && !p.id.includes('pad')) {
+      try {
+        await db.from('players').update({
+          full_name: p.name,
+          display_name: p.name,
+          role: roleMapping,
+          photo_url: p.avatarUrl || null
+        }).eq('id', p.id);
+        return p.id;
+      } catch {}
+    }
+
+    let { data, error } = await db.from('players').insert({
+      owner_id: user.id,
+      full_name: p.name,
+      display_name: p.name,
+      role: roleMapping,
+      photo_url: p.avatarUrl || null
+    }).select().single();
+
+    if (error || !data) {
+      const resFallback = await db.from('players').insert({
+        full_name: p.name,
+        display_name: p.name,
+        role: roleMapping
+      }).select().single();
+      data = resFallback.data;
+    }
+
+    if (data && teamId) {
+      try {
+        await db.from('team_players').upsert({
+          team_id: teamId,
+          player_id: data.id
+        });
+      } catch {}
+
+      try {
+        await db.from('players').update({ team_id: teamId }).eq('id', data.id);
+      } catch {}
+    }
+
+    return data?.id;
+  };
+
   try {
     await db.from('match_players').delete().eq('match_id', payload.matchId);
   } catch {}
 
   const matchPlayersToInsert: any[] = [];
 
-  for (const p of updatedYourTeamPlayers) {
-    if (p.name.trim() && isUuid(p.id)) {
+  for (const p of payload.yourTeamPlayers) {
+    if (p.name.trim()) {
+      const pid = await insertOrUpdatePlayer(p, match.team1_id);
       matchPlayersToInsert.push({
         match_id: payload.matchId,
         team_id: match.team1_id,
-        player_id: p.id,
+        player_id: pid || null,
+        player_name: p.name,
+        name: p.name,
+        role: p.type,
         is_playing: true
       });
     }
   }
 
-  for (const p of updatedOppositeTeamPlayers) {
-    if (p.name.trim() && isUuid(p.id)) {
+  for (const p of payload.oppositeTeamPlayers) {
+    if (p.name.trim()) {
+      const pid = await insertOrUpdatePlayer(p, match.team2_id);
       matchPlayersToInsert.push({
         match_id: payload.matchId,
         team_id: match.team2_id,
-        player_id: p.id,
+        player_id: pid || null,
+        player_name: p.name,
+        name: p.name,
+        role: p.type,
         is_playing: true
       });
     }
@@ -838,15 +757,13 @@ export async function updateFullMatch(payload: {
   if (matchPlayersToInsert.length > 0) {
     try {
       await db.from('match_players').insert(matchPlayersToInsert);
-    } catch (err) {
-      console.warn('[UPDATE MATCH_PLAYERS ERR]', err);
-    }
+    } catch {}
   }
 
-  safeRevalidatePath('/master/dashboard');
-  safeRevalidatePath('/master/matches');
-  safeRevalidatePath('/matches');
-  safeRevalidatePath(`/matches/${payload.matchId}`);
+  revalidatePath('/master/dashboard');
+  revalidatePath('/master/matches');
+  revalidatePath('/matches');
+  revalidatePath(`/matches/${payload.matchId}`);
 
   return { success: true };
 }
@@ -938,36 +855,22 @@ export async function updateMatch(payload: {
 }
 
 export async function deleteMatch(matchId: string) {
-  let db: any;
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) return { error: 'Unauthorized: Master Scorer login required.' };
+
+  let db: any = supabase;
   try {
     db = createAdminClient();
   } catch {
-    try {
-      db = createClient();
-    } catch {}
+    db = supabase;
   }
-
-  let userId: string | null = null;
-  try {
-    const { data: authUser } = await db.auth.getUser();
-    if (authUser?.user?.id) userId = authUser.user.id;
-  } catch {}
-
-  if (!userId) {
-    try {
-      const { data: profs } = await db.from('profiles').select('id').limit(1);
-      if (profs && profs.length > 0) {
-        userId = profs[0].id;
-      }
-    } catch {}
-  }
-
-  if (!userId) return { error: 'Unauthorized: Master Scorer login required.' };
 
   // Verify ownership before deleting
   const { data: targetMatch } = await db.from('matches').select('master_id, created_by, scorer_id').eq('id', matchId).maybeSingle();
-  if (targetMatch && targetMatch.master_id) {
-    const isOwner = targetMatch.master_id === userId || targetMatch.created_by === userId || targetMatch.scorer_id === userId;
+  if (targetMatch) {
+    const isOwner = targetMatch.master_id === user.id || targetMatch.created_by === user.id || targetMatch.scorer_id === user.id;
     if (!isOwner) {
       return { error: 'Unauthorized: You can only delete your own matches.' };
     }
@@ -999,9 +902,9 @@ export async function deleteMatch(matchId: string) {
     }
   }
 
-  safeRevalidatePath('/master/dashboard');
-  safeRevalidatePath('/master/matches');
-  safeRevalidatePath('/matches');
+  revalidatePath('/master/dashboard');
+  revalidatePath('/master/matches');
+  revalidatePath('/matches');
 
   return { success: true };
 }
