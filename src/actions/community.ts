@@ -13,16 +13,6 @@ export interface CommunityPayload {
   coverImage?: string;
 }
 
-function getOriginalImageUrl(val: any): string | null {
-  if (typeof val === 'string') {
-    const v = val.trim();
-    if (v.length > 0 && v !== 'null' && v !== 'undefined') {
-      return v;
-    }
-  }
-  return null;
-}
-
 // 1. Fetch all communities for public / normal user display
 export async function getPublicCommunities() {
   const supabase = createClient();
@@ -33,9 +23,6 @@ export async function getPublicCommunities() {
     db = supabase;
   }
 
-  const defaultProfile = 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&w=300&q=80';
-  const defaultCover = 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?auto=format&fit=crop&w=1200&q=80';
-
   try {
     const { data: list, error } = await db
       .from('communities')
@@ -43,23 +30,15 @@ export async function getPublicCommunities() {
       .order('created_at', { ascending: false });
 
     if (!error && Array.isArray(list)) {
-      return list.map((c: any) => {
-        const rawProfile = c.profile_image || c.profile_image_url || c.logo_url || c.avatar_url || c.image_url || c.logo;
-        const rawCover = c.cover_image || c.cover_image_url || c.banner_url || c.cover_url || c.banner || c.header_image;
-
-        const originalProfile = getOriginalImageUrl(rawProfile);
-        const originalCover = getOriginalImageUrl(rawCover);
-
-        return {
-          id: c.id,
-          ownerId: c.owner_id,
-          name: c.name,
-          bio: c.bio,
-          profileImage: originalProfile || defaultProfile,
-          coverImage: originalCover || defaultCover,
-          createdAt: c.created_at || new Date().toISOString()
-        };
-      });
+      return list.map((c: any) => ({
+        id: c.id,
+        ownerId: c.owner_id,
+        name: c.name,
+        bio: c.bio,
+        profileImage: c.profile_image || c.logo_url || 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&w=300&q=80',
+        coverImage: c.cover_image || c.banner_url || 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?auto=format&fit=crop&w=1200&q=80',
+        createdAt: c.created_at || new Date().toISOString()
+      }));
     }
   } catch {}
 
@@ -78,9 +57,6 @@ export async function getMasterCommunities(masterId: string) {
     db = supabase;
   }
 
-  const defaultProfile = 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&w=300&q=80';
-  const defaultCover = 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?auto=format&fit=crop&w=1200&q=80';
-
   try {
     const { data: list, error } = await db
       .from('communities')
@@ -89,23 +65,15 @@ export async function getMasterCommunities(masterId: string) {
       .order('created_at', { ascending: false });
 
     if (!error && Array.isArray(list)) {
-      return list.map((c: any) => {
-        const rawProfile = c.profile_image || c.profile_image_url || c.logo_url || c.avatar_url || c.image_url || c.logo;
-        const rawCover = c.cover_image || c.cover_image_url || c.banner_url || c.cover_url || c.banner || c.header_image;
-
-        const originalProfile = getOriginalImageUrl(rawProfile);
-        const originalCover = getOriginalImageUrl(rawCover);
-
-        return {
-          id: c.id,
-          ownerId: c.owner_id,
-          name: c.name,
-          bio: c.bio,
-          profileImage: originalProfile || defaultProfile,
-          coverImage: originalCover || defaultCover,
-          createdAt: c.created_at || new Date().toISOString()
-        };
-      });
+      return list.map((c: any) => ({
+        id: c.id,
+        ownerId: c.owner_id,
+        name: c.name,
+        bio: c.bio,
+        profileImage: c.profile_image || c.logo_url || 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&w=300&q=80',
+        coverImage: c.cover_image || c.banner_url || 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?auto=format&fit=crop&w=1200&q=80',
+        createdAt: c.created_at || new Date().toISOString()
+      }));
     }
   } catch {}
 
@@ -158,20 +126,55 @@ export async function createCommunityAction(payload: CommunityPayload) {
       .select()
       .single();
 
+    if (!error && data) {
+      revalidatePath('/community');
+      revalidatePath('/master/dashboard');
+
+      return { 
+        success: true, 
+        community: {
+          id: data.id,
+          ownerId: data.owner_id,
+          name: data.name,
+          bio: data.bio,
+          profileImage: data.profile_image || payload.profileImage || '',
+          coverImage: data.cover_image || payload.coverImage || '',
+          createdAt: data.created_at
+        }
+      };
+    }
+
     if (error) {
-      // Fallback try inserting with minimal fields
-      const { data: fallbackData, error: fallbackError } = await db
+      console.warn('[COMMUNITY CREATE DB WARNING]', error.message);
+      // Fallback try inserting with essential fields
+      const { data: fallbackData } = await db
         .from('communities')
         .insert({
           owner_id: user.id,
           name: payload.name.trim(),
-          bio: payload.bio.trim()
+          bio: payload.bio.trim(),
+          profile_image: payload.profileImage || null,
+          cover_image: payload.coverImage || null
         })
         .select()
         .single();
 
-      if (fallbackError) {
-        console.warn('[COMMUNITY CREATE DB WARNING]', fallbackError.message);
+      if (fallbackData) {
+        revalidatePath('/community');
+        revalidatePath('/master/dashboard');
+
+        return {
+          success: true,
+          community: {
+            id: fallbackData.id,
+            ownerId: fallbackData.owner_id,
+            name: fallbackData.name,
+            bio: fallbackData.bio,
+            profileImage: fallbackData.profile_image || payload.profileImage || '',
+            coverImage: fallbackData.cover_image || payload.coverImage || '',
+            createdAt: fallbackData.created_at
+          }
+        };
       }
     }
   } catch (err: any) {
@@ -188,8 +191,8 @@ export async function createCommunityAction(payload: CommunityPayload) {
       ownerId: user.id,
       name: payload.name.trim(),
       bio: payload.bio.trim(),
-      profileImage: payload.profileImage || 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&w=300&q=80',
-      coverImage: payload.coverImage || 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?auto=format&fit=crop&w=1200&q=80',
+      profileImage: payload.profileImage || '',
+      coverImage: payload.coverImage || '',
       createdAt: new Date().toISOString()
     }
   };
@@ -237,7 +240,7 @@ export async function updateCommunityAction(payload: CommunityPayload) {
       return { error: 'Unauthorized: You can edit only your own communities.' };
     }
 
-    await db
+    const { data: updatedData } = await db
       .from('communities')
       .update({
         name: payload.name.trim(),
@@ -246,7 +249,27 @@ export async function updateCommunityAction(payload: CommunityPayload) {
         cover_image: payload.coverImage || null,
         updated_at: new Date().toISOString()
       })
-      .eq('id', payload.id);
+      .eq('id', payload.id)
+      .select()
+      .maybeSingle();
+
+    revalidatePath('/community');
+    revalidatePath('/master/dashboard');
+
+    if (updatedData) {
+      return { 
+        success: true,
+        community: {
+          id: updatedData.id,
+          ownerId: updatedData.owner_id,
+          name: updatedData.name,
+          bio: updatedData.bio,
+          profileImage: updatedData.profile_image || payload.profileImage || '',
+          coverImage: updatedData.cover_image || payload.coverImage || '',
+          createdAt: updatedData.created_at
+        }
+      };
+    }
   } catch (err: any) {
     console.warn('[COMMUNITY UPDATE DB CATCH]', err.message);
   }
@@ -261,8 +284,8 @@ export async function updateCommunityAction(payload: CommunityPayload) {
       ownerId: user.id,
       name: payload.name.trim(),
       bio: payload.bio.trim(),
-      profileImage: payload.profileImage || 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&w=300&q=80',
-      coverImage: payload.coverImage || 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?auto=format&fit=crop&w=1200&q=80',
+      profileImage: payload.profileImage || '',
+      coverImage: payload.coverImage || '',
       createdAt: new Date().toISOString()
     }
   };

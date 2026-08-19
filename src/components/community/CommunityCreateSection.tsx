@@ -18,6 +18,7 @@ import {
   UserCheck,
   Shield
 } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 import { 
   createCommunityAction, 
   updateCommunityAction, 
@@ -37,6 +38,46 @@ export interface CommunityItem {
   createdAt: string;
   membersCount?: number;
 }
+
+const uploadImageFile = async (file: File, folderPrefix: string): Promise<string> => {
+  const supabase = createClient();
+  const fileExt = file.name.split('.').pop() || 'jpg';
+  const fileName = `${folderPrefix}_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
+  const filePath = `${folderPrefix}/${fileName}`;
+
+  try {
+    const { data, error } = await supabase.storage
+      .from('avatars')
+      .upload(filePath, file, { upsert: true });
+
+    if (!error) {
+      const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(filePath);
+      if (publicUrl) {
+        let validUrl = publicUrl;
+        if (validUrl.includes('/storage/v1/object/') && !validUrl.includes('/storage/v1/object/public/')) {
+          validUrl = validUrl.replace('/storage/v1/object/', '/storage/v1/object/public/');
+        }
+        return validUrl;
+      }
+    }
+  } catch (err) {
+    console.warn('[STORAGE UPLOAD WARNING]', err);
+  }
+
+  // Persistent Fallback: Convert to Base64 Data URL so image is permanently saved in Supabase DB
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      if (typeof reader.result === 'string') {
+        resolve(reader.result);
+      } else {
+        reject(new Error('Failed to read image file.'));
+      }
+    };
+    reader.onerror = () => reject(new Error('Failed to read image file.'));
+    reader.readAsDataURL(file);
+  });
+};
 
 export default function CommunityCreateSection() {
   const [communities, setCommunities] = useState<CommunityItem[]>([]);
@@ -216,14 +257,43 @@ export default function CommunityCreateSection() {
     setIsSubmitting(true);
 
     try {
+      let finalProfileUrl = profileImagePreview;
+      let finalCoverUrl = coverImagePreview;
+
+      // 1. Upload Profile Image file if newly selected
+      if (profileImageFile) {
+        try {
+          finalProfileUrl = await uploadImageFile(profileImageFile, 'comm_profile');
+        } catch (uploadErr: any) {
+          setErrorMsg('Failed to upload profile image. Please try again.');
+          setIsSubmitting(false);
+          return;
+        }
+      } else if (finalProfileUrl && finalProfileUrl.startsWith('blob:')) {
+        finalProfileUrl = '';
+      }
+
+      // 2. Upload Cover Image file if newly selected
+      if (coverImageFile) {
+        try {
+          finalCoverUrl = await uploadImageFile(coverImageFile, 'comm_cover');
+        } catch (uploadErr: any) {
+          setErrorMsg('Failed to upload cover image. Please try again.');
+          setIsSubmitting(false);
+          return;
+        }
+      } else if (finalCoverUrl && finalCoverUrl.startsWith('blob:')) {
+        finalCoverUrl = '';
+      }
+
       if (editingCommunityId) {
         // UPDATE EXISTING COMMUNITY
         const res = await updateCommunityAction({
           id: editingCommunityId,
           name: name.trim(),
           bio: bio.trim(),
-          profileImage: profileImagePreview,
-          coverImage: coverImagePreview
+          profileImage: finalProfileUrl,
+          coverImage: finalCoverUrl
         });
 
         if (res.error) {
@@ -232,14 +302,15 @@ export default function CommunityCreateSection() {
           return;
         }
 
+        const updatedComm = res.community;
         const updatedList = communities.map(c => {
           if (c.id === editingCommunityId) {
             return {
               ...c,
               name: name.trim(),
               bio: bio.trim(),
-              profileImage: profileImagePreview || c.profileImage,
-              coverImage: coverImagePreview || c.coverImage
+              profileImage: updatedComm?.profileImage || finalProfileUrl || c.profileImage,
+              coverImage: updatedComm?.coverImage || finalCoverUrl || c.coverImage
             };
           }
           return c;
@@ -252,8 +323,8 @@ export default function CommunityCreateSection() {
         const res = await createCommunityAction({
           name: name.trim(),
           bio: bio.trim(),
-          profileImage: profileImagePreview,
-          coverImage: coverImagePreview
+          profileImage: finalProfileUrl,
+          coverImage: finalCoverUrl
         });
 
         if (res.error) {
@@ -266,8 +337,8 @@ export default function CommunityCreateSection() {
           id: `comm_${Date.now()}`,
           name: name.trim(),
           bio: bio.trim(),
-          profileImage: profileImagePreview || 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&w=300&q=80',
-          coverImage: coverImagePreview || 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?auto=format&fit=crop&w=1200&q=80',
+          profileImage: finalProfileUrl || 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&w=300&q=80',
+          coverImage: finalCoverUrl || 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?auto=format&fit=crop&w=1200&q=80',
           createdAt: new Date().toISOString(),
           membersCount: 1
         };
