@@ -324,6 +324,31 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
     showToast('Striker swapped');
   };
 
+  // 5. NEXT INNINGS / OPPOSITE TEAM SCORING HANDLER
+  const handleNextInnings = async () => {
+    if (loading) return;
+    setLoading(true);
+    setErrorMsg('');
+
+    const newBattingTeamId = isBattingTeam1 ? team2Id : team1Id;
+    const newBowlingTeamId = isBattingTeam1 ? team1Id : team2Id;
+    const newBattingPlayers = isBattingTeam1 ? team2Players : team1Players;
+    const newBowlingPlayers = isBattingTeam1 ? team1Players : team2Players;
+
+    try {
+      await setBattingTeam(match.id, safeInningsId, newBattingTeamId, newBowlingTeamId);
+      setSelectedBattingTeamId(newBattingTeamId);
+      setStrikerId(newBattingPlayers[0]?.id || '');
+      setNonStrikerId(newBattingPlayers[1]?.id || '');
+      setBowlerId(newBowlingPlayers[0]?.id || '');
+      setLiveInningsState(null);
+      showToast(`Started scoring for ${isBattingTeam1 ? team2Name : team1Name}`);
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Failed to switch team.');
+    }
+    setLoading(false);
+  };
+
   return (
     <div className="min-h-screen bg-[#050A1A] text-white selection:bg-[#19D89A] selection:text-black font-sans pb-16">
       
@@ -418,7 +443,8 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
               <span className="text-[10px] font-extrabold text-[#71809A] uppercase tracking-wider">Batters</span>
               <button 
                 onClick={handleSwapBatsmen}
-                className="text-[10px] font-extrabold text-[#19D89A] flex items-center gap-1 hover:underline"
+                className="text-[10px] font-extrabold text-[#19D89A] flex items-center gap-1 hover:underline active:scale-95 transition-transform"
+                title="Swap Striker and Non-Striker"
               >
                 <RefreshCw className="w-3 h-3" />
                 Swap
@@ -427,10 +453,13 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
 
             <div className="grid grid-cols-2 gap-2">
               {/* STRIKER */}
-              <div className="bg-[#111A2D] border border-[#19D89A]/40 rounded-xl p-2">
-                <div className="flex items-center gap-1.5 text-xs font-bold text-white truncate">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#19D89A] shrink-0 animate-pulse" />
-                  <span className="truncate">{strikerPlayer?.full_name || strikerPlayer?.display_name || 'Striker'}</span>
+              <div className="bg-[#111A2D] border border-[#19D89A]/60 rounded-xl p-2">
+                <div className="flex items-center justify-between text-xs font-bold text-white truncate gap-1">
+                  <div className="flex items-center gap-1.5 truncate">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#19D89A] shrink-0 animate-pulse" />
+                    <span className="truncate">{strikerPlayer?.full_name || strikerPlayer?.display_name || 'Striker'}</span>
+                  </div>
+                  <span className="text-[8px] font-black text-[#19D89A] bg-[#19D89A]/10 px-1 rounded border border-[#19D89A]/30 shrink-0">STRIKER</span>
                 </div>
                 <div className="text-xs font-extrabold text-[#19D89A] font-mono mt-0.5">
                   {strikerRuns} <span className="text-[10px] text-[#AAB5CC] font-normal">({strikerBalls})</span>
@@ -439,10 +468,11 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
 
               {/* NON-STRIKER */}
               <div className="bg-[#111A2D] border border-[#173541] rounded-xl p-2">
-                <div className="text-xs font-bold text-[#AAB5CC] truncate pl-2">
-                  <span className="truncate">{nonStrikerPlayer?.full_name || nonStrikerPlayer?.display_name || 'Non-Striker'}</span>
+                <div className="flex items-center justify-between text-xs font-bold text-[#AAB5CC] truncate gap-1">
+                  <span className="truncate pl-1">{nonStrikerPlayer?.full_name || nonStrikerPlayer?.display_name || 'Non-Striker'}</span>
+                  <span className="text-[8px] font-bold text-[#71809A] shrink-0">NON-STRIKER</span>
                 </div>
-                <div className="text-xs font-extrabold text-white font-mono mt-0.5 pl-2">
+                <div className="text-xs font-extrabold text-white font-mono mt-0.5 pl-1">
                   {nonStrikerRuns} <span className="text-[10px] text-[#71809A] font-normal">({nonStrikerBalls})</span>
                 </div>
               </div>
@@ -488,15 +518,21 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
             )}
           </div>
 
-          {/* 4. COMPACT CURRENT BOWLER WITH DYNAMIC STATS */}
-          <div className="bg-[#0D1528] border border-[#173541] rounded-2xl p-2 flex items-center justify-between">
-            <div>
+          {/* 4. COMPACT CURRENT BOWLER WITH DYNAMIC STATS & SELECTOR */}
+          <div className="bg-[#0D1528] border border-[#173541] rounded-2xl p-2.5 flex items-center justify-between gap-2">
+            <div className="flex-1 min-w-0">
               <span className="text-[9px] font-extrabold text-[#71809A] uppercase tracking-wider block">Bowler</span>
-              <span className="text-xs font-bold text-white block mt-0.5">
-                {bowlerPlayer?.full_name || bowlerPlayer?.display_name || 'Bowler'}
-              </span>
+              <select
+                value={bowlerId}
+                onChange={(e) => setBowlerId(e.target.value)}
+                className="bg-[#071022] border border-[#173541] text-xs font-bold text-white rounded-lg px-2 py-1 mt-0.5 max-w-full truncate focus:outline-none focus:border-[#19D89A]"
+              >
+                {bowlingPlayers.map(p => (
+                  <option key={p.id} value={p.id}>{p.full_name || p.display_name || 'Bowler'}</option>
+                ))}
+              </select>
             </div>
-            <div className="flex items-center gap-2.5 text-xs font-extrabold font-mono text-[#AAB5CC]">
+            <div className="flex items-center gap-2.5 text-xs font-extrabold font-mono text-[#AAB5CC] shrink-0">
               <div>{bowlerOvers} <span className="text-[9px] font-semibold text-[#71809A]">OV</span></div>
               <div>{bowlerRuns} <span className="text-[9px] font-semibold text-[#71809A]">R</span></div>
               <div className="text-[#19D89A]">{bowlerWickets} <span className="text-[9px] font-semibold text-[#71809A]">W</span></div>
@@ -535,7 +571,7 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
         </div>
 
         {/* ========================================================== */}
-        {/* RIGHT COLUMN (Run Keypad, Wicket, More, Undo)             */}
+        {/* RIGHT COLUMN (Run Keypad, Wicket, More, Undo, Next)       */}
         {/* ========================================================== */}
         <div className="lg:col-span-6 space-y-2.5">
           
@@ -606,8 +642,8 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
             </div>
           </div>
 
-          {/* 8. COMPACT WICKET, MORE, UNDO ACTION BAR */}
-          <div className="grid grid-cols-3 gap-2">
+          {/* 8. COMPACT WICKET, MORE, UNDO, NEXT ACTION BAR */}
+          <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
             {/* WICKET BUTTON */}
             <button
               type="button"
@@ -638,6 +674,18 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
             >
               <RotateCcw className="w-3.5 h-3.5 text-amber-400" />
               UNDO
+            </button>
+
+            {/* NEXT BUTTON */}
+            <button
+              type="button"
+              disabled={loading}
+              onClick={handleNextInnings}
+              className="h-11 rounded-xl bg-[#19D89A] hover:bg-emerald-400 text-[#050A1A] font-black text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/20 transition-all active:scale-95 flex items-center justify-center gap-0.5"
+              title="Proceed to opposite team scoring"
+            >
+              <span>NEXT</span>
+              <ChevronRight className="w-3.5 h-3.5" />
             </button>
           </div>
 
