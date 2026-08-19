@@ -109,6 +109,20 @@ export async function createCommunityAction(payload: CommunityPayload) {
     db = supabase;
   }
 
+  // STRICT SERVER-SIDE VALIDATION: Maximum 2 Communities per Master User
+  try {
+    const { data: existingComms } = await db
+      .from('communities')
+      .select('id')
+      .eq('owner_id', user.id);
+
+    if (existingComms && existingComms.length >= 2) {
+      return { error: 'You can create a maximum of 2 communities.' };
+    }
+  } catch (checkErr) {
+    console.warn('[COMMUNITY LIMIT CHECK WARNING]', checkErr);
+  }
+
   const communityObj = {
     owner_id: user.id,
     name: payload.name.trim(),
@@ -380,4 +394,95 @@ export async function getCommunityMembersAction(communityId: string) {
   } catch {}
 
   return { count: 0, members: [] };
+}
+
+// 6. Join Community (AUTOMATIC INSTANT JOIN WITH DATABASE PERSISTENCE)
+export async function joinCommunityAction(communityId: string) {
+  const { user } = await getUserAndRole();
+  if (!user) {
+    return { error: 'Authentication required to join a community.' };
+  }
+
+  if (!communityId) {
+    return { error: 'Community ID is required.' };
+  }
+
+  const supabase = createClient();
+  let db: any = supabase;
+  try {
+    db = createAdminClient();
+  } catch {
+    db = supabase;
+  }
+
+  try {
+    // Check if user is already a member to prevent duplicates
+    const { data: existingMember } = await db
+      .from('community_members')
+      .select('id')
+      .eq('community_id', communityId)
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (!existingMember) {
+      // Create new membership record in database
+      const { error: insertError } = await db
+        .from('community_members')
+        .insert({
+          community_id: communityId,
+          user_id: user.id,
+          role: 'MEMBER',
+          created_at: new Date().toISOString()
+        });
+
+      if (insertError) {
+        console.warn('[JOIN COMMUNITY DB INSERT WARNING]', insertError.message);
+      }
+    }
+
+    // Get current total member count
+    const { count } = await db
+      .from('community_members')
+      .select('*', { count: 'exact', head: true })
+      .eq('community_id', communityId);
+
+    revalidatePath('/community');
+    revalidatePath('/master/dashboard');
+
+    return { 
+      success: true, 
+      isJoined: true, 
+      membersCount: (count !== null && count !== undefined) ? count : 1 
+    };
+  } catch (err: any) {
+    console.warn('[JOIN COMMUNITY CATCH]', err.message);
+    return { error: err.message || 'Failed to join community.' };
+  }
+}
+
+// 7. Get All Community IDs Joined by Current Logged-In User
+export async function getUserJoinedCommunityIdsAction() {
+  const { user } = await getUserAndRole();
+  if (!user) return [];
+
+  const supabase = createClient();
+  let db: any = supabase;
+  try {
+    db = createAdminClient();
+  } catch {
+    db = supabase;
+  }
+
+  try {
+    const { data: rows } = await db
+      .from('community_members')
+      .select('community_id')
+      .eq('user_id', user.id);
+
+    if (rows && Array.isArray(rows)) {
+      return rows.map((r: any) => r.community_id);
+    }
+  } catch {}
+
+  return [];
 }

@@ -106,7 +106,9 @@ export default function CommunityCreateSection() {
   // UI Feedback
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const [limitErrorMsg, setLimitErrorMsg] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
 
   const profileInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
@@ -191,6 +193,11 @@ export default function CommunityCreateSection() {
   };
 
   const handleOpenCreateModal = () => {
+    setLimitErrorMsg('');
+    if (communities.length >= 2) {
+      setLimitErrorMsg('You can create a maximum of 2 communities.');
+      return;
+    }
     resetForm();
     setIsModalOpen(true);
   };
@@ -320,6 +327,12 @@ export default function CommunityCreateSection() {
         setSuccessMsg('✓ Community Updated Successfully!');
       } else {
         // CREATE NEW COMMUNITY
+        if (communities.length >= 2) {
+          setErrorMsg('You can create a maximum of 2 communities.');
+          setIsSubmitting(false);
+          return;
+        }
+
         const res = await createCommunityAction({
           name: name.trim(),
           bio: bio.trim(),
@@ -345,7 +358,15 @@ export default function CommunityCreateSection() {
 
         const updatedList = [newComm, ...communities];
         saveCommunitiesToState(updatedList);
-        setSuccessMsg('✓ Community Created Successfully!');
+        setIsSubmitting(false);
+        handleCloseModal();
+
+        // Show Created Successfully Animation Overlay ONLY after successful database save
+        setShowSuccessAnimation(true);
+        setTimeout(() => {
+          setShowSuccessAnimation(false);
+        }, 2200);
+        return;
       }
 
       setTimeout(() => {
@@ -491,7 +512,6 @@ export default function CommunityCreateSection() {
             <Users className="w-5 h-5 text-[#19D89A]" />
             Community Create
           </h2>
-          <p className="text-xs text-[#AAB5CC] mt-0.5">Build and manage local cricket communities, connect teams, and organize matches.</p>
         </div>
 
         {/* PROMINENT PLUS BUTTON FOR MASTER USERS */}
@@ -507,6 +527,13 @@ export default function CommunityCreateSection() {
           <span className="hidden sm:inline">Create Community</span>
         </button>
       </div>
+
+      {limitErrorMsg && (
+        <div className="p-3.5 bg-amber-500/10 border border-amber-500/30 rounded-2xl text-amber-400 text-xs font-bold flex items-center gap-2">
+          <AlertTriangle className="w-4 h-4 shrink-0" />
+          <span>{limitErrorMsg}</span>
+        </div>
+      )}
 
       {/* CREATED COMMUNITIES LIST GRID WITH VIEW, EDIT & DELETE CONTROLS */}
       {communities.length === 0 ? (
@@ -816,6 +843,21 @@ export default function CommunityCreateSection() {
               >
                 {isDeleting ? 'Deleting...' : 'Delete'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CREATED SUCCESSFULLY ANIMATION OVERLAY */}
+      {showSuccessAnimation && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in zoom-in duration-300">
+          <div className="bg-[#0D1528] border border-[#19D89A]/50 rounded-3xl p-8 max-w-sm w-full text-center space-y-4 shadow-2xl shadow-[#19D89A]/20">
+            <div className="w-16 h-16 mx-auto rounded-full bg-[#19D89A]/20 border-2 border-[#19D89A] flex items-center justify-center text-[#19D89A]">
+              <CheckCircle2 className="w-10 h-10 animate-bounce" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-xl font-black text-white">Created Successfully</h3>
+              <p className="text-xs text-[#AAB5CC]">Your community has been saved successfully.</p>
             </div>
           </div>
         </div>

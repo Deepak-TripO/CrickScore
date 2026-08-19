@@ -1,6 +1,6 @@
-'use client';
-
 import React, { useState } from 'react';
+import { joinCommunityAction } from '@/actions/community';
+import { Check, Loader2 } from 'lucide-react';
 
 const DEFAULT_COVER = 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?auto=format&fit=crop&w=1200&q=80';
 const DEFAULT_PROFILE = 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&w=300&q=80';
@@ -14,6 +14,7 @@ interface CommunityCardProps {
     profileImage?: string;
     coverImage?: string;
     members?: string;
+    isJoined?: boolean;
   };
 }
 
@@ -24,6 +25,26 @@ export default function CommunityCard({ community }: CommunityCardProps) {
 
   const [coverSrc, setCoverSrc] = useState<string>(initialCover);
   const [profileSrc, setProfileSrc] = useState<string>(initialProfile);
+  const [isJoinedState, setIsJoinedState] = useState<boolean>(!!community.isJoined);
+  const [isJoining, setIsJoining] = useState<boolean>(false);
+
+  const handleJoinClick = async () => {
+    if (isJoinedState || isJoining) return;
+    setIsJoining(true);
+
+    try {
+      const res = await joinCommunityAction(community.id);
+      if (res.success || res.isJoined) {
+        setIsJoinedState(true);
+      } else if (res.error) {
+        alert(res.error);
+      }
+    } catch (err: any) {
+      console.warn('[JOIN COMMUNITY ERROR]', err);
+    } finally {
+      setIsJoining(false);
+    }
+  };
 
   return (
     <div className="bg-[#0D1528] border border-[#173541] rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl hover:border-[#19D89A]/40 transition-all group flex flex-col justify-between">
@@ -65,9 +86,31 @@ export default function CommunityCard({ community }: CommunityCardProps) {
 
       {/* ACTION FOOTER */}
       <div className="px-3.5 py-2.5 sm:px-5 sm:py-3.5 bg-[#050A1A]/60 border-t border-[#173541] flex items-center justify-end">
-        <button className="px-3.5 py-1.5 sm:px-4 sm:py-1.5 bg-[#111A2D] hover:bg-[#19D89A] hover:text-[#050A1A] border border-[#173541] text-[11px] sm:text-xs font-extrabold text-[#19D89A] rounded-xl transition-all shadow-sm">
-          Join Community
-        </button>
+        {isJoinedState ? (
+          <button 
+            disabled 
+            className="px-3.5 py-1.5 sm:px-4 sm:py-1.5 bg-[#19D89A]/15 border border-[#19D89A]/40 text-[11px] sm:text-xs font-black text-[#19D89A] rounded-xl flex items-center gap-1.5 cursor-default shadow-sm"
+          >
+            <Check className="w-3.5 h-3.5" />
+            <span>Joined</span>
+          </button>
+        ) : (
+          <button 
+            type="button"
+            onClick={handleJoinClick}
+            disabled={isJoining}
+            className="px-3.5 py-1.5 sm:px-4 sm:py-1.5 bg-[#111A2D] hover:bg-[#19D89A] hover:text-[#050A1A] border border-[#173541] hover:border-[#19D89A] text-[11px] sm:text-xs font-extrabold text-[#19D89A] rounded-xl transition-all shadow-sm flex items-center gap-1.5 active:scale-95"
+          >
+            {isJoining ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <span>Joining...</span>
+              </>
+            ) : (
+              <span>Join Community</span>
+            )}
+          </button>
+        )}
       </div>
     </div>
   );
