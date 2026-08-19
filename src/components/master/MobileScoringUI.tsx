@@ -14,11 +14,19 @@ interface MobileScoringUIProps {
 }
 
 export default function MobileScoringUI({ match, activeInnings, team1Players, team2Players }: MobileScoringUIProps) {
-  const team1Id = match.team1?.id || match.team1_id || match.team_a_id || 't1';
-  const team2Id = match.team2?.id || match.team2_id || match.team_b_id || 't2';
+  const t1 = Array.isArray(match.team1) ? match.team1[0] : match.team1;
+  const t2 = Array.isArray(match.team2) ? match.team2[0] : match.team2;
 
-  const team1Name = match.team1?.name || match.your_team_name || (match.title ? match.title.split(' vs ')[0] : 'Team 1');
-  const team2Name = match.team2?.name || match.opposite_team_name || (match.title ? match.title.split(' vs ')[1] : 'Team 2');
+  const team1Id = t1?.id || match.team1_id || match.team_a_id || 't1';
+  const team2Id = t2?.id || match.team2_id || match.team_b_id || 't2';
+
+  const team1Name = t1?.name || match.your_team_name || (match.title ? match.title.split(' vs ')[0] : 'Team 1');
+  const team2Name = t2?.name || match.opposite_team_name || (match.title ? match.title.split(' vs ')[1] : 'Team 2');
+
+  const team1Logo = t1?.logo_url || match.your_team_logo_url;
+  const team2Logo = t2?.logo_url || match.opposite_team_logo_url;
+  const team1Short = t1?.short_name || team1Name.slice(0, 4).toUpperCase();
+  const team2Short = t2?.short_name || team2Name.slice(0, 4).toUpperCase();
 
   const [selectedBattingTeamId, setSelectedBattingTeamId] = useState<string>(
     activeInnings?.batting_team_id || team1Id
@@ -28,6 +36,10 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
   const isBattingTeam1 = selectedBattingTeamId === team1Id;
   const battingPlayers = isBattingTeam1 ? team1Players : team2Players;
   const bowlingPlayers = isBattingTeam1 ? team2Players : team1Players;
+
+  const battingTeamName = isBattingTeam1 ? team1Name : team2Name;
+  const battingTeamLogo = isBattingTeam1 ? team1Logo : team2Logo;
+  const battingTeamShort = isBattingTeam1 ? team1Short : team2Short;
 
   const [strikerId, setStrikerId] = useState<string>(battingPlayers[0]?.id || '');
   const [nonStrikerId, setNonStrikerId] = useState<string>(battingPlayers[1]?.id || '');
@@ -89,38 +101,37 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
             </span>
           </header>
 
-          {/* MATCH TITLE SUBHEADER */}
-          <div className="bg-[#0D1528] border border-[#173541] rounded-2xl p-3 text-center text-xs font-bold text-[#AAB5CC]">
-            {team1Name} <span className="text-[#19D89A]">vs</span> {team2Name}
-          </div>
-
           {/* QUESTION BOX */}
-          <div className="bg-[#0D1528] border border-[#173541] rounded-3xl p-6 space-y-6 text-center shadow-xl mt-2">
-            <div className="w-14 h-14 rounded-2xl bg-[#19D89A]/15 border border-[#19D89A]/30 flex items-center justify-center text-[#19D89A] mx-auto">
-              <Play className="w-7 h-7 fill-current ml-0.5" />
+          <div className="bg-[#0D1528] border border-[#173541] rounded-3xl p-5 space-y-5 text-center shadow-xl mt-2">
+            <div className="w-12 h-12 rounded-2xl bg-[#19D89A]/15 border border-[#19D89A]/30 flex items-center justify-center text-[#19D89A] mx-auto">
+              <Play className="w-6 h-6 fill-current ml-0.5" />
             </div>
 
             <div>
-              <h2 className="text-lg font-black text-white">Which team is batting now?</h2>
-              <p className="text-xs text-[#AAB5CC] mt-1">
+              <h2 className="text-base font-black text-white">Which team is batting now?</h2>
+              <p className="text-xs text-[#AAB5CC] mt-0.5">
                 Select the team currently batting to start updating live scores.
               </p>
             </div>
 
             {/* TEAM OPTIONS */}
-            <div className="space-y-3 pt-1">
+            <div className="space-y-2.5 pt-1">
               <button
                 type="button"
                 onClick={() => setSelectedBattingTeamId(team1Id)}
-                className={`w-full p-4 rounded-2xl border transition-all flex items-center justify-between active:scale-[0.98] ${
+                className={`w-full p-3.5 rounded-2xl border transition-all flex items-center justify-between active:scale-[0.98] ${
                   selectedBattingTeamId === team1Id
                     ? 'bg-[#19D89A]/15 border-[#19D89A] text-[#19D89A] shadow-md shadow-[#19D89A]/10 font-black'
                     : 'bg-[#111A2D] border-[#173541] text-[#AAB5CC] hover:text-white hover:border-[#AAB5CC]/40 font-bold'
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-[#050A1A] border border-[#173541] flex items-center justify-center font-black text-xs text-[#19D89A] font-mono">
-                    {team1Name.slice(0, 4).toUpperCase()}
+                  <div className="w-10 h-10 rounded-xl bg-[#050A1A] border border-[#173541] p-1 flex items-center justify-center font-black text-xs text-[#19D89A] font-mono overflow-hidden shrink-0">
+                    {team1Logo ? (
+                      <img src={team1Logo} alt={team1Name} className="w-full h-full object-cover rounded-lg" />
+                    ) : (
+                      team1Short
+                    )}
                   </div>
                   <span className="text-sm font-bold text-white">{team1Name}</span>
                 </div>
@@ -132,15 +143,19 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
               <button
                 type="button"
                 onClick={() => setSelectedBattingTeamId(team2Id)}
-                className={`w-full p-4 rounded-2xl border transition-all flex items-center justify-between active:scale-[0.98] ${
+                className={`w-full p-3.5 rounded-2xl border transition-all flex items-center justify-between active:scale-[0.98] ${
                   selectedBattingTeamId === team2Id
                     ? 'bg-[#19D89A]/15 border-[#19D89A] text-[#19D89A] shadow-md shadow-[#19D89A]/10 font-black'
                     : 'bg-[#111A2D] border-[#173541] text-[#AAB5CC] hover:text-white hover:border-[#AAB5CC]/40 font-bold'
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-[#050A1A] border border-[#173541] flex items-center justify-center font-black text-xs text-[#19D89A] font-mono">
-                    {team2Name.slice(0, 4).toUpperCase()}
+                  <div className="w-10 h-10 rounded-xl bg-[#050A1A] border border-[#173541] p-1 flex items-center justify-center font-black text-xs text-[#19D89A] font-mono overflow-hidden shrink-0">
+                    {team2Logo ? (
+                      <img src={team2Logo} alt={team2Name} className="w-full h-full object-cover rounded-lg" />
+                    ) : (
+                      team2Short
+                    )}
                   </div>
                   <span className="text-sm font-bold text-white">{team2Name}</span>
                 </div>
@@ -153,7 +168,7 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
         </div>
 
         {/* START SCORING BUTTON */}
-        <div className="pt-6">
+        <div className="pt-4">
           <button
             type="button"
             disabled={!selectedBattingTeamId || loading}
@@ -167,7 +182,7 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
               setLoading(false);
               setIsTeamConfirmed(true);
             }}
-            className="w-full py-4 bg-[#19D89A] hover:bg-emerald-400 text-[#050A1A] font-black rounded-2xl text-xs uppercase tracking-wider shadow-lg shadow-[#19D89A]/20 transition-all active:scale-95 disabled:opacity-50"
+            className="w-full py-3.5 bg-[#19D89A] hover:bg-emerald-400 text-[#050A1A] font-black rounded-2xl text-xs uppercase tracking-wider shadow-lg shadow-[#19D89A]/20 transition-all active:scale-95 disabled:opacity-50"
           >
             {loading ? 'Starting...' : 'Continue / Start Scoring'}
           </button>
@@ -277,15 +292,13 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
     ? (((match.target - (activeInnings.total_runs || 0)) / Math.max((match.overs - (activeInnings.total_overs || 0)), 0.1))).toFixed(2)
     : 'N/A';
 
-  const battingTeamName = isBattingTeam1 ? team1Name : team2Name;
-
   return (
     <div className="min-h-screen bg-[#050A1A] text-white selection:bg-[#19D89A] selection:text-black font-sans pb-16">
       
-      {/* 1. HEADER */}
-      <header className="bg-[#080F20] border-b border-[#173541] px-4 py-3 sticky top-0 z-30 flex items-center justify-between">
-        <Link href="/master/dashboard" className="flex items-center gap-2 text-[#AAB5CC] hover:text-white transition-colors">
-          <ArrowLeft className="w-5 h-5" />
+      {/* 1. HEADER (CLEAN TOP BAR) */}
+      <header className="bg-[#080F20] border-b border-[#173541] px-4 py-2.5 sticky top-0 z-30 flex items-center justify-between">
+        <Link href="/master/dashboard" className="flex items-center gap-1.5 text-[#AAB5CC] hover:text-white transition-colors">
+          <ArrowLeft className="w-4 h-4" />
           <span className="text-xs font-bold">Back</span>
         </Link>
         
@@ -301,51 +314,55 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
         </div>
       </header>
 
-      {/* MATCH TITLE SUBHEADER */}
-      <div className="bg-[#0D1528] border-b border-[#173541] px-4 py-2 text-center text-xs font-bold text-[#AAB5CC]">
-        {team1Name} <span className="text-[#19D89A]">vs</span> {team2Name}
-      </div>
-
       {/* TOAST CONFIRMATION FEEDBACK */}
       {toastMsg && (
-        <div className="fixed top-14 left-1/2 -translate-x-1/2 z-40 bg-[#19D89A] text-[#050A1A] font-extrabold text-xs px-4 py-2 rounded-full shadow-lg border border-[#19D89A] animate-in fade-in slide-in-from-top-2">
+        <div className="fixed top-12 left-1/2 -translate-x-1/2 z-40 bg-[#19D89A] text-[#050A1A] font-extrabold text-xs px-4 py-1.5 rounded-full shadow-lg border border-[#19D89A] animate-in fade-in slide-in-from-top-2">
           ✓ {toastMsg}
         </div>
       )}
 
       {/* ERROR MESSAGE DISPLAY */}
       {errorMsg && (
-        <div className="max-w-4xl mx-auto px-4 mt-3">
-          <div className="p-3 bg-[#E5232F]/10 border border-[#E5232F]/40 rounded-xl text-[#E5232F] text-xs font-bold flex items-center gap-2">
+        <div className="max-w-4xl mx-auto px-4 mt-2">
+          <div className="p-2.5 bg-[#E5232F]/10 border border-[#E5232F]/40 rounded-xl text-[#E5232F] text-xs font-bold flex items-center gap-2">
             <AlertTriangle className="w-4 h-4 shrink-0" />
             <span>{errorMsg}</span>
           </div>
         </div>
       )}
 
-      {/* MAIN LAYOUT CONTAINER */}
-      <div className="max-w-4xl mx-auto px-4 py-4 lg:grid lg:grid-cols-12 lg:gap-6 lg:items-start space-y-4 lg:space-y-0">
+      {/* MAIN COMPACT LAYOUT CONTAINER */}
+      <div className="max-w-4xl mx-auto px-3.5 py-3 lg:grid lg:grid-cols-12 lg:gap-5 lg:items-start space-y-3 lg:space-y-0">
         
         {/* ========================================================== */}
         {/* LEFT COLUMN (Scoreboard, Batters, Bowler, Over, History)   */}
         {/* ========================================================== */}
-        <div className="lg:col-span-6 space-y-4">
+        <div className="lg:col-span-6 space-y-3">
           
-          {/* 2. MAIN SCOREBOARD */}
-          <div className="bg-[#0D1528] border-t-2 border-t-[#19D89A] border-x border-b border-[#173541] rounded-2xl p-4 text-center shadow-lg">
-            <h2 className="text-xs font-black text-[#AAB5CC] uppercase tracking-wider mb-1">
-              {battingTeamName}
-            </h2>
+          {/* 2. COMPACT MAIN SCOREBOARD */}
+          <div className="bg-[#0D1528] border border-[#19D89A]/50 rounded-2xl p-3.5 text-center shadow-lg">
+            <div className="flex items-center justify-center gap-2 mb-0.5">
+              <div className="w-5 h-5 rounded-md bg-[#050A1A] border border-[#173541] p-0.5 flex items-center justify-center overflow-hidden shrink-0">
+                {battingTeamLogo ? (
+                  <img src={battingTeamLogo} alt={battingTeamName} className="w-full h-full object-cover rounded-sm" />
+                ) : (
+                  <span className="font-black text-[9px] text-[#19D89A] font-mono">{battingTeamShort}</span>
+                )}
+              </div>
+              <h2 className="text-xs font-black text-[#AAB5CC] uppercase tracking-wider">
+                {battingTeamName}
+              </h2>
+            </div>
 
-            <div className="text-5xl sm:text-6xl font-black font-mono tracking-tight text-[#19D89A] py-1">
+            <div className="text-4xl sm:text-5xl font-black font-mono tracking-tight text-[#19D89A] py-0.5">
               {activeInnings.total_runs || 0} <span className="text-white">/</span> {activeInnings.total_wickets || 0}
             </div>
 
-            <div className="text-sm font-extrabold text-white font-mono mb-3">
-              {(activeInnings.total_overs || 0.0).toFixed(1)} <span className="text-xs text-[#71809A]">OV</span>
+            <div className="text-xs font-extrabold text-white font-mono mb-2">
+              {(activeInnings.total_overs || 0.0).toFixed(1)} <span className="text-[10px] text-[#71809A]">OV</span>
             </div>
 
-            <div className="flex items-center justify-center gap-4 text-xs font-extrabold pt-2 border-t border-[#173541] text-[#AAB5CC]">
+            <div className="flex items-center justify-center gap-3 text-[11px] font-extrabold pt-1.5 border-t border-[#173541] text-[#AAB5CC]">
               <div>CRR <span className="text-white font-mono ml-1">{crr}</span></div>
               {match.target && (
                 <>
@@ -358,13 +375,13 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
             </div>
           </div>
 
-          {/* 3. ACTIVE BATTERS */}
-          <div className="bg-[#0D1528] border border-[#173541] rounded-2xl p-3.5 space-y-2.5">
+          {/* 3. COMPACT ACTIVE BATTERS */}
+          <div className="bg-[#0D1528] border border-[#173541] rounded-2xl p-3 space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-extrabold text-[#71809A] uppercase tracking-wider">Batters</span>
+              <span className="text-[10px] font-extrabold text-[#71809A] uppercase tracking-wider">Batters</span>
               <button 
                 onClick={handleSwapBatsmen}
-                className="text-[11px] font-extrabold text-[#19D89A] flex items-center gap-1 hover:underline"
+                className="text-[10px] font-extrabold text-[#19D89A] flex items-center gap-1 hover:underline"
               >
                 <RefreshCw className="w-3 h-3" />
                 Swap
@@ -373,23 +390,23 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
 
             <div className="grid grid-cols-2 gap-2">
               {/* STRIKER */}
-              <div className="bg-[#111A2D] border border-[#19D89A]/40 rounded-xl p-2.5">
+              <div className="bg-[#111A2D] border border-[#19D89A]/40 rounded-xl p-2">
                 <div className="flex items-center gap-1.5 text-xs font-bold text-white truncate">
-                  <span className="w-2 h-2 rounded-full bg-[#19D89A] shrink-0 animate-pulse" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#19D89A] shrink-0 animate-pulse" />
                   <span className="truncate">{strikerPlayer?.full_name || strikerPlayer?.display_name || 'Striker'}</span>
                 </div>
-                <div className="text-xs font-extrabold text-[#19D89A] font-mono mt-1">
-                  56 <span className="text-[11px] text-[#AAB5CC] font-normal">(32)</span>
+                <div className="text-xs font-extrabold text-[#19D89A] font-mono mt-0.5">
+                  56 <span className="text-[10px] text-[#AAB5CC] font-normal">(32)</span>
                 </div>
               </div>
 
               {/* NON-STRIKER */}
-              <div className="bg-[#111A2D] border border-[#173541] rounded-xl p-2.5">
-                <div className="text-xs font-bold text-[#AAB5CC] truncate pl-3">
+              <div className="bg-[#111A2D] border border-[#173541] rounded-xl p-2">
+                <div className="text-xs font-bold text-[#AAB5CC] truncate pl-2">
                   <span className="truncate">{nonStrikerPlayer?.full_name || nonStrikerPlayer?.display_name || 'Non-Striker'}</span>
                 </div>
-                <div className="text-xs font-extrabold text-white font-mono mt-1 pl-3">
-                  24 <span className="text-[11px] text-[#71809A] font-normal">(18)</span>
+                <div className="text-xs font-extrabold text-white font-mono mt-0.5 pl-2">
+                  24 <span className="text-[10px] text-[#71809A] font-normal">(18)</span>
                 </div>
               </div>
             </div>
@@ -434,32 +451,32 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
             )}
           </div>
 
-          {/* 4. CURRENT BOWLER */}
-          <div className="bg-[#0D1528] border border-[#173541] rounded-2xl p-3.5 flex items-center justify-between">
+          {/* 4. COMPACT CURRENT BOWLER */}
+          <div className="bg-[#0D1528] border border-[#173541] rounded-2xl p-2.5 flex items-center justify-between">
             <div>
-              <span className="text-[10px] font-extrabold text-[#71809A] uppercase tracking-wider block">Bowler</span>
+              <span className="text-[9px] font-extrabold text-[#71809A] uppercase tracking-wider block">Bowler</span>
               <span className="text-xs font-bold text-white block mt-0.5">
                 {bowlerPlayer?.full_name || bowlerPlayer?.display_name || 'Bowler'}
               </span>
             </div>
-            <div className="flex items-center gap-3 text-xs font-extrabold font-mono text-[#AAB5CC]">
-              <div>2.4 <span className="text-[10px] font-semibold text-[#71809A]">OV</span></div>
-              <div>21 <span className="text-[10px] font-semibold text-[#71809A]">R</span></div>
-              <div className="text-[#19D89A]">1 <span className="text-[10px] font-semibold text-[#71809A]">W</span></div>
+            <div className="flex items-center gap-2.5 text-xs font-extrabold font-mono text-[#AAB5CC]">
+              <div>2.4 <span className="text-[9px] font-semibold text-[#71809A]">OV</span></div>
+              <div>21 <span className="text-[9px] font-semibold text-[#71809A]">R</span></div>
+              <div className="text-[#19D89A]">1 <span className="text-[9px] font-semibold text-[#71809A]">W</span></div>
             </div>
           </div>
 
-          {/* 5. CURRENT OVER STRIP */}
-          <div className="bg-[#0D1528] border border-[#173541] rounded-2xl p-3.5 space-y-2">
-            <div className="flex items-center justify-between text-xs">
+          {/* 5. COMPACT CURRENT OVER STRIP */}
+          <div className="bg-[#0D1528] border border-[#173541] rounded-2xl p-2.5 space-y-1.5">
+            <div className="flex items-center justify-between text-[11px]">
               <span className="font-extrabold text-[#AAB5CC] uppercase tracking-wider">OVER 11</span>
-              <span className="font-bold text-[#19D89A] text-[11px]">13 RUNS</span>
+              <span className="font-bold text-[#19D89A] text-[10px]">13 RUNS</span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               {['●', '1', '4', 'W', '2', '0', '6'].map((ball, idx) => (
                 <span 
                   key={idx}
-                  className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-black shadow-sm ${
+                  className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black shadow-sm ${
                     ball === '4' ? 'bg-[#315BEA] text-white' :
                     ball === '6' ? 'bg-[#19D89A] text-[#050A1A]' :
                     ball === 'W' ? 'bg-[#E5232F] text-white' :
@@ -472,22 +489,22 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
             </div>
           </div>
 
-          {/* 6. BALL HISTORY LIST */}
-          <div className="bg-[#0D1528] border border-[#173541] rounded-2xl p-3.5 space-y-2">
-            <span className="text-[11px] font-extrabold text-[#71809A] uppercase tracking-wider block mb-1">Ball History</span>
-            <div className="grid grid-cols-4 gap-2">
+          {/* 6. COMPACT BALL HISTORY LIST */}
+          <div className="bg-[#0D1528] border border-[#173541] rounded-2xl p-2.5 space-y-1.5">
+            <span className="text-[10px] font-extrabold text-[#71809A] uppercase tracking-wider block mb-0.5">Ball History</span>
+            <div className="grid grid-cols-4 gap-1.5">
               {recentBalls.map((b, idx) => (
-                <div key={idx} className="bg-[#111A2D] border border-[#173541] rounded-xl p-2 text-center">
-                  <div className="text-[10px] text-[#71809A] font-mono">{b.ball}</div>
-                  <div className={`text-sm font-black font-mono ${b.run === 'W' ? 'text-[#E5232F]' : b.run === 4 ? 'text-[#315BEA]' : b.run === 6 ? 'text-[#19D89A]' : 'text-white'}`}>
+                <div key={idx} className="bg-[#111A2D] border border-[#173541] rounded-xl p-1.5 text-center">
+                  <div className="text-[9px] text-[#71809A] font-mono">{b.ball}</div>
+                  <div className={`text-xs font-black font-mono ${b.run === 'W' ? 'text-[#E5232F]' : b.run === 4 ? 'text-[#315BEA]' : b.run === 6 ? 'text-[#19D89A]' : 'text-white'}`}>
                     {b.run}
                   </div>
                 </div>
               ))}
             </div>
-            <div className="pt-2 text-center">
-              <Link href={`/matches/${match.id}`} className="text-xs font-bold text-[#19D89A] hover:underline inline-flex items-center gap-1">
-                View Full Scorecard <ChevronRight className="w-3.5 h-3.5" />
+            <div className="pt-1 text-center">
+              <Link href={`/matches/${match.id}`} className="text-[11px] font-bold text-[#19D89A] hover:underline inline-flex items-center gap-1">
+                View Full Scorecard <ChevronRight className="w-3 h-3" />
               </Link>
             </div>
           </div>
@@ -497,19 +514,19 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
         {/* ========================================================== */}
         {/* RIGHT COLUMN (Run Keypad, Wicket, More, Undo)             */}
         {/* ========================================================== */}
-        <div className="lg:col-span-6 space-y-4">
+        <div className="lg:col-span-6 space-y-3">
           
-          {/* 7. MAIN SCORING KEYPAD (3x2 GRID) */}
-          <div className="bg-[#111A2D] border border-[#173541] rounded-2xl p-4 space-y-3 shadow-xl">
-            <span className="text-[11px] font-extrabold text-[#71809A] uppercase tracking-wider block">Runs</span>
+          {/* 7. COMPACT SCORING KEYPAD (3x2 GRID) */}
+          <div className="bg-[#111A2D] border border-[#173541] rounded-2xl p-3 space-y-2.5 shadow-xl">
+            <span className="text-[10px] font-extrabold text-[#71809A] uppercase tracking-wider block">Runs</span>
             
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-3 gap-2.5">
               {/* RUN 0 */}
               <button
                 type="button"
                 disabled={loading}
                 onClick={() => handleScoreRun(0)}
-                className="h-20 rounded-xl bg-[#071022] hover:bg-[#0D1528] border border-[#173541] text-white font-black text-3xl transition-all active:scale-95 flex items-center justify-center"
+                className="h-16 rounded-xl bg-[#071022] hover:bg-[#0D1528] border border-[#173541] text-white font-black text-2xl transition-all active:scale-95 flex items-center justify-center"
               >
                 0
               </button>
@@ -519,7 +536,7 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
                 type="button"
                 disabled={loading}
                 onClick={() => handleScoreRun(1)}
-                className="h-20 rounded-xl bg-[#071022] hover:bg-[#0D1528] border border-[#173541] text-[#19D89A] font-black text-3xl transition-all active:scale-95 flex items-center justify-center"
+                className="h-16 rounded-xl bg-[#071022] hover:bg-[#0D1528] border border-[#173541] text-[#19D89A] font-black text-2xl transition-all active:scale-95 flex items-center justify-center"
               >
                 1
               </button>
@@ -529,7 +546,7 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
                 type="button"
                 disabled={loading}
                 onClick={() => handleScoreRun(2)}
-                className="h-20 rounded-xl bg-[#071022] hover:bg-[#0D1528] border border-[#173541] text-[#19D89A] font-black text-3xl transition-all active:scale-95 flex items-center justify-center"
+                className="h-16 rounded-xl bg-[#071022] hover:bg-[#0D1528] border border-[#173541] text-[#19D89A] font-black text-2xl transition-all active:scale-95 flex items-center justify-center"
               >
                 2
               </button>
@@ -539,7 +556,7 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
                 type="button"
                 disabled={loading}
                 onClick={() => handleScoreRun(3)}
-                className="h-20 rounded-xl bg-[#071022] hover:bg-[#0D1528] border border-[#173541] text-[#19D89A] font-black text-3xl transition-all active:scale-95 flex items-center justify-center"
+                className="h-16 rounded-xl bg-[#071022] hover:bg-[#0D1528] border border-[#173541] text-[#19D89A] font-black text-2xl transition-all active:scale-95 flex items-center justify-center"
               >
                 3
               </button>
@@ -549,7 +566,7 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
                 type="button"
                 disabled={loading}
                 onClick={() => handleScoreRun(4)}
-                className="h-20 rounded-xl bg-[#315BEA] hover:bg-blue-600 text-white font-black text-3xl shadow-lg shadow-blue-600/20 transition-all active:scale-95 flex items-center justify-center"
+                className="h-16 rounded-xl bg-[#315BEA] hover:bg-blue-600 text-white font-black text-2xl shadow-lg shadow-blue-600/20 transition-all active:scale-95 flex items-center justify-center"
               >
                 4
               </button>
@@ -559,21 +576,21 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
                 type="button"
                 disabled={loading}
                 onClick={() => handleScoreRun(6)}
-                className="h-20 rounded-xl bg-[#19D89A] hover:bg-emerald-400 text-[#050A1A] font-black text-3xl shadow-lg shadow-emerald-500/20 transition-all active:scale-95 flex items-center justify-center"
+                className="h-16 rounded-xl bg-[#19D89A] hover:bg-emerald-400 text-[#050A1A] font-black text-2xl shadow-lg shadow-emerald-500/20 transition-all active:scale-95 flex items-center justify-center"
               >
                 6
               </button>
             </div>
           </div>
 
-          {/* 8. WICKET, MORE, UNDO ACTION BAR */}
-          <div className="grid grid-cols-3 gap-3">
+          {/* 8. COMPACT WICKET, MORE, UNDO ACTION BAR */}
+          <div className="grid grid-cols-3 gap-2.5">
             {/* WICKET BUTTON */}
             <button
               type="button"
               disabled={loading}
               onClick={() => setIsWicketModalOpen(true)}
-              className="h-14 rounded-xl bg-[#E5232F] hover:bg-red-600 text-white font-black text-sm uppercase tracking-wider shadow-lg shadow-red-600/20 transition-all active:scale-95 flex items-center justify-center"
+              className="h-12 rounded-xl bg-[#E5232F] hover:bg-red-600 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-red-600/20 transition-all active:scale-95 flex items-center justify-center"
             >
               WICKET
             </button>
@@ -583,7 +600,7 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
               type="button"
               disabled={loading}
               onClick={() => setIsMoreModalOpen(true)}
-              className="h-14 rounded-xl bg-[#0D1528] hover:bg-[#111A2D] border border-[#173541] text-[#19D89A] font-black text-sm uppercase tracking-wider transition-all active:scale-95 flex items-center justify-center gap-1"
+              className="h-12 rounded-xl bg-[#0D1528] hover:bg-[#111A2D] border border-[#173541] text-[#19D89A] font-black text-xs uppercase tracking-wider transition-all active:scale-95 flex items-center justify-center gap-1"
             >
               <MoreHorizontal className="w-4 h-4" />
               MORE
@@ -594,9 +611,9 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
               type="button"
               disabled={loading}
               onClick={handleUndo}
-              className="h-14 rounded-xl bg-[#0D1528] hover:bg-[#111A2D] border border-[#173541] text-[#AAB5CC] hover:text-white font-black text-xs uppercase tracking-wider transition-all active:scale-95 flex items-center justify-center gap-1.5"
+              className="h-12 rounded-xl bg-[#0D1528] hover:bg-[#111A2D] border border-[#173541] text-[#AAB5CC] hover:text-white font-black text-[11px] uppercase tracking-wider transition-all active:scale-95 flex items-center justify-center gap-1"
             >
-              <RotateCcw className="w-4 h-4 text-amber-400" />
+              <RotateCcw className="w-3.5 h-3.5 text-amber-400" />
               UNDO
             </button>
           </div>
