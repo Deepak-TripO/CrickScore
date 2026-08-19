@@ -2,20 +2,25 @@
 
 import React, { useState } from 'react';
 import CommunityCard from './CommunityCard';
-import { ArrowLeft, UserCheck, Users, Loader2 } from 'lucide-react';
-import { getCommunityMembersAction, CommunityMemberItem } from '@/actions/community';
+import { ArrowLeft, UserCheck, Users, Loader2, LogOut } from 'lucide-react';
+import { getCommunityMembersAction, leaveCommunityAction, CommunityMemberItem } from '@/actions/community';
 
 interface PublicCommunityClientProps {
   communities: any[];
 }
 
-export default function PublicCommunityClient({ communities }: PublicCommunityClientProps) {
+export default function PublicCommunityClient({ communities: initialCommunities }: PublicCommunityClientProps) {
+  const [communityList, setCommunityList] = useState<any[]>(initialCommunities);
   const [selectedCommunity, setSelectedCommunity] = useState<any | null>(null);
   const [communityMembers, setCommunityMembers] = useState<CommunityMemberItem[]>([]);
   const [memberCount, setMemberCount] = useState<number>(0);
   const [loadingMembers, setLoadingMembers] = useState<boolean>(false);
+  const [isLeaving, setIsLeaving] = useState<boolean>(false);
 
   const handleSelectCommunity = async (comm: any) => {
+    // Access Control: Only open member page for joined communities
+    if (!comm.isJoined) return;
+
     setSelectedCommunity(comm);
     setLoadingMembers(true);
     try {
@@ -36,12 +41,35 @@ export default function PublicCommunityClient({ communities }: PublicCommunityCl
     setMemberCount(0);
   };
 
-  // IF VIEWING SELECTED COMMUNITY MEMBER PAGE (IMAGE 2 REFERENCE)
+  const handleLeaveCommunity = async () => {
+    if (!selectedCommunity || isLeaving) return;
+    setIsLeaving(true);
+    try {
+      const res = await leaveCommunityAction(selectedCommunity.id);
+      if (res.success) {
+        setCommunityList(prev => prev.map(c => {
+          if (c.id === selectedCommunity.id) {
+            return { ...c, isJoined: false };
+          }
+          return c;
+        }));
+        handleCloseMemberPage();
+      } else if (res.error) {
+        alert(res.error);
+      }
+    } catch (err: any) {
+      console.warn('[LEAVE COMMUNITY ERROR]', err);
+    } finally {
+      setIsLeaving(false);
+    }
+  };
+
+  // IF VIEWING DEDICATED JOINED COMMUNITY MEMBER PAGE
   if (selectedCommunity) {
     return (
       <div className="space-y-6 animate-in fade-in duration-200">
         
-        {/* BACK ACTION BUTTON (RENAMED TO "Back" WITHOUT VISIBLE COMMUNITY ID BADGE) */}
+        {/* BACK ACTION & LEAVE BUTTON (NO VISIBLE COMMUNITY ID BADGE) */}
         <div className="flex items-center justify-between border-b border-[#173541] pb-4">
           <button
             type="button"
@@ -50,6 +78,26 @@ export default function PublicCommunityClient({ communities }: PublicCommunityCl
           >
             <ArrowLeft className="w-4 h-4 text-[#19D89A]" />
             <span>Back</span>
+          </button>
+
+          {/* LEAVE BUTTON */}
+          <button
+            type="button"
+            onClick={handleLeaveCommunity}
+            disabled={isLeaving}
+            className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 font-extrabold text-xs rounded-xl border border-red-500/30 flex items-center gap-1.5 transition-all shadow-md active:scale-95"
+          >
+            {isLeaving ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <span>Leaving...</span>
+              </>
+            ) : (
+              <>
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Leave</span>
+              </>
+            )}
           </button>
         </div>
 
@@ -164,7 +212,7 @@ export default function PublicCommunityClient({ communities }: PublicCommunityCl
 
       {/* COMMUNITY DIRECTORY GRID */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {communities.map((c: any) => (
+        {communityList.map((c: any) => (
           <CommunityCard 
             key={c.id} 
             community={c} 

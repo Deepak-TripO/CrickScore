@@ -460,6 +460,47 @@ export async function joinCommunityAction(communityId: string) {
   }
 }
 
+// 8. Leave Community (REMOVE CURRENT LOGGED-IN USER MEMBERSHIP ONLY)
+export async function leaveCommunityAction(communityId: string) {
+  const { user } = await getUserAndRole();
+  if (!user) {
+    return { error: 'Authentication required.' };
+  }
+
+  if (!communityId) {
+    return { error: 'Community ID is required.' };
+  }
+
+  const supabase = createClient();
+  let db: any = supabase;
+  try {
+    db = createAdminClient();
+  } catch {
+    db = supabase;
+  }
+
+  try {
+    // Remove ONLY current logged-in user's membership row for this community
+    const { error: deleteError } = await db
+      .from('community_members')
+      .delete()
+      .eq('community_id', communityId)
+      .eq('user_id', user.id);
+
+    if (deleteError) {
+      console.warn('[LEAVE COMMUNITY DB DELETE WARNING]', deleteError.message);
+    }
+
+    revalidatePath('/community');
+    revalidatePath('/master/dashboard');
+
+    return { success: true, isJoined: false };
+  } catch (err: any) {
+    console.warn('[LEAVE COMMUNITY CATCH]', err.message);
+    return { error: err.message || 'Failed to leave community.' };
+  }
+}
+
 // 7. Get All Community IDs Joined by Current Logged-In User
 export async function getUserJoinedCommunityIdsAction() {
   const { user } = await getUserAndRole();

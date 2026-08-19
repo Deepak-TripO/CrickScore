@@ -52,8 +52,8 @@ export default function CommunityCard({ community, onSelect }: CommunityCardProp
 
   return (
     <div 
-      onClick={() => onSelect?.()}
-      className={`bg-[#0D1528] border border-[#173541] rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl hover:border-[#19D89A]/40 transition-all group flex flex-col justify-between ${onSelect ? 'cursor-pointer active:scale-[0.99]' : ''}`}
+      onClick={() => isJoinedState && onSelect?.()}
+      className={`bg-[#0D1528] border border-[#173541] rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl transition-all group flex flex-col justify-between ${isJoinedState && onSelect ? 'cursor-pointer hover:border-[#19D89A]/50 active:scale-[0.99]' : ''}`}
     >
       <div>
         {/* COVER IMAGE BANNER (COMPACT ON MOBILE) */}
