@@ -389,15 +389,11 @@ export default function CommunityCreateSection() {
           <button
             type="button"
             onClick={handleCloseViewPanel}
-            className="px-4 py-2 bg-[#111A2D] hover:bg-[#173541] text-[#AAB5CC] hover:text-white font-extrabold text-xs rounded-xl border border-[#173541] flex items-center gap-2 transition-all"
+            className="px-4 py-2 bg-[#111A2D] hover:bg-[#173541] text-[#AAB5CC] hover:text-white font-extrabold text-xs rounded-xl border border-[#173541] flex items-center gap-2 transition-all shadow-md active:scale-95"
           >
             <ArrowLeft className="w-4 h-4 text-[#19D89A]" />
-            <span>Back to Active Communities</span>
+            <span>Back</span>
           </button>
-
-          <span className="px-3 py-1 rounded-full text-xs font-black bg-[#19D89A]/15 text-[#19D89A] border border-[#19D89A]/30">
-            Community ID: {viewingCommunity.id.slice(0, 8)}...
-          </span>
         </div>
 
         {/* COMMUNITY BANNER & INFO HEADER CARD */}
@@ -671,37 +667,37 @@ export default function CommunityCreateSection() {
               </button>
             </div>
 
-            {/* FORM BODY */}
-            <form onSubmit={handleSubmitCommunity} className="p-4 sm:p-6 space-y-4 sm:space-y-5 overflow-y-auto flex-1">
+            {/* FORM BODY (COMPACT ON MOBILE - IMAGE 1 REFERENCE) */}
+            <form onSubmit={handleSubmitCommunity} className="p-3.5 sm:p-5 space-y-3 sm:space-y-4 overflow-y-auto flex-1">
               
               {/* FEEDBACK MESSAGES */}
               {errorMsg && (
-                <div className="p-3.5 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-xs font-bold">
+                <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-xs font-bold">
                   {errorMsg}
                 </div>
               )}
               {successMsg && (
-                <div className="p-3.5 bg-[#19D89A]/10 border border-[#19D89A]/30 rounded-xl text-[#19D89A] text-xs font-extrabold flex items-center gap-2">
+                <div className="p-3 bg-[#19D89A]/10 border border-[#19D89A]/30 rounded-xl text-[#19D89A] text-xs font-extrabold flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4" />
                   <span>{successMsg}</span>
                 </div>
               )}
 
               {/* COVER IMAGE UPLOAD WITH PREVIEW */}
-              <div className="space-y-2">
-                <label className="text-xs font-extrabold text-[#19D89A] uppercase tracking-wider block">
+              <div className="space-y-1.5">
+                <label className="text-[11px] sm:text-xs font-extrabold text-[#19D89A] uppercase tracking-wider block">
                   Cover Image
                 </label>
                 <div 
                   onClick={() => coverInputRef.current?.click()}
-                  className="relative h-32 w-full rounded-2xl border-2 border-dashed border-[#173541] hover:border-[#19D89A] bg-[#050A1A] flex flex-col items-center justify-center cursor-pointer overflow-hidden transition-all group"
+                  className="relative h-20 sm:h-28 w-full rounded-xl sm:rounded-2xl border-2 border-dashed border-[#173541] hover:border-[#19D89A] bg-[#050A1A] flex flex-col items-center justify-center cursor-pointer overflow-hidden transition-all group"
                 >
                   {coverImagePreview ? (
                     <img src={coverImagePreview} alt="Cover Preview" className="w-full h-full object-cover" />
                   ) : (
-                    <div className="text-center space-y-1 p-3">
-                      <ImageIcon className="w-6 h-6 mx-auto text-[#AAB5CC] group-hover:text-[#19D89A] transition-colors" />
-                      <span className="text-xs font-bold text-[#AAB5CC] block">Click to upload Cover Image</span>
+                    <div className="text-center space-y-0.5 p-2">
+                      <ImageIcon className="w-5 h-5 sm:w-6 sm:h-6 mx-auto text-[#AAB5CC] group-hover:text-[#19D89A] transition-colors" />
+                      <span className="text-[11px] sm:text-xs font-bold text-[#AAB5CC] block">Click to upload Cover Image</span>
                     </div>
                   )}
                   <input 
@@ -715,25 +711,25 @@ export default function CommunityCreateSection() {
               </div>
 
               {/* PROFILE IMAGE UPLOAD WITH PREVIEW */}
-              <div className="space-y-2">
-                <label className="text-xs font-extrabold text-[#19D89A] uppercase tracking-wider block">
+              <div className="space-y-1.5">
+                <label className="text-[11px] sm:text-xs font-extrabold text-[#19D89A] uppercase tracking-wider block">
                   Profile Image
                 </label>
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3">
                   <div 
                     onClick={() => profileInputRef.current?.click()}
-                    className="w-16 h-16 rounded-2xl border-2 border-dashed border-[#173541] hover:border-[#19D89A] bg-[#050A1A] flex items-center justify-center cursor-pointer overflow-hidden shrink-0 group transition-all"
+                    className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl border-2 border-dashed border-[#173541] hover:border-[#19D89A] bg-[#050A1A] flex items-center justify-center cursor-pointer overflow-hidden shrink-0 group transition-all"
                   >
                     {profileImagePreview ? (
                       <img src={profileImagePreview} alt="Profile Preview" className="w-full h-full object-cover" />
                     ) : (
-                      <Camera className="w-5 h-5 text-[#AAB5CC] group-hover:text-[#19D89A] transition-colors" />
+                      <Camera className="w-4 h-4 sm:w-5 sm:h-5 text-[#AAB5CC] group-hover:text-[#19D89A] transition-colors" />
                     )}
                   </div>
                   <button
                     type="button"
                     onClick={() => profileInputRef.current?.click()}
-                    className="px-4 py-2 bg-[#111A2D] hover:bg-[#173541] border border-[#173541] text-[#AAB5CC] hover:text-white font-bold text-xs rounded-xl transition-all"
+                    className="px-3 py-1.5 sm:px-4 sm:py-2 bg-[#111A2D] hover:bg-[#173541] border border-[#173541] text-[#AAB5CC] hover:text-white font-bold text-xs rounded-xl transition-all"
                   >
                     Select Profile Image
                   </button>
@@ -748,8 +744,8 @@ export default function CommunityCreateSection() {
               </div>
 
               {/* COMMUNITY NAME FIELD (REQUIRED) */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-extrabold text-[#19D89A] uppercase tracking-wider block">
+              <div className="space-y-1">
+                <label className="text-[11px] sm:text-xs font-extrabold text-[#19D89A] uppercase tracking-wider block">
                   Community Name *
                 </label>
                 <input
@@ -757,22 +753,22 @@ export default function CommunityCreateSection() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Enter community name (e.g. Royal Cricket Club)"
-                  className="w-full px-4 py-3 bg-[#050A1A] border border-[#173541] focus:border-[#19D89A] rounded-xl text-xs font-bold text-white outline-none transition-all placeholder:text-[#AAB5CC]/50"
+                  className="w-full px-3.5 py-2.5 sm:px-4 sm:py-3 bg-[#050A1A] border border-[#173541] focus:border-[#19D89A] rounded-xl text-xs font-bold text-white outline-none transition-all placeholder:text-[#AAB5CC]/50"
                   required
                 />
               </div>
 
               {/* BIO FIELD (REQUIRED) */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-extrabold text-[#19D89A] uppercase tracking-wider block">
+              <div className="space-y-1">
+                <label className="text-[11px] sm:text-xs font-extrabold text-[#19D89A] uppercase tracking-wider block">
                   Bio *
                 </label>
                 <textarea
-                  rows={4}
+                  rows={2}
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
                   placeholder="Describe your community, guidelines, activities, and goals..."
-                  className="w-full px-4 py-3 bg-[#050A1A] border border-[#173541] focus:border-[#19D89A] rounded-xl text-xs font-bold text-white outline-none transition-all placeholder:text-[#AAB5CC]/50 resize-none"
+                  className="w-full px-3.5 py-2.5 sm:px-4 sm:py-3 bg-[#050A1A] border border-[#173541] focus:border-[#19D89A] rounded-xl text-xs font-bold text-white outline-none transition-all placeholder:text-[#AAB5CC]/50 resize-none"
                   required
                 />
               </div>

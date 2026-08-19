@@ -2,14 +2,11 @@ import React from 'react';
 import Navbar from '@/components/navigation/Navbar';
 import MobileNav from '@/components/navigation/MobileNav';
 import { getUserAndRole } from '@/lib/auth';
-import Link from 'next/link';
-import { PlusCircle } from 'lucide-react';
 import { getPublicCommunities, getUserJoinedCommunityIdsAction } from '@/actions/community';
-import CommunityCard from '@/components/community/CommunityCard';
+import PublicCommunityClient from '@/components/community/PublicCommunityClient';
 
 export default async function CommunityPage() {
   const { user, role: userRole } = await getUserAndRole();
-  const isMasterOrAdmin = userRole === 'MASTER' || userRole === 'ADMIN';
 
   const [dbCommunities, joinedIds] = await Promise.all([
     getPublicCommunities(),
@@ -45,34 +42,7 @@ export default async function CommunityPage() {
       <Navbar user={user} userRole={userRole} />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-        
-        {/* TABS & CREATE ACTION BAR */}
-        <div className="flex items-center justify-between border-b border-[#173541] pb-3">
-          <div className="flex items-center gap-2">
-            <button className="px-4 py-2 bg-[#19D89A] text-[#050A1A] font-extrabold text-xs rounded-xl shadow-md">
-              Discover Communities
-            </button>
-          </div>
-
-          {/* CREATE COMMUNITY BUTTON — SHOWN ONLY TO MASTER / ADMIN USERS */}
-          {isMasterOrAdmin && (
-            <Link 
-              href="/master/dashboard?tab=community" 
-              className="px-4 py-2 bg-[#19D89A] hover:bg-emerald-400 text-[#050A1A] font-black text-xs rounded-xl shadow-lg shadow-[#19D89A]/20 transition-all uppercase tracking-wider flex items-center gap-1.5"
-            >
-              <PlusCircle className="w-4 h-4" /> 
-              <span>Create Community</span>
-            </Link>
-          )}
-        </div>
-
-        {/* COMMUNITY DIRECTORY GRID */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {allCommunities.map((c: any) => (
-            <CommunityCard key={c.id} community={c} />
-          ))}
-        </div>
-
+        <PublicCommunityClient communities={allCommunities} />
       </main>
 
       <MobileNav userRole={userRole} />

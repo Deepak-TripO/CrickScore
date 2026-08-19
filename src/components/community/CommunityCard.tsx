@@ -18,9 +18,10 @@ interface CommunityCardProps {
     members?: string;
     isJoined?: boolean;
   };
+  onSelect?: () => void;
 }
 
-export default function CommunityCard({ community }: CommunityCardProps) {
+export default function CommunityCard({ community, onSelect }: CommunityCardProps) {
   // Use original uploaded images directly from database as single source of truth
   const initialCover = community.coverImage || DEFAULT_COVER;
   const initialProfile = community.profileImage || DEFAULT_PROFILE;
@@ -30,7 +31,8 @@ export default function CommunityCard({ community }: CommunityCardProps) {
   const [isJoinedState, setIsJoinedState] = useState<boolean>(!!community.isJoined);
   const [isJoining, setIsJoining] = useState<boolean>(false);
 
-  const handleJoinClick = async () => {
+  const handleJoinClick = async (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (isJoinedState || isJoining) return;
     setIsJoining(true);
 
@@ -49,7 +51,10 @@ export default function CommunityCard({ community }: CommunityCardProps) {
   };
 
   return (
-    <div className="bg-[#0D1528] border border-[#173541] rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl hover:border-[#19D89A]/40 transition-all group flex flex-col justify-between">
+    <div 
+      onClick={() => onSelect?.()}
+      className={`bg-[#0D1528] border border-[#173541] rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl hover:border-[#19D89A]/40 transition-all group flex flex-col justify-between ${onSelect ? 'cursor-pointer active:scale-[0.99]' : ''}`}
+    >
       <div>
         {/* COVER IMAGE BANNER (COMPACT ON MOBILE) */}
         <div className="relative h-28 sm:h-40 w-full bg-[#050A1A] overflow-hidden">
@@ -91,6 +96,7 @@ export default function CommunityCard({ community }: CommunityCardProps) {
         {isJoinedState ? (
           <button 
             disabled 
+            onClick={(e) => e.stopPropagation()}
             className="px-3.5 py-1.5 sm:px-4 sm:py-1.5 bg-[#19D89A]/15 border border-[#19D89A]/40 text-[11px] sm:text-xs font-black text-[#19D89A] rounded-xl flex items-center gap-1.5 cursor-default shadow-sm"
           >
             <Check className="w-3.5 h-3.5" />
