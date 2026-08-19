@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import { joinCommunityAction } from '@/actions/community';
 import { Check, Loader2 } from 'lucide-react';
