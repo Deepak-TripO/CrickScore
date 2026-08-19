@@ -530,3 +530,63 @@ export async function setBattingTeam(matchId: string, inningsId: string, batting
   return { success: true };
 }
 
+export async function getOrCreateInnings2(matchId: string, team2Id: string, team1Id: string) {
+  const supabase = createClient();
+  let db: any = supabase;
+  try { db = createAdminClient(); } catch { db = supabase; }
+
+  const { data: existing2 } = await db
+    .from('innings')
+    .select('id')
+    .eq('match_id', matchId)
+    .eq('innings_number', 2)
+    .maybeSingle();
+
+  if (existing2?.id) return { inningsId: existing2.id };
+
+  const { data: created2 } = await db
+    .from('innings')
+    .insert({
+      match_id: matchId,
+      innings_number: 2,
+      batting_team_id: team2Id,
+      bowling_team_id: team1Id,
+      total_runs: 0,
+      total_wickets: 0,
+      total_overs: 0.0,
+      status: 'IN_PROGRESS'
+    })
+    .select('id')
+    .maybeSingle();
+
+  return { inningsId: created2?.id || matchId };
+}
+
+export async function completeMatchScoring(matchId: string) {
+  const supabase = createClient();
+  const { user, role: userRole } = await getUserAndRole();
+  if (!user) return { error: 'Unauthorized' };
+
+  let db: any = supabase;
+  try { db = createAdminClient(); } catch { db = supabase; }
+
+  const { data: match } = await db.from('matches').select('*').eq('id', matchId).maybeSingle();
+  if (!match || !isAuthorizedScorer(user, userRole, match)) {
+    return { error: 'Unauthorized' };
+  }
+
+  await db
+    .from('matches')
+    .update({
+      status: 'COMPLETED',
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', matchId);
+
+  revalidatePath(`/master/matches/${matchId}/score`);
+  revalidatePath(`/matches/${matchId}`);
+  revalidatePath('/master/dashboard');
+  revalidatePath('/');
+  return { success: true };
+}
+

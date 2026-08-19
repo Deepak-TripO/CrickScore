@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { scoreBall, undoLastBall, setBattingTeam } from '@/actions/scoring';
+import { scoreBall, undoLastBall, setBattingTeam, getOrCreateInnings2, completeMatchScoring } from '@/actions/scoring';
 import { ExtraType, WicketType, InningsState } from '@/lib/cricket/engine';
 import { ArrowLeft, RotateCcw, AlertTriangle, ChevronRight, RefreshCw, X, MoreHorizontal, Play, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
@@ -28,6 +28,10 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
   const team1Short = t1?.short_name || team1Name.slice(0, 4).toUpperCase();
   const team2Short = t2?.short_name || team2Name.slice(0, 4).toUpperCase();
 
+  // Innings State & Navigation (1 = First Batting Team, 2 = Second Batting Team)
+  const [currentInningsNumber, setCurrentInningsNumber] = useState<number>(1);
+  const [innings2Id, setInnings2Id] = useState<string | null>(null);
+
   const [selectedBattingTeamId, setSelectedBattingTeamId] = useState<string>(
     activeInnings?.batting_team_id || team1Id
   );
@@ -45,8 +49,18 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
   const [nonStrikerId, setNonStrikerId] = useState<string>(battingPlayers[1]?.id || '');
   const [bowlerId, setBowlerId] = useState<string>(bowlingPlayers[0]?.id || '');
 
-  // Live Innings State for real-time score & player stats synchronization
-  const [liveInningsState, setLiveInningsState] = useState<InningsState | null>(null);
+  // Separate Innings State objects for strict score separation
+  const [innings1State, setInnings1State] = useState<InningsState | null>(null);
+  const [innings2State, setInnings2State] = useState<InningsState | null>(null);
+
+  const liveInningsState = currentInningsNumber === 1 ? innings1State : innings2State;
+  const setLiveInningsState = (newState: InningsState | null) => {
+    if (currentInningsNumber === 1) {
+      setInnings1State(newState);
+    } else {
+      setInnings2State(newState);
+    }
+  };
 
   // Modals / Bottom Sheets
   const [isWicketModalOpen, setIsWicketModalOpen] = useState<boolean>(false);
@@ -63,8 +77,10 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
   const [loading, setLoading] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string>('');
 
-  // Always resolve a valid UUID string for inningsId
-  const safeInningsId = (activeInnings?.id && activeInnings.id !== 'inn1') ? activeInnings.id : match.id;
+  // Innings ID for current scoring session
+  const safeInningsId = currentInningsNumber === 1 
+    ? ((activeInnings?.id && activeInnings.id !== 'inn1') ? activeInnings.id : match.id)
+    : (innings2Id || match.id);
 
   const strikerPlayer = battingPlayers.find(p => p.id === strikerId) || battingPlayers[0];
   const nonStrikerPlayer = battingPlayers.find(p => p.id === nonStrikerId) || battingPlayers[1];
@@ -73,6 +89,66 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
   const showToast = (msg: string) => {
     setToastMsg(msg);
     setTimeout(() => setToastMsg(''), 3000);
+  };
+
+  // 4. SWAP BATSMEN HANDLER
+  const handleSwapBatsmen = () => {
+    const temp = strikerId;
+    setStrikerId(nonStrikerId);
+    setNonStrikerId(temp);
+    showToast('Striker swapped');
+  };
+
+  // 5. NEXT INNINGS / OPPOSITE TEAM SCORING HANDLER (FIRST TEAM ONLY)
+  const handleNextInnings = async () => {
+    if (loading) return;
+    setLoading(true);
+    setErrorMsg('');
+
+    try {
+      const newBattingTeamId = team2Id;
+      const res = await getOrCreateInnings2(match.id, newBattingTeamId, team1Id);
+      if (res?.inningsId) setInnings2Id(res.inningsId);
+
+      setCurrentInningsNumber(2);
+      setSelectedBattingTeamId(newBattingTeamId);
+      setStrikerId(team2Players[0]?.id || '');
+      setNonStrikerId(team2Players[1]?.id || '');
+      setBowlerId(team1Players[0]?.id || '');
+      showToast(`Switched scoring to ${team2Name} (Second Innings)`);
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Failed to open second team scoring.');
+    }
+    setLoading(false);
+  };
+
+  // 6. PREVIOUS INNINGS HANDLER (SECOND TEAM ONLY)
+  const handlePreviousInnings = () => {
+    setCurrentInningsNumber(1);
+    setSelectedBattingTeamId(team1Id);
+    setStrikerId(team1Players[0]?.id || '');
+    setNonStrikerId(team1Players[1]?.id || '');
+    setBowlerId(team2Players[0]?.id || '');
+    showToast(`Returned to ${team1Name} (First Innings)`);
+  };
+
+  // 7. COMPLETE MATCH SCORING HANDLER (SECOND TEAM ONLY)
+  const handleCompleteMatch = async () => {
+    if (loading) return;
+    setLoading(true);
+    setErrorMsg('');
+
+    try {
+      const res = await completeMatchScoring(match.id);
+      if (res?.error) {
+        setErrorMsg(res.error);
+      } else {
+        showToast('Match scoring completed successfully!');
+      }
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Failed to complete match scoring.');
+    }
+    setLoading(false);
   };
 
   // Dynamic live score stats
@@ -314,39 +390,6 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
       setLoading(false);
       setErrorMsg(err.message || 'Failed to undo last ball.');
     }
-  };
-
-  // 4. SWAP BATSMEN HANDLER
-  const handleSwapBatsmen = () => {
-    const temp = strikerId;
-    setStrikerId(nonStrikerId);
-    setNonStrikerId(temp);
-    showToast('Striker swapped');
-  };
-
-  // 5. NEXT INNINGS / OPPOSITE TEAM SCORING HANDLER
-  const handleNextInnings = async () => {
-    if (loading) return;
-    setLoading(true);
-    setErrorMsg('');
-
-    const newBattingTeamId = isBattingTeam1 ? team2Id : team1Id;
-    const newBowlingTeamId = isBattingTeam1 ? team1Id : team2Id;
-    const newBattingPlayers = isBattingTeam1 ? team2Players : team1Players;
-    const newBowlingPlayers = isBattingTeam1 ? team1Players : team2Players;
-
-    try {
-      await setBattingTeam(match.id, safeInningsId, newBattingTeamId, newBowlingTeamId);
-      setSelectedBattingTeamId(newBattingTeamId);
-      setStrikerId(newBattingPlayers[0]?.id || '');
-      setNonStrikerId(newBattingPlayers[1]?.id || '');
-      setBowlerId(newBowlingPlayers[0]?.id || '');
-      setLiveInningsState(null);
-      showToast(`Started scoring for ${isBattingTeam1 ? team2Name : team1Name}`);
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Failed to switch team.');
-    }
-    setLoading(false);
   };
 
   return (
@@ -642,51 +685,82 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
             </div>
           </div>
 
-          {/* 8. COMPACT WICKET, MORE, UNDO, NEXT ACTION BAR */}
-          <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
-            {/* WICKET BUTTON */}
-            <button
-              type="button"
-              disabled={loading}
-              onClick={() => setIsWicketModalOpen(true)}
-              className="h-11 rounded-xl bg-[#E5232F] hover:bg-red-600 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-red-600/20 transition-all active:scale-95 flex items-center justify-center"
-            >
-              WICKET
-            </button>
+          {/* 8. COMPACT ACTION BAR (NEXT for First Team | PREVIOUS & COMPLETE for Second Team) */}
+          <div className="space-y-2">
+            <div className={`grid gap-1.5 sm:gap-2 ${currentInningsNumber === 1 ? 'grid-cols-4' : 'grid-cols-3'}`}>
+              {/* WICKET BUTTON */}
+              <button
+                type="button"
+                disabled={loading}
+                onClick={() => setIsWicketModalOpen(true)}
+                className="h-11 rounded-xl bg-[#E5232F] hover:bg-red-600 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-red-600/20 transition-all active:scale-95 flex items-center justify-center"
+              >
+                WICKET
+              </button>
 
-            {/* MORE BUTTON */}
-            <button
-              type="button"
-              disabled={loading}
-              onClick={() => setIsMoreModalOpen(true)}
-              className="h-11 rounded-xl bg-[#0D1528] hover:bg-[#111A2D] border border-[#173541] text-[#19D89A] font-black text-xs uppercase tracking-wider transition-all active:scale-95 flex items-center justify-center gap-1"
-            >
-              <MoreHorizontal className="w-3.5 h-3.5" />
-              MORE
-            </button>
+              {/* MORE BUTTON */}
+              <button
+                type="button"
+                disabled={loading}
+                onClick={() => setIsMoreModalOpen(true)}
+                className="h-11 rounded-xl bg-[#0D1528] hover:bg-[#111A2D] border border-[#173541] text-[#19D89A] font-black text-xs uppercase tracking-wider transition-all active:scale-95 flex items-center justify-center gap-1"
+              >
+                <MoreHorizontal className="w-3.5 h-3.5" />
+                MORE
+              </button>
 
-            {/* UNDO BUTTON */}
-            <button
-              type="button"
-              disabled={loading}
-              onClick={handleUndo}
-              className="h-11 rounded-xl bg-[#0D1528] hover:bg-[#111A2D] border border-[#173541] text-[#AAB5CC] hover:text-white font-black text-[10px] uppercase tracking-wider transition-all active:scale-95 flex items-center justify-center gap-1"
-            >
-              <RotateCcw className="w-3.5 h-3.5 text-amber-400" />
-              UNDO
-            </button>
+              {/* UNDO BUTTON */}
+              <button
+                type="button"
+                disabled={loading}
+                onClick={handleUndo}
+                className="h-11 rounded-xl bg-[#0D1528] hover:bg-[#111A2D] border border-[#173541] text-[#AAB5CC] hover:text-white font-black text-[10px] uppercase tracking-wider transition-all active:scale-95 flex items-center justify-center gap-1"
+              >
+                <RotateCcw className="w-3.5 h-3.5 text-amber-400" />
+                UNDO
+              </button>
 
-            {/* NEXT BUTTON */}
-            <button
-              type="button"
-              disabled={loading}
-              onClick={handleNextInnings}
-              className="h-11 rounded-xl bg-[#19D89A] hover:bg-emerald-400 text-[#050A1A] font-black text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/20 transition-all active:scale-95 flex items-center justify-center gap-0.5"
-              title="Proceed to opposite team scoring"
-            >
-              <span>NEXT</span>
-              <ChevronRight className="w-3.5 h-3.5" />
-            </button>
+              {/* NEXT BUTTON (FIRST TEAM ONLY) */}
+              {currentInningsNumber === 1 && (
+                <button
+                  type="button"
+                  disabled={loading}
+                  onClick={handleNextInnings}
+                  className="h-11 rounded-xl bg-[#19D89A] hover:bg-emerald-400 text-[#050A1A] font-black text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/20 transition-all active:scale-95 flex items-center justify-center gap-0.5"
+                  title="Proceed to second team scoring"
+                >
+                  <span>NEXT</span>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+
+            {/* PREVIOUS & COMPLETE BUTTONS (SECOND TEAM ONLY) */}
+            {currentInningsNumber === 2 && (
+              <div className="grid grid-cols-2 gap-2 pt-1 border-t border-[#173541]">
+                <button
+                  type="button"
+                  disabled={loading}
+                  onClick={handlePreviousInnings}
+                  className="h-11 rounded-xl bg-[#111A2D] hover:bg-[#173541] border border-[#173541] text-[#AAB5CC] hover:text-white font-black text-xs uppercase tracking-wider transition-all active:scale-95 flex items-center justify-center gap-1"
+                  title="Return to first team scoring"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  <span>PREVIOUS</span>
+                </button>
+
+                <button
+                  type="button"
+                  disabled={loading}
+                  onClick={handleCompleteMatch}
+                  className="h-11 rounded-xl bg-[#19D89A] hover:bg-emerald-400 text-[#050A1A] font-black text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/20 transition-all active:scale-95 flex items-center justify-center gap-1"
+                  title="Complete match scoring"
+                >
+                  <span>COMPLETE</span>
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
           </div>
 
         </div>
