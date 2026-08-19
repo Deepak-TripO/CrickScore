@@ -68,7 +68,6 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
   const [isWicketModalOpen, setIsWicketModalOpen] = useState<boolean>(false);
   const [isMoreModalOpen, setIsMoreModalOpen] = useState<boolean>(false);
   const [isPlayerChangeOpen, setIsPlayerChangeOpen] = useState<boolean>(false);
-  const [isCompleteConfirmOpen, setIsCompleteConfirmOpen] = useState<boolean>(false);
 
   // Wicket Form State
   const [wicketType, setWicketType] = useState<WicketType>('Bowled');
@@ -407,38 +406,24 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
     setLoading(false);
   };
 
-  // 7. COMPLETE MATCH HANDLER — OPENS CONFIRMATION MODAL FIRST
-  const handleOpenCompleteModal = () => {
-    setIsCompleteConfirmOpen(true);
-  };
-
-  const handleConfirmCompleteMatch = async () => {
+  // 7. COMPLETE MATCH HANDLER (ONLY WAY TO CLOSE THE SCORING PANEL)
+  const handleCompleteMatch = async () => {
     if (loading) return;
     setLoading(true);
     setErrorMsg('');
 
     try {
       const res = await completeMatch(match.id);
-      setIsCompleteConfirmOpen(false);
-
       if (res?.error) {
         setErrorMsg(res.error);
         setLoading(false);
       } else {
-        showToast('Scoring completed & saved to History');
-        if (typeof window !== 'undefined') {
-          // If this was marked as latest created match, clear it so dashboard moves it to History
-          const storedLatestId = localStorage.getItem('batscore_latest_created_match_id');
-          if (storedLatestId === match.id) {
-            localStorage.removeItem('batscore_latest_created_match_id');
-          }
-        }
+        showToast('Scoring completed & match finalized');
         setTimeout(() => {
-          router.push('/master/dashboard?tab=history');
-        }, 800);
+          router.push('/master/dashboard');
+        }, 1000);
       }
     } catch (err: any) {
-      setIsCompleteConfirmOpen(false);
       setErrorMsg(err.message || 'Failed to complete match.');
       setLoading(false);
     }
@@ -812,7 +797,7 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
                 <button
                   type="button"
                   disabled={loading}
-                  onClick={handleOpenCompleteModal}
+                  onClick={handleCompleteMatch}
                   className="h-12 rounded-xl bg-[#19D89A] hover:bg-emerald-400 text-[#050A1A] font-black text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/20 transition-all active:scale-95 flex items-center justify-center gap-1.5"
                   title="Finalize match and close scoring panel"
                 >
@@ -826,60 +811,6 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
         </div>
 
       </div>
-
-      {/* ========================================================== */}
-      {/* 8. COMPLETE MATCH CONFIRMATION MODAL                       */}
-      {/* ========================================================== */}
-      {isCompleteConfirmOpen && (
-        <div className="fixed inset-0 z-50 bg-[#050A1A]/85 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-[#0D1528] border border-[#173541] w-full max-w-md rounded-3xl p-6 space-y-5 shadow-2xl animate-in zoom-in-95 text-white">
-            
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-[#19D89A]/15 border border-[#19D89A]/30 flex items-center justify-center text-[#19D89A] shrink-0">
-                <CheckCircle2 className="w-6 h-6" />
-              </div>
-              <div>
-                <h3 className="text-base font-black text-white">Complete Match?</h3>
-                <p className="text-xs text-[#AAB5CC] font-medium mt-0.5">
-                  Finalize match scoring and save to History
-                </p>
-              </div>
-            </div>
-
-            <p className="text-xs text-[#AAB5CC] leading-relaxed bg-[#050A1A] p-4 rounded-2xl border border-[#173541]">
-              Are you sure you want to complete this match? Final scoring data will be saved, the match will automatically move to History, and the live scoring panel will close.
-            </p>
-
-            <div className="flex items-center justify-end gap-3 pt-2">
-              <button
-                type="button"
-                onClick={() => setIsCompleteConfirmOpen(false)}
-                disabled={loading}
-                className="px-5 py-2.5 bg-[#111A2D] hover:bg-[#173541] text-[#AAB5CC] hover:text-white font-bold rounded-xl text-xs transition-all disabled:opacity-50"
-              >
-                Cancel
-              </button>
-
-              <button
-                type="button"
-                onClick={handleConfirmCompleteMatch}
-                disabled={loading}
-                className="px-6 py-2.5 bg-[#19D89A] hover:bg-emerald-400 text-[#050A1A] font-black rounded-xl text-xs flex items-center gap-2 shadow-lg shadow-[#19D89A]/20 transition-all disabled:opacity-50 uppercase tracking-wider"
-              >
-                {loading ? (
-                  <>
-                    <div className="w-3.5 h-3.5 border-2 border-[#050A1A] border-t-transparent rounded-full animate-spin" />
-                    <span>Completing...</span>
-                  </>
-                ) : (
-                  <span>Confirm</span>
-                )}
-              </button>
-            </div>
-
-          </div>
-        </div>
-      )}
 
       {/* ========================================================== */}
       {/* 9. WICKET BOTTOM SHEET MODAL                               */}

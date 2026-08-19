@@ -13,6 +13,16 @@ export interface CommunityPayload {
   coverImage?: string;
 }
 
+function sanitizeUrl(val: any, fallback: string): string {
+  if (typeof val === 'string' && val.trim().length > 0) {
+    const v = val.trim();
+    if (v.startsWith('http://') || v.startsWith('https://') || v.startsWith('data:') || v.startsWith('/')) {
+      return v;
+    }
+  }
+  return fallback;
+}
+
 // 1. Fetch all communities for public / normal user display
 export async function getPublicCommunities() {
   const supabase = createClient();
@@ -22,6 +32,9 @@ export async function getPublicCommunities() {
   } catch {
     db = supabase;
   }
+
+  const defaultProfile = 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&w=300&q=80';
+  const defaultCover = 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?auto=format&fit=crop&w=1200&q=80';
 
   try {
     const { data: list, error } = await db
@@ -35,8 +48,8 @@ export async function getPublicCommunities() {
         ownerId: c.owner_id,
         name: c.name,
         bio: c.bio,
-        profileImage: c.profile_image || c.logo_url || 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&w=300&q=80',
-        coverImage: c.cover_image || c.banner_url || 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?auto=format&fit=crop&w=1200&q=80',
+        profileImage: sanitizeUrl(c.profile_image || c.logo_url || c.avatar_url, defaultProfile),
+        coverImage: sanitizeUrl(c.cover_image || c.banner_url || c.cover_url, defaultCover),
         createdAt: c.created_at || new Date().toISOString()
       }));
     }
@@ -57,6 +70,9 @@ export async function getMasterCommunities(masterId: string) {
     db = supabase;
   }
 
+  const defaultProfile = 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&w=300&q=80';
+  const defaultCover = 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?auto=format&fit=crop&w=1200&q=80';
+
   try {
     const { data: list, error } = await db
       .from('communities')
@@ -70,8 +86,8 @@ export async function getMasterCommunities(masterId: string) {
         ownerId: c.owner_id,
         name: c.name,
         bio: c.bio,
-        profileImage: c.profile_image || c.logo_url || 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&w=300&q=80',
-        coverImage: c.cover_image || c.banner_url || 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?auto=format&fit=crop&w=1200&q=80',
+        profileImage: sanitizeUrl(c.profile_image || c.logo_url || c.avatar_url, defaultProfile),
+        coverImage: sanitizeUrl(c.cover_image || c.banner_url || c.cover_url, defaultCover),
         createdAt: c.created_at || new Date().toISOString()
       }));
     }

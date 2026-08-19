@@ -70,20 +70,6 @@ export default function MatchCard({
     ? new Date(rawDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
     : 'Today';
 
-  // Resolve Innings data for Team 1 and Team 2 independently
-  const inningsList = Array.isArray((match as any).innings) ? (match as any).innings : [];
-  const team1Id = t1?.id || (match as any).team1_id || (match as any).team_a_id;
-  const team2Id = t2?.id || (match as any).team2_id || (match as any).team_b_id;
-
-  const t1Inn = inningsList.find((i: any) => (team1Id && i.batting_team_id === team1Id) || i.innings_number === 1);
-  const t2Inn = inningsList.find((i: any) => (team2Id && i.batting_team_id === team2Id) || i.innings_number === 2);
-
-  const team1ScoreText = t1Inn ? `${t1Inn.total_runs || 0}/${t1Inn.total_wickets || 0}` : (match.current_score || '0/0');
-  const team1OversText = `(${t1Inn ? (t1Inn.total_overs || 0.0).toFixed(1) : (match.current_over || 0.0)} Ov)`;
-
-  const team2ScoreText = t2Inn ? `${t2Inn.total_runs || 0}/${t2Inn.total_wickets || 0}` : ((match as any).team2_score || '0/0');
-  const team2OversText = `(${t2Inn ? (t2Inn.total_overs || 0.0).toFixed(1) : 0.0} Ov)`;
-
   // Handle clicking anywhere on the card to open Scorecard (Home Page / History)
   const handleCardClick = () => {
     if ((isHistoryView || isHomePageCard) && match.id) {
@@ -96,6 +82,12 @@ export default function MatchCard({
   /* ========================================================================= */
   if (isHomePageCard || isHistoryView) {
     const categoryType = (match.category || 'TOURNAMENT').toUpperCase();
+
+    const team1ScoreText = match.current_score || '0/0';
+    const team1OversText = `(${match.current_over || 0.0} Ov)`;
+
+    const team2ScoreText = isLive || isCompleted ? '0/0' : '0/0';
+    const team2OversText = '(0.0 Ov)';
 
     return (
       <div
@@ -265,7 +257,7 @@ export default function MatchCard({
               <h3 className="font-extrabold text-sm sm:text-base text-white line-clamp-1">{team1Name}</h3>
               <div className="bg-[#050A1A] border border-[#173541] px-3 py-1 rounded-xl">
                 <p className="text-xs text-[#19D89A] font-black font-mono">
-                  {isLive || isCompleted ? `${team1ScoreText} ${team1OversText}` : 'Yet to Bat'}
+                  {isLive || isCompleted ? match.current_score || '0/0' : 'Yet to Bat'}
                 </p>
               </div>
             </div>
@@ -296,7 +288,7 @@ export default function MatchCard({
               <h3 className="font-extrabold text-sm sm:text-base text-white line-clamp-1">{team2Name}</h3>
               <div className="bg-[#050A1A] border border-[#173541] px-3 py-1 rounded-xl">
                 <p className="text-xs text-[#19D89A] font-black font-mono">
-                  {isLive || isCompleted ? `${team2ScoreText} ${team2OversText}` : 'Yet to Bat'}
+                  {isLive || isCompleted ? 'Innings' : 'Yet to Bat'}
                 </p>
               </div>
             </div>
@@ -422,7 +414,7 @@ export default function MatchCard({
             </div>
             <h4 className="mt-2 font-bold text-xs sm:text-sm text-white line-clamp-1">{team1Name}</h4>
             <p className="text-[11px] text-[#19D89A] font-extrabold mt-0.5 font-mono">
-              {isLive || isCompleted ? `${team1ScoreText} ${team1OversText}` : 'Yet to bat'}
+              {isLive || isCompleted ? match.current_score || '0/0' : 'Yet to bat'}
             </p>
           </div>
 
@@ -451,7 +443,7 @@ export default function MatchCard({
             </div>
             <h4 className="mt-2 font-bold text-xs sm:text-sm text-white line-clamp-1">{team2Name}</h4>
             <p className="text-[11px] text-[#19D89A] font-extrabold mt-0.5 font-mono">
-              {isLive || isCompleted ? `${team2ScoreText} ${team2OversText}` : 'Yet to bat'}
+              {isLive || isCompleted ? 'Innings' : 'Yet to bat'}
             </p>
           </div>
 

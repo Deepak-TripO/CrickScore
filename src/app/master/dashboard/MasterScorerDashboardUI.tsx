@@ -211,7 +211,7 @@ export default function MasterScorerDashboardUI({
     if (isLatestMatchDeleted && !latestCreatedMatchId) return null;
 
     if (latestCreatedMatchId) {
-      const found = currentMatches.find((m: any) => m.id === latestCreatedMatchId && m.status !== 'DELETED' && m.status !== 'COMPLETED');
+      const found = currentMatches.find((m: any) => m.id === latestCreatedMatchId && m.status !== 'DELETED');
       return found || null;
     }
 
@@ -220,7 +220,7 @@ export default function MasterScorerDashboardUI({
       const timeB = new Date(b.created_at || b.scheduled_start || b.scheduled_at || 0).getTime();
       return timeB - timeA;
     });
-    return sorted.find((m: any) => m.status !== 'DELETED' && m.status !== 'COMPLETED') || null;
+    return sorted.find((m: any) => m.status !== 'DELETED') || null;
   }, [currentMatches, latestCreatedMatchId, isLatestMatchDeleted]);
 
   const sortedMatches = React.useMemo(() => {
