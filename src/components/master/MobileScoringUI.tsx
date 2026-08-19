@@ -242,7 +242,8 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
     try {
       const res = await scoreBall({
         matchId: match.id,
-        inningsId: safeInningsId,
+        inningsId: selectedBattingTeamId,
+        battingTeamId: selectedBattingTeamId,
         strikerId,
         nonStrikerId,
         bowlerId,
@@ -278,7 +279,8 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
     try {
       const res = await scoreBall({
         matchId: match.id,
-        inningsId: safeInningsId,
+        inningsId: selectedBattingTeamId,
+        battingTeamId: selectedBattingTeamId,
         strikerId,
         nonStrikerId,
         bowlerId,
@@ -317,7 +319,7 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
     setErrorMsg('');
 
     try {
-      const res = await undoLastBall(match.id, safeInningsId);
+      const res = await undoLastBall(match.id, selectedBattingTeamId);
       setLoading(false);
 
       if (res?.error) {
@@ -351,7 +353,7 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
     const firstTeamPlayers = firstBattingTeamId === team1Id ? team1Players : team2Players;
 
     try {
-      await setBattingTeam(match.id, safeInningsId, secondTeamId, firstBattingTeamId);
+      await setBattingTeam(match.id, secondTeamId, secondTeamId, firstBattingTeamId);
       setSelectedBattingTeamId(secondTeamId);
       setStrikerId(secondTeamPlayers[0]?.id || '');
       setNonStrikerId(secondTeamPlayers[1]?.id || '');
@@ -369,11 +371,12 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
     setLoading(true);
     setErrorMsg('');
 
+    const secondTeamId = firstBattingTeamId === team1Id ? team2Id : team1Id;
     const firstTeamPlayers = firstBattingTeamId === team1Id ? team1Players : team2Players;
     const secondTeamPlayers = firstBattingTeamId === team1Id ? team2Players : team1Players;
 
     try {
-      await setBattingTeam(match.id, safeInningsId, firstBattingTeamId, secondTeamPlayers[0]?.id || 't2');
+      await setBattingTeam(match.id, firstBattingTeamId, firstBattingTeamId, secondTeamId);
       setSelectedBattingTeamId(firstBattingTeamId);
       setStrikerId(firstTeamPlayers[0]?.id || '');
       setNonStrikerId(firstTeamPlayers[1]?.id || '');

@@ -81,8 +81,8 @@ async function deleteDeliverySafely(db: any, deliveryId: string) {
 }
 
 // Helper: Ensure valid Innings record exists in database table 'innings'
-async function ensureValidInningsId(db: any, match: any, rawInningsId?: string): Promise<string> {
-  // 1. Check if rawInningsId exists in 'innings' table
+async function ensureValidInningsId(db: any, match: any, rawInningsId?: string, targetBattingTeamId?: string): Promise<string> {
+  // 1. Check if rawInningsId is an existing UUID in 'innings' table
   if (rawInningsId && rawInningsId !== match.id && rawInningsId !== 'inn1' && rawInningsId.length > 20) {
     const { data: existing } = await db
       .from('innings')
@@ -93,40 +93,60 @@ async function ensureValidInningsId(db: any, match: any, rawInningsId?: string):
     if (existing?.id) return existing.id;
   }
 
-  // 2. Check if any innings row exists for this match.id
-  const { data: matchInnings } = await db
+  // 2. Check if rawInningsId or targetBattingTeamId matches batting_team_id in 'innings' table
+  const teamIdToMatch = targetBattingTeamId || (rawInningsId && rawInningsId.length > 5 && rawInningsId !== 'inn1' ? rawInningsId : null);
+  if (teamIdToMatch) {
+    const { data: existingByTeam } = await db
+      .from('innings')
+      .select('id')
+      .eq('match_id', match.id)
+      .eq('batting_team_id', teamIdToMatch)
+      .maybeSingle();
+
+    if (existingByTeam?.id) return existingByTeam.id;
+  }
+
+  // 3. Query all existing innings for this match
+  const { data: allInnings } = await db
     .from('innings')
-    .select('id')
+    .select('id, innings_number, batting_team_id')
     .eq('match_id', match.id)
-    .order('innings_number', { ascending: true })
-    .limit(1)
-    .maybeSingle();
+    .order('innings_number', { ascending: true });
 
-  if (matchInnings?.id) return matchInnings.id;
+  if (allInnings && allInnings.length > 0) {
+    if (teamIdToMatch) {
+      const matched = allInnings.find((i: any) => i.batting_team_id === teamIdToMatch);
+      if (matched?.id) return matched.id;
 
-  // 3. Resolve Team IDs from match or teams table
-  let team1Id = match.team1_id || match.team_a_id;
-  let team2Id = match.team2_id || match.team_b_id;
+      // If teamIdToMatch is different from existing innings 1, create Innings 2 for this team
+      if (allInnings.length === 1 && allInnings[0].batting_team_id !== teamIdToMatch) {
+        const bowlingTeamId = allInnings[0].batting_team_id;
+        const { data: inn2 } = await db
+          .from('innings')
+          .insert({
+            match_id: match.id,
+            innings_number: 2,
+            batting_team_id: teamIdToMatch,
+            bowling_team_id: bowlingTeamId,
+            total_runs: 0,
+            total_wickets: 0,
+            total_overs: 0.0,
+            status: 'IN_PROGRESS'
+          })
+          .select()
+          .maybeSingle();
 
-  if (!team1Id || !team2Id) {
-    const { data: teams } = await db.from('teams').select('id').limit(2);
-    if (teams && teams.length > 0) {
-      if (!team1Id) team1Id = teams[0].id;
-      if (!team2Id) team2Id = teams[1]?.id || teams[0].id;
+        if (inn2?.id) return inn2.id;
+      }
     }
+    return allInnings[0].id;
   }
 
-  // If team IDs are still missing, create fallback teams
-  if (!team1Id) {
-    const { data: createdT1 } = await db.from('teams').insert({ name: 'Team 1', short_name: 'T1', owner_id: match.master_id || match.created_by }).select('id').maybeSingle();
-    team1Id = createdT1?.id;
-  }
-  if (!team2Id) {
-    const { data: createdT2 } = await db.from('teams').insert({ name: 'Team 2', short_name: 'T2', owner_id: match.master_id || match.created_by }).select('id').maybeSingle();
-    team2Id = createdT2?.id;
-  }
+  // 4. Resolve Team IDs from match or teams table
+  let team1Id = teamIdToMatch || match.team1_id || match.team_a_id || 't1';
+  let team2Id = match.team2_id || match.team_b_id || 't2';
 
-  // 4. Create an Innings row in 'innings' table
+  // Create Innings 1 row in 'innings' table
   const { data: created } = await db
     .from('innings')
     .insert({
@@ -144,21 +164,13 @@ async function ensureValidInningsId(db: any, match: any, rawInningsId?: string):
 
   if (created?.id) return created.id;
 
-  // 5. Final fallback query
-  const { data: retryInnings } = await db
-    .from('innings')
-    .select('id')
-    .eq('match_id', match.id)
-    .maybeSingle();
-
-  if (retryInnings?.id) return retryInnings.id;
-
   throw new Error('Could not resolve or create a valid Innings record for this match.');
 }
 
 export async function scoreBall(payload: {
   matchId: string;
   inningsId: string;
+  battingTeamId?: string;
   strikerId: string;
   nonStrikerId: string;
   bowlerId: string;
@@ -183,24 +195,15 @@ export async function scoreBall(payload: {
   }
 
   // 1. Verify match ownership & authorization
-  const { data: match } = await db
-    .from('matches')
-    .select('*, innings(*)')
-    .eq('id', payload.matchId)
-    .maybeSingle();
-
-  if (!match) {
-    return { error: 'Match not found.' };
-  }
-
-  if (!isAuthorizedScorer(user, userRole, match)) {
+  const { data: match } = await db.from('matches').select('*').eq('id', payload.matchId).maybeSingle();
+  if (!match || !isAuthorizedScorer(user, userRole, match)) {
     return { error: 'Unauthorized. Only the match creator can update scores.' };
   }
 
-  // 2. Ensure valid Innings ID in table 'innings' to prevent foreign key violations
+  // 2. Ensure valid Innings ID in table 'innings' for payload.battingTeamId
   let actualInningsId: string;
   try {
-    actualInningsId = await ensureValidInningsId(db, match, payload.inningsId);
+    actualInningsId = await ensureValidInningsId(db, match, payload.inningsId, payload.battingTeamId);
   } catch (err: any) {
     return { error: err.message || 'Failed to initialize match innings.' };
   }
