@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 export async function fetchMatchesSafely(options?: {
   status?: string;
   masterId?: string;
+  onlyMasterCreated?: boolean;
   limit?: number;
 }) {
   let db: any = createClient();
@@ -29,6 +30,51 @@ export async function fetchMatchesSafely(options?: {
       (res3.data || []).forEach((m: any) => map.set(m.id, m));
 
       rawMatches = Array.from(map.values()).sort((a: any, b: any) => {
+        const timeA = new Date(a.created_at || a.scheduled_start || a.scheduled_at || 0).getTime();
+        const timeB = new Date(b.created_at || b.scheduled_start || b.scheduled_at || 0).getTime();
+        return timeB - timeA;
+      });
+    } else if (options?.onlyMasterCreated) {
+      const masterUserSet = new Set<string>();
+
+      const [profilesRes, userRolesRes, masterAppsRes] = await Promise.all([
+        db.from('profiles').select('id, role').in('role', ['MASTER', 'ADMIN', 'SUPER_ADMIN']),
+        db.from('user_roles').select('user_id, roles!inner(name)').in('roles.name', ['MASTER', 'ADMIN', 'SUPER_ADMIN']),
+        db.from('master_applications').select('user_id').eq('status', 'APPROVED')
+      ]);
+
+      if (profilesRes.data) {
+        profilesRes.data.forEach((p: any) => p.id && masterUserSet.add(p.id));
+      }
+      if (userRolesRes.data) {
+        userRolesRes.data.forEach((ur: any) => ur.user_id && masterUserSet.add(ur.user_id));
+      }
+      if (masterAppsRes.data) {
+        masterAppsRes.data.forEach((ma: any) => ma.user_id && masterUserSet.add(ma.user_id));
+      }
+
+      const masterUserIdsArray = Array.from(masterUserSet);
+
+      if (masterUserIdsArray.length === 0) {
+        return [];
+      }
+
+      const [res1, res2, res3] = await Promise.all([
+        db.from('matches').select('*').in('scorer_id', masterUserIdsArray).order('created_at', { ascending: false }),
+        db.from('matches').select('*').in('master_id', masterUserIdsArray).order('created_at', { ascending: false }),
+        db.from('matches').select('*').in('created_by', masterUserIdsArray).order('created_at', { ascending: false })
+      ]);
+
+      const map = new Map<string, any>();
+      (res1.data || []).forEach((m: any) => map.set(m.id, m));
+      (res2.data || []).forEach((m: any) => map.set(m.id, m));
+      (res3.data || []).forEach((m: any) => map.set(m.id, m));
+
+      rawMatches = Array.from(map.values()).filter((m: any) => {
+        if (!m || m.status === 'DELETED' || m.status === 'INVALID' || m.status === 'INACTIVE') return false;
+        const creatorId = m.master_id || m.created_by || m.scorer_id;
+        return creatorId && masterUserSet.has(creatorId);
+      }).sort((a: any, b: any) => {
         const timeA = new Date(a.created_at || a.scheduled_start || a.scheduled_at || 0).getTime();
         const timeB = new Date(b.created_at || b.scheduled_start || b.scheduled_at || 0).getTime();
         return timeB - timeA;

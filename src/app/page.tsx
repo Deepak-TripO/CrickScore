@@ -17,7 +17,7 @@ export default async function HomePage() {
   }
 
   const profile = await getCurrentUserProfile(user);
-  const allMatches = await fetchMatchesSafely({ limit: 20 });
+  const allMatches = await fetchMatchesSafely({ limit: 20, onlyMasterCreated: true });
 
   return (
     <div className="min-h-screen bg-[#050A1A] text-white flex flex-col selection:bg-[#19D89A] selection:text-[#050A1A] font-sans pb-20 md:pb-0">

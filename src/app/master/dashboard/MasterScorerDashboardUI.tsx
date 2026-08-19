@@ -459,14 +459,13 @@ export default function MasterScorerDashboardUI({
       )}
 
       {/* ============================================================ */}
-      {/* 🧭 PREMIUM GLASSMORPHISM BOTTOM NAVIGATION BAR               */}
+      {/* 🧭 SIMPLE & LIGHTWEIGHT MASTER DASHBOARD BOTTOM NAVIGATION    */}
       {/* ============================================================ */}
       <nav 
         aria-label="Master Dashboard Bottom Navigation"
-        className="fixed bottom-0 left-0 right-0 z-50 bg-[#070D1D]/90 backdrop-blur-2xl border-t border-[#19D89A]/20 shadow-[0_-12px_40px_rgba(0,0,0,0.85)] py-2.5 px-3 sm:px-6 transform-gpu"
-        style={{ position: 'fixed', bottom: 0, left: 0, right: 0, transform: 'translateZ(0)' }}
+        className="fixed bottom-0 left-0 right-0 z-50 bg-[#070D1D]/95 backdrop-blur-md border-t border-[#173541] py-2 px-3 sm:px-6"
       >
-        <div className="max-w-2xl mx-auto flex items-center justify-around gap-1.5 sm:gap-4">
+        <div className="max-w-lg mx-auto flex items-center justify-around gap-1 sm:gap-3">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -475,23 +474,15 @@ export default function MasterScorerDashboardUI({
                 key={item.id}
                 type="button"
                 onClick={() => handleTabChange(item.id)}
-                className={`flex-1 flex flex-col items-center justify-center py-2 px-1 sm:px-3 rounded-2xl transition-all duration-300 ease-out relative group ${
+                className={`flex-1 flex flex-col items-center justify-center py-1.5 px-2 rounded-xl transition-colors ${
                   isActive
-                    ? 'bg-gradient-to-b from-[#19D89A]/20 to-[#19D89A]/5 text-[#19D89A] font-extrabold shadow-[0_4px_20px_rgba(25,216,154,0.15)] border border-[#19D89A]/40 scale-102'
-                    : 'text-[#8F9BB3] hover:text-white hover:bg-[#111A2D]/80 font-medium border border-transparent'
+                    ? 'text-[#19D89A] bg-[#19D89A]/10 font-bold border border-[#19D89A]/20'
+                    : 'text-[#8F9BB3] hover:text-white font-medium border border-transparent'
                 }`}
               >
-                {/* Active Indicator Top Glowing Bar */}
-                {isActive && (
-                  <span className="absolute -top-2.5 w-10 h-1 bg-gradient-to-r from-[#19D89A] via-emerald-300 to-[#19D89A] rounded-full shadow-[0_0_12px_#19D89A] transition-all duration-300 ease-out" />
-                )}
-                
-                <Icon className={`w-5 h-5 transition-all duration-300 ease-out ${
-                  isActive ? 'text-[#19D89A] scale-110 drop-shadow-[0_0_8px_rgba(25,216,154,0.5)]' : 'text-[#8F9BB3] group-hover:text-white'
-                }`} />
-
-                <span className={`text-[10px] sm:text-xs tracking-wider mt-1 text-center whitespace-nowrap transition-all duration-300 ease-out ${
-                  isActive ? 'text-[#19D89A] font-black' : 'text-[#8F9BB3]'
+                <Icon className="w-5 h-5 stroke-[2px]" />
+                <span className={`text-[11px] sm:text-xs tracking-tight mt-1 text-center whitespace-nowrap ${
+                  isActive ? 'text-[#19D89A] font-bold' : 'text-[#8F9BB3]'
                 }`}>
                   {item.label}
                 </span>
