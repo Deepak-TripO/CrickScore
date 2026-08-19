@@ -64,28 +64,27 @@ export default function PublicCommunityClient({ communities: initialCommunities 
     }
   };
 
-  // IF VIEWING DEDICATED JOINED COMMUNITY MEMBER PAGE
+  // IF VIEWING DEDICATED JOINED COMMUNITY MEMBER PAGE (UNIFIED PAGE - IMAGE REFERENCE)
   if (selectedCommunity) {
     return (
-      <div className="space-y-6 animate-in fade-in duration-200">
+      <div className="space-y-5 sm:space-y-6 animate-in fade-in duration-200 pb-12">
         
-        {/* BACK ACTION & LEAVE BUTTON (NO VISIBLE COMMUNITY ID BADGE) */}
-        <div className="flex items-center justify-between border-b border-[#173541] pb-4">
+        {/* TOP NAVIGATION BAR: BACK (LEFT) & LEAVE (RIGHT) */}
+        <div className="flex items-center justify-between pb-1">
           <button
             type="button"
             onClick={handleCloseMemberPage}
-            className="px-4 py-2 bg-[#111A2D] hover:bg-[#173541] text-[#AAB5CC] hover:text-white font-extrabold text-xs rounded-xl border border-[#173541] flex items-center gap-2 transition-all shadow-md active:scale-95"
+            className="px-4 py-2 bg-[#0D1528] hover:bg-[#173541] text-white font-extrabold text-xs rounded-xl border border-[#173541] flex items-center gap-2 transition-all shadow-md active:scale-95"
           >
             <ArrowLeft className="w-4 h-4 text-[#19D89A]" />
             <span>Back</span>
           </button>
 
-          {/* LEAVE BUTTON */}
           <button
             type="button"
             onClick={handleLeaveCommunity}
             disabled={isLeaving}
-            className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 font-extrabold text-xs rounded-xl border border-red-500/30 flex items-center gap-1.5 transition-all shadow-md active:scale-95"
+            className="px-4 py-2 bg-[#0D1528] hover:bg-red-500/10 text-red-400 hover:text-red-300 font-extrabold text-xs rounded-xl border border-red-500/30 flex items-center gap-2 transition-all shadow-md active:scale-95"
           >
             {isLeaving ? (
               <>
@@ -94,16 +93,16 @@ export default function PublicCommunityClient({ communities: initialCommunities 
               </>
             ) : (
               <>
-                <LogOut className="w-3.5 h-3.5" />
+                <LogOut className="w-3.5 h-3.5 text-red-400" />
                 <span>Leave</span>
               </>
             )}
           </button>
         </div>
 
-        {/* COMMUNITY BANNER & INFO HEADER CARD */}
+        {/* UNIFIED COMMUNITY HEADER CARD */}
         <div className="bg-[#0D1528] border border-[#173541] rounded-3xl overflow-hidden shadow-2xl space-y-0">
-          <div className="relative h-36 sm:h-48 w-full bg-[#050A1A] overflow-hidden">
+          <div className="relative h-40 sm:h-52 w-full bg-[#050A1A] overflow-hidden">
             <img 
               src={selectedCommunity.coverImage} 
               alt={selectedCommunity.name} 
@@ -165,13 +164,13 @@ export default function PublicCommunityClient({ communities: initialCommunities 
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            <div className="space-y-3">
               {communityMembers.map((member) => (
                 <div 
                   key={member.id} 
-                  className="bg-[#050A1A] border border-[#173541] rounded-2xl p-4 flex items-center gap-3.5 shadow-md hover:border-[#19D89A]/40 transition-all"
+                  className="bg-[#050A1A] border border-[#173541] rounded-2xl p-3.5 sm:p-4 flex items-center gap-3.5 shadow-md hover:border-[#19D89A]/40 transition-all"
                 >
-                  <div className="w-11 h-11 rounded-xl bg-[#111A2D] border border-[#173541] overflow-hidden shrink-0 flex items-center justify-center font-bold text-white text-sm">
+                  <div className="w-12 h-12 rounded-xl bg-[#0D1528] border border-[#173541] overflow-hidden shrink-0 flex items-center justify-center font-black text-white text-sm">
                     {member.avatarUrl ? (
                       <img src={member.avatarUrl} alt={member.fullName} className="w-full h-full object-cover" />
                     ) : (
@@ -180,12 +179,12 @@ export default function PublicCommunityClient({ communities: initialCommunities 
                   </div>
 
                   <div className="space-y-0.5 min-w-0 flex-1">
-                    <h4 className="text-xs font-black text-white truncate">{member.fullName}</h4>
+                    <h4 className="text-sm font-black text-white truncate">{member.fullName}</h4>
                     {member.username && (
-                      <span className="text-[10px] text-[#AAB5CC] block truncate">@{member.username}</span>
+                      <span className="text-xs text-[#AAB5CC] block truncate">@{member.username}</span>
                     )}
-                    <span className="text-[9px] font-extrabold text-[#19D89A] uppercase tracking-wider block">
-                      {member.role || 'Member'}
+                    <span className="text-[10px] font-black text-[#19D89A] uppercase tracking-wider block pt-0.5">
+                      {member.role || 'MEMBER'}
                     </span>
                   </div>
                 </div>
