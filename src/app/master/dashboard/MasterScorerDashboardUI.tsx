@@ -350,9 +350,8 @@ export default function MasterScorerDashboardUI({
             <div>
               <h2 className="text-lg font-bold text-white flex items-center gap-2">
                 <History className="w-5 h-5 text-[#19D89A]" />
-                Match History Log ({sortedMatches.length})
+                Match History ({sortedMatches.length})
               </h2>
-              <p className="text-xs text-[#AAB5CC]">Complete record of all matches created and saved by you (newest first).</p>
             </div>
           </div>
 

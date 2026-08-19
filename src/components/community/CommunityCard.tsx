@@ -26,10 +26,10 @@ export default function CommunityCard({ community }: CommunityCardProps) {
   const [profileSrc, setProfileSrc] = useState<string>(initialProfile);
 
   return (
-    <div className="bg-[#0D1528] border border-[#173541] rounded-3xl overflow-hidden shadow-xl hover:border-[#19D89A]/40 transition-all group flex flex-col justify-between">
+    <div className="bg-[#0D1528] border border-[#173541] rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl hover:border-[#19D89A]/40 transition-all group flex flex-col justify-between">
       <div>
-        {/* COVER IMAGE BANNER */}
-        <div className="relative h-36 sm:h-40 w-full bg-[#050A1A] overflow-hidden">
+        {/* COVER IMAGE BANNER (COMPACT ON MOBILE) */}
+        <div className="relative h-28 sm:h-40 w-full bg-[#050A1A] overflow-hidden">
           <img 
             src={coverSrc} 
             alt={`${community.name} Cover`} 
@@ -39,10 +39,10 @@ export default function CommunityCard({ community }: CommunityCardProps) {
           <div className="absolute inset-0 bg-gradient-to-t from-[#0D1528] via-transparent to-black/20" />
         </div>
 
-        {/* PROFILE IMAGE & DETAILS */}
-        <div className="px-5 pb-5 relative space-y-3">
-          <div className="-mt-10 flex items-end justify-between">
-            <div className="w-16 h-16 rounded-2xl bg-[#050A1A] border-4 border-[#0D1528] overflow-hidden shadow-lg shrink-0 relative z-10">
+        {/* PROFILE IMAGE & DETAILS (COMPACT ON MOBILE) */}
+        <div className="px-3.5 pb-3.5 sm:px-5 sm:pb-5 relative space-y-2 sm:space-y-3">
+          <div className="-mt-7 sm:-mt-10 flex items-end justify-between">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-[#050A1A] border-3 sm:border-4 border-[#0D1528] overflow-hidden shadow-lg shrink-0 relative z-10">
               <img 
                 src={profileSrc} 
                 alt={community.name} 
@@ -50,16 +50,13 @@ export default function CommunityCard({ community }: CommunityCardProps) {
                 className="w-full h-full object-cover"
               />
             </div>
-            <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-[#19D89A]/15 text-[#19D89A] border border-[#19D89A]/30">
-              {community.members || 'Active Club'}
-            </span>
           </div>
 
-          <div className="space-y-1 pt-1">
-            <h3 className="text-base font-black text-white group-hover:text-[#19D89A] transition-colors">
+          <div className="space-y-1 pt-0.5 sm:pt-1">
+            <h3 className="text-sm sm:text-base font-black text-white group-hover:text-[#19D89A] transition-colors truncate sm:whitespace-normal">
               {community.name}
             </h3>
-            <p className="text-xs text-[#AAB5CC] line-clamp-3 leading-relaxed">
+            <p className="text-[11px] sm:text-xs text-[#AAB5CC] line-clamp-2 sm:line-clamp-3 leading-relaxed">
               {community.bio || community.desc || 'No description provided.'}
             </p>
           </div>
@@ -67,9 +64,8 @@ export default function CommunityCard({ community }: CommunityCardProps) {
       </div>
 
       {/* ACTION FOOTER */}
-      <div className="px-5 py-3.5 bg-[#050A1A]/60 border-t border-[#173541] flex items-center justify-between">
-        <span className="text-[11px] font-bold text-[#AAB5CC]">Master Created</span>
-        <button className="px-4 py-1.5 bg-[#111A2D] hover:bg-[#19D89A] hover:text-[#050A1A] border border-[#173541] text-xs font-extrabold text-[#19D89A] rounded-xl transition-all shadow-sm">
+      <div className="px-3.5 py-2.5 sm:px-5 sm:py-3.5 bg-[#050A1A]/60 border-t border-[#173541] flex items-center justify-end">
+        <button className="px-3.5 py-1.5 sm:px-4 sm:py-1.5 bg-[#111A2D] hover:bg-[#19D89A] hover:text-[#050A1A] border border-[#173541] text-[11px] sm:text-xs font-extrabold text-[#19D89A] rounded-xl transition-all shadow-sm">
           Join Community
         </button>
       </div>

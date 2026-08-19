@@ -532,11 +532,11 @@ export default function CommunityCreateSection() {
           {communities.map((comm) => (
             <div 
               key={comm.id} 
-              className="bg-[#0D1528] border border-[#173541] rounded-3xl overflow-hidden shadow-xl hover:border-[#19D89A]/40 transition-all group flex flex-col justify-between"
+              className="bg-[#0D1528] border border-[#173541] rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl hover:border-[#19D89A]/40 transition-all group flex flex-col justify-between"
             >
               <div>
                 {/* COVER IMAGE */}
-                <div className="relative h-32 w-full bg-[#050A1A] overflow-hidden">
+                <div className="relative h-28 sm:h-32 w-full bg-[#050A1A] overflow-hidden">
                   <img 
                     src={comm.coverImage} 
                     alt={`${comm.name} Cover`} 
@@ -546,25 +546,22 @@ export default function CommunityCreateSection() {
                 </div>
 
                 {/* PROFILE IMAGE & DETAILS */}
-                <div className="px-5 pb-5 relative space-y-3">
-                  <div className="-mt-10 flex items-end justify-between">
-                    <div className="w-16 h-16 rounded-2xl bg-[#050A1A] border-4 border-[#0D1528] overflow-hidden shadow-lg shrink-0">
+                <div className="px-3.5 pb-3.5 sm:px-5 sm:pb-5 relative space-y-2 sm:space-y-3">
+                  <div className="-mt-7 sm:-mt-10 flex items-end justify-between">
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-[#050A1A] border-3 sm:border-4 border-[#0D1528] overflow-hidden shadow-lg shrink-0">
                       <img 
                         src={comm.profileImage} 
                         alt={comm.name} 
                         className="w-full h-full object-cover"
                       />
                     </div>
-                    <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-[#19D89A]/15 text-[#19D89A] border border-[#19D89A]/30">
-                      Active Community
-                    </span>
                   </div>
 
-                  <div className="space-y-1">
-                    <h3 className="text-base font-black text-white group-hover:text-[#19D89A] transition-colors">
+                  <div className="space-y-1 pt-0.5 sm:pt-1">
+                    <h3 className="text-sm sm:text-base font-black text-white group-hover:text-[#19D89A] transition-colors truncate sm:whitespace-normal">
                       {comm.name}
                     </h3>
-                    <p className="text-xs text-[#AAB5CC] line-clamp-3 leading-relaxed">
+                    <p className="text-[11px] sm:text-xs text-[#AAB5CC] line-clamp-2 sm:line-clamp-3 leading-relaxed">
                       {comm.bio}
                     </p>
                   </div>
@@ -619,11 +616,11 @@ export default function CommunityCreateSection() {
       {/* CREATE / EDIT COMMUNITY FORM MODAL                            */}
       {/* ============================================================ */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200">
-          <div className="bg-[#0D1528] border border-[#173541] rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl space-y-0 relative">
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-in fade-in duration-200">
+          <div className="bg-[#0D1528] border border-[#173541] rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl space-y-0 relative max-h-[92vh] sm:max-h-[90vh] flex flex-col my-auto">
             
             {/* MODAL HEADER */}
-            <div className="px-6 py-5 border-b border-[#173541] flex items-center justify-between bg-[#050A1A]">
+            <div className="px-5 py-4 sm:px-6 sm:py-5 border-b border-[#173541] flex items-center justify-between bg-[#050A1A] shrink-0">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-xl bg-[#19D89A]/20 border border-[#19D89A]/40 flex items-center justify-center text-[#19D89A]">
                   {editingCommunityId ? <Pencil className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
@@ -648,7 +645,7 @@ export default function CommunityCreateSection() {
             </div>
 
             {/* FORM BODY */}
-            <form onSubmit={handleSubmitCommunity} className="p-6 space-y-5">
+            <form onSubmit={handleSubmitCommunity} className="p-4 sm:p-6 space-y-4 sm:space-y-5 overflow-y-auto flex-1">
               
               {/* FEEDBACK MESSAGES */}
               {errorMsg && (

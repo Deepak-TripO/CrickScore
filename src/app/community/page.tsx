@@ -43,10 +43,6 @@ export default async function CommunityPage() {
         {/* HEADER AREA */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-[#0D1528] border border-[#173541] rounded-3xl p-6 sm:p-8 shadow-xl">
           <div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#19D89A]/10 border border-[#19D89A]/30 text-[#19D89A] text-[10px] font-extrabold uppercase tracking-wider mb-2">
-              <Users className="w-3.5 h-3.5" />
-              <span>Cricket Network</span>
-            </div>
             <h1 className="text-2xl sm:text-3xl font-black text-white">Cricket Community Directory</h1>
             <p className="text-xs text-[#AAB5CC] mt-1">Discover, join, and interact with Master-created local cricket clubs and leagues.</p>
           </div>
