@@ -210,17 +210,17 @@ export async function scoreBall(payload: {
 
   const currentDeliveries: DeliveryInput[] = (existingDeliveries || []).map((d: any) => ({
     id: d.id,
-    overNumber: d.over_number,
-    ballNumber: d.ball_number,
-    strikerId: d.striker_id,
-    nonStrikerId: d.non_striker_id,
-    bowlerId: d.bowler_id,
-    runsBatter: d.runs_batter,
-    runsExtras: d.runs_extras,
-    extraType: d.extra_type as ExtraType,
-    wicket: d.wicket,
+    overNumber: d.over_number || 0,
+    ballNumber: d.ball_number || 0,
+    strikerId: d.striker_id || payload.strikerId || 'striker',
+    nonStrikerId: d.non_striker_id || payload.nonStrikerId || 'non_striker',
+    bowlerId: d.bowler_id || payload.bowlerId || 'bowler',
+    runsBatter: typeof d.runs_batter === 'number' ? d.runs_batter : 0,
+    runsExtras: typeof d.runs_extras === 'number' ? d.runs_extras : 0,
+    extraType: (d.extra_type as ExtraType) || 'NONE',
+    wicket: Boolean(d.wicket),
     wicketType: d.wicket_type as WicketType,
-    dismissedPlayerId: d.dismissed_player_id
+    dismissedPlayerId: d.dismissed_player_id || d.striker_id || payload.strikerId
   }));
 
   // Calculate ball sequence numbers

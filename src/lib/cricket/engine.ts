@@ -162,17 +162,14 @@ export function processInningsDeliveries(
   let totalWickets = 0;
   let legalBalls = 0;
 
-  let strikerId = initialStrikerId;
-  let nonStrikerId = initialNonStrikerId;
-  let currentBowlerId = initialBowlerId;
-
   const batters: Record<string, BatterStats> = {};
   const bowlers: Record<string, BowlerStats> = {};
 
-  const ensureBatter = (id: string) => {
-    if (id && !batters[id]) {
-      batters[id] = {
-        playerId: id,
+  const ensureBatter = (id?: string | null): string => {
+    const key = (id && String(id).trim()) ? String(id).trim() : 'UNKNOWN_BATTER';
+    if (!batters[key]) {
+      batters[key] = {
+        playerId: key,
         runs: 0,
         balls: 0,
         fours: 0,
@@ -181,12 +178,14 @@ export function processInningsDeliveries(
         strikeRate: 0
       };
     }
+    return key;
   };
 
-  const ensureBowler = (id: string) => {
-    if (id && !bowlers[id]) {
-      bowlers[id] = {
-        playerId: id,
+  const ensureBowler = (id?: string | null): string => {
+    const key = (id && String(id).trim()) ? String(id).trim() : 'UNKNOWN_BOWLER';
+    if (!bowlers[key]) {
+      bowlers[key] = {
+        playerId: key,
         legalBalls: 0,
         oversFormatted: '0.0',
         maidens: 0,
@@ -197,11 +196,12 @@ export function processInningsDeliveries(
         economy: 0
       };
     }
+    return key;
   };
 
-  ensureBatter(initialStrikerId);
-  ensureBatter(initialNonStrikerId);
-  ensureBowler(initialBowlerId);
+  let strikerId = ensureBatter(initialStrikerId);
+  let nonStrikerId = ensureBatter(initialNonStrikerId);
+  let currentBowlerId = ensureBowler(initialBowlerId);
 
   const extras = {
     wides: 0,
@@ -214,8 +214,8 @@ export function processInningsDeliveries(
 
   const partnerships: Partnership[] = [];
   let currentPartnership: Partnership = {
-    batter1Id: initialStrikerId,
-    batter2Id: initialNonStrikerId,
+    batter1Id: strikerId,
+    batter2Id: nonStrikerId,
     runs: 0,
     balls: 0
   };
@@ -223,15 +223,13 @@ export function processInningsDeliveries(
   let overLegalBallsCount = 0;
   let overRunsConcededCount = 0;
 
-  for (let i = 0; i < deliveries.length; i++) {
+  for (let i = 0; i < (deliveries || []).length; i++) {
     const d = deliveries[i];
-    strikerId = d.strikerId || strikerId;
-    nonStrikerId = d.nonStrikerId || nonStrikerId;
-    currentBowlerId = d.bowlerId || currentBowlerId;
+    if (!d) continue;
 
-    ensureBatter(strikerId);
-    ensureBatter(nonStrikerId);
-    ensureBowler(currentBowlerId);
+    strikerId = ensureBatter(d.strikerId || strikerId);
+    nonStrikerId = ensureBatter(d.nonStrikerId || nonStrikerId);
+    currentBowlerId = ensureBowler(d.bowlerId || currentBowlerId);
 
     const isLegal = isLegalDelivery(d.extraType);
 

@@ -197,30 +197,35 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
     setLoading(true);
     setErrorMsg('');
 
-    const res = await scoreBall({
-      matchId: match.id,
-      inningsId: safeInningsId,
-      strikerId,
-      nonStrikerId,
-      bowlerId,
-      runsBatter,
-      extraType
-    });
+    try {
+      const res = await scoreBall({
+        matchId: match.id,
+        inningsId: safeInningsId,
+        strikerId,
+        nonStrikerId,
+        bowlerId,
+        runsBatter,
+        extraType
+      });
 
-    setLoading(false);
-    setIsMoreModalOpen(false);
+      setLoading(false);
+      setIsMoreModalOpen(false);
 
-    if (res?.error) {
-      setErrorMsg(res.error);
-    } else if (res?.newState) {
-      setStrikerId(res.newState.strikerId);
-      setNonStrikerId(res.newState.nonStrikerId);
-      
-      const nextBallNum = ((activeInnings.total_overs || 0) + 0.1).toFixed(1);
-      const displayRun = extraType !== 'NONE' ? `${extraType === 'WIDE' ? '1wd' : extraType === 'NO_BALL' ? '1nb' : runsBatter}` : runsBatter;
-      setRecentBalls(prev => [...prev.slice(-3), { ball: nextBallNum, run: displayRun }]);
-      
-      showToast(extraType !== 'NONE' ? `${extraType.replace('_', ' ')} recorded` : `${runsBatter} run${runsBatter === 1 ? '' : 's'} added`);
+      if (res?.error) {
+        setErrorMsg(res.error);
+      } else if (res?.newState) {
+        setStrikerId(res.newState.strikerId);
+        setNonStrikerId(res.newState.nonStrikerId);
+        
+        const nextBallNum = ((activeInnings.total_overs || 0) + 0.1).toFixed(1);
+        const displayRun = extraType !== 'NONE' ? `${extraType === 'WIDE' ? '1wd' : extraType === 'NO_BALL' ? '1nb' : runsBatter}` : runsBatter;
+        setRecentBalls(prev => [...prev.slice(-3), { ball: nextBallNum, run: displayRun }]);
+        
+        showToast(extraType !== 'NONE' ? `${extraType.replace('_', ' ')} recorded` : `${runsBatter} run${runsBatter === 1 ? '' : 's'} added`);
+      }
+    } catch (err: any) {
+      setLoading(false);
+      setErrorMsg(err.message || 'Failed to update score. Please try again.');
     }
   };
 
@@ -231,34 +236,39 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
     setErrorMsg('');
     setIsWicketModalOpen(false);
 
-    const res = await scoreBall({
-      matchId: match.id,
-      inningsId: safeInningsId,
-      strikerId,
-      nonStrikerId,
-      bowlerId,
-      runsBatter: 0,
-      extraType: 'NONE',
-      wicket: true,
-      wicketType,
-      dismissedPlayerId: dismissedPlayerId || strikerId
-    });
+    try {
+      const res = await scoreBall({
+        matchId: match.id,
+        inningsId: safeInningsId,
+        strikerId,
+        nonStrikerId,
+        bowlerId,
+        runsBatter: 0,
+        extraType: 'NONE',
+        wicket: true,
+        wicketType,
+        dismissedPlayerId: dismissedPlayerId || strikerId
+      });
 
-    setLoading(false);
+      setLoading(false);
 
-    if (res?.error) {
-      setErrorMsg(res.error);
-    } else if (res?.newState) {
-      if (nextBatterId) {
-        if ((dismissedPlayerId || strikerId) === strikerId) {
-          setStrikerId(nextBatterId);
-        } else {
-          setNonStrikerId(nextBatterId);
+      if (res?.error) {
+        setErrorMsg(res.error);
+      } else if (res?.newState) {
+        if (nextBatterId) {
+          if ((dismissedPlayerId || strikerId) === strikerId) {
+            setStrikerId(nextBatterId);
+          } else {
+            setNonStrikerId(nextBatterId);
+          }
         }
+        const nextBallNum = ((activeInnings.total_overs || 0) + 0.1).toFixed(1);
+        setRecentBalls(prev => [...prev.slice(-3), { ball: nextBallNum, run: 'W' }]);
+        showToast('Wicket recorded');
       }
-      const nextBallNum = ((activeInnings.total_overs || 0) + 0.1).toFixed(1);
-      setRecentBalls(prev => [...prev.slice(-3), { ball: nextBallNum, run: 'W' }]);
-      showToast('Wicket recorded');
+    } catch (err: any) {
+      setLoading(false);
+      setErrorMsg(err.message || 'Failed to record wicket. Please try again.');
     }
   };
 
@@ -268,14 +278,19 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
     setLoading(true);
     setErrorMsg('');
 
-    const res = await undoLastBall(match.id, safeInningsId);
-    setLoading(false);
+    try {
+      const res = await undoLastBall(match.id, safeInningsId);
+      setLoading(false);
 
-    if (res?.error) {
-      setErrorMsg(res.error);
-    } else {
-      setRecentBalls(prev => prev.slice(0, -1));
-      showToast('Last ball undone');
+      if (res?.error) {
+        setErrorMsg(res.error);
+      } else {
+        setRecentBalls(prev => prev.slice(0, -1));
+        showToast('Last ball undone');
+      }
+    } catch (err: any) {
+      setLoading(false);
+      setErrorMsg(err.message || 'Failed to undo last ball.');
     }
   };
 
@@ -331,279 +346,299 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
         </div>
       )}
 
-      {/* MAIN COMPACT LAYOUT CONTAINER MATCHING REFERENCE UI MODEL */}
-      <div className="max-w-xl mx-auto px-3 py-3 space-y-3">
+      {/* MAIN COMPACT LAYOUT CONTAINER */}
+      <div className="max-w-4xl mx-auto px-3 py-2.5 lg:grid lg:grid-cols-12 lg:gap-4 lg:items-start space-y-2.5 lg:space-y-0">
         
-        {/* 1. MAIN SCOREBOARD HEADER BOX WITH CRR */}
-        <div className="bg-[#0D1528] border border-[#19D89A]/40 rounded-2xl p-3 shadow-md flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-md bg-[#050A1A] border border-[#173541] p-0.5 flex items-center justify-center overflow-hidden shrink-0">
-              {battingTeamLogo ? (
-                <img src={battingTeamLogo} alt={battingTeamName} className="w-full h-full object-cover rounded-sm" />
-              ) : (
-                <span className="font-black text-[9px] text-[#19D89A] font-mono">{battingTeamShort}</span>
+        {/* ========================================================== */}
+        {/* LEFT COLUMN (Scoreboard, Batters, Bowler, Over, History)   */}
+        {/* ========================================================== */}
+        <div className="lg:col-span-6 space-y-2.5">
+          
+          {/* 2. COMPACT MAIN SCOREBOARD WITH CRR ON CENTER OF RIGHT SIDE */}
+          <div className="bg-[#0D1528] border border-[#19D89A]/50 rounded-2xl p-2.5 sm:p-3 shadow-lg flex items-center justify-between gap-3">
+            {/* LEFT / CENTER SCORE DETAILS */}
+            <div className="flex-1 min-w-0 space-y-0.5">
+              <div className="flex items-center gap-1.5">
+                <div className="w-4 h-4 rounded-md bg-[#050A1A] border border-[#173541] p-0.5 flex items-center justify-center overflow-hidden shrink-0">
+                  {battingTeamLogo ? (
+                    <img src={battingTeamLogo} alt={battingTeamName} className="w-full h-full object-cover rounded-sm" />
+                  ) : (
+                    <span className="font-black text-[8px] text-[#19D89A] font-mono">{battingTeamShort}</span>
+                  )}
+                </div>
+                <h2 className="text-xs font-black text-[#AAB5CC] uppercase tracking-wider truncate">
+                  {battingTeamName}
+                </h2>
+              </div>
+
+              <div className="flex items-baseline gap-2">
+                <div className="text-3xl sm:text-4xl font-black font-mono tracking-tight text-[#19D89A]">
+                  {activeInnings.total_runs || 0} <span className="text-white">/</span> {activeInnings.total_wickets || 0}
+                </div>
+                <div className="text-xs font-extrabold text-white font-mono">
+                  {(activeInnings.total_overs || 0.0).toFixed(1)} <span className="text-[9px] text-[#71809A]">OV</span>
+                </div>
+              </div>
+
+              {match.target && (
+                <div className="text-[10px] font-bold text-[#AAB5CC] font-mono flex items-center gap-2">
+                  <span>TARGET <strong className="text-[#19D89A]">{match.target}</strong></span>
+                  <span>• RRR <strong className="text-[#315BEA]">{rrr}</strong></span>
+                </div>
               )}
             </div>
-            <div>
-              <h2 className="text-xs font-black text-white uppercase tracking-wider">
-                {battingTeamName}
-              </h2>
-              <div className="text-xs font-bold text-[#AAB5CC] font-mono">
-                {(activeInnings.total_overs || 0.0).toFixed(1)} <span className="text-[9px] text-[#71809A]">OV</span>
+
+            {/* RIGHT SIDE: CRR DISPLAYED AT CENTER OF RIGHT SIDE */}
+            <div className="flex flex-col items-center justify-center text-center shrink-0 pl-3 border-l border-[#173541] py-1 min-w-[64px]">
+              <span className="text-[9px] font-black text-[#71809A] uppercase tracking-wider block">CRR</span>
+              <span className="text-base font-black text-[#19D89A] font-mono mt-0.5">{crr}</span>
+            </div>
+          </div>
+
+          {/* 3. COMPACT ACTIVE BATTERS */}
+          <div className="bg-[#0D1528] border border-[#173541] rounded-2xl p-2.5 space-y-1.5">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-extrabold text-[#71809A] uppercase tracking-wider">Batters</span>
+              <button 
+                onClick={handleSwapBatsmen}
+                className="text-[10px] font-extrabold text-[#19D89A] flex items-center gap-1 hover:underline"
+              >
+                <RefreshCw className="w-3 h-3" />
+                Swap
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              {/* STRIKER */}
+              <div className="bg-[#111A2D] border border-[#19D89A]/40 rounded-xl p-2">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-white truncate">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#19D89A] shrink-0 animate-pulse" />
+                  <span className="truncate">{strikerPlayer?.full_name || strikerPlayer?.display_name || 'Striker'}</span>
+                </div>
+                <div className="text-xs font-extrabold text-[#19D89A] font-mono mt-0.5">
+                  56 <span className="text-[10px] text-[#AAB5CC] font-normal">(32)</span>
+                </div>
+              </div>
+
+              {/* NON-STRIKER */}
+              <div className="bg-[#111A2D] border border-[#173541] rounded-xl p-2">
+                <div className="text-xs font-bold text-[#AAB5CC] truncate pl-2">
+                  <span className="truncate">{nonStrikerPlayer?.full_name || nonStrikerPlayer?.display_name || 'Non-Striker'}</span>
+                </div>
+                <div className="text-xs font-extrabold text-white font-mono mt-0.5 pl-2">
+                  24 <span className="text-[10px] text-[#71809A] font-normal">(18)</span>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="flex items-center gap-4">
-            <div className="text-2xl sm:text-3xl font-black font-mono text-[#19D89A]">
-              {activeInnings.total_runs || 0} <span className="text-white">/</span> {activeInnings.total_wickets || 0}
-            </div>
-
-            <div className="text-right border-l border-[#173541] pl-3 py-0.5">
-              <span className="text-[9px] font-black text-[#71809A] uppercase tracking-wider block">CRR</span>
-              <span className="text-sm font-black text-white font-mono">{crr}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* 2. BATSMAN & BOWLER SCORECARD TABLE */}
-        <div className="bg-[#0D1528] border border-[#173541] rounded-2xl p-3 shadow-md space-y-2.5">
-          {/* BATSMAN TABLE */}
-          <table className="w-full text-left text-xs">
-            <thead>
-              <tr className="text-[#71809A] font-semibold border-b border-[#173541]/60">
-                <th className="font-semibold py-1">Batsman</th>
-                <th className="text-right py-1">R</th>
-                <th className="text-right py-1">B</th>
-                <th className="text-right py-1">4s</th>
-                <th className="text-right py-1">6s</th>
-                <th className="text-right py-1">SR</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#173541]/30">
-              {/* STRIKER ROW */}
-              <tr className="font-medium text-white">
-                <td className="py-1.5 font-bold text-[#19D89A] flex items-center gap-1">
-                  <span>{strikerPlayer?.full_name || strikerPlayer?.display_name || 'Striker'}*</span>
-                  <span className="text-[10px]" title="Striker">👑</span>
-                </td>
-                <td className="text-right font-black py-1.5 text-white">44</td>
-                <td className="text-right py-1.5 text-[#AAB5CC]">17</td>
-                <td className="text-right py-1.5 text-[#AAB5CC]">5</td>
-                <td className="text-right py-1.5 text-[#AAB5CC]">2</td>
-                <td className="text-right py-1.5 text-[#AAB5CC]">258.82</td>
-              </tr>
-              {/* NON-STRIKER ROW */}
-              <tr className="font-medium text-[#AAB5CC]">
-                <td className="py-1.5 font-bold text-[#19D89A]">
-                  {nonStrikerPlayer?.full_name || nonStrikerPlayer?.display_name || 'Non-Striker'}
-                </td>
-                <td className="text-right font-black py-1.5 text-white">32</td>
-                <td className="text-right py-1.5 text-[#AAB5CC]">13</td>
-                <td className="text-right py-1.5 text-[#AAB5CC]">5</td>
-                <td className="text-right py-1.5 text-[#AAB5CC]">1</td>
-                <td className="text-right py-1.5 text-[#AAB5CC]">246.15</td>
-              </tr>
-            </tbody>
-          </table>
-
-          {/* BOWLER TABLE */}
-          <div className="border-t border-[#173541] pt-2">
-            <table className="w-full text-left text-xs">
-              <thead>
-                <tr className="text-[#71809A] font-semibold">
-                  <th className="font-semibold py-1">Bowler</th>
-                  <th className="text-right py-1">O</th>
-                  <th className="text-right py-1">M</th>
-                  <th className="text-right py-1">R</th>
-                  <th className="text-right py-1">W</th>
-                  <th className="text-right py-1">ER</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="font-medium text-[#AAB5CC]">
-                  <td className="py-1 font-bold text-[#19D89A]">{bowlerPlayer?.full_name || bowlerPlayer?.display_name || 'Bowler'}</td>
-                  <td className="text-right py-1 text-[#AAB5CC]">1.0</td>
-                  <td className="text-right py-1 text-[#AAB5CC]">0</td>
-                  <td className="text-right py-1 text-[#AAB5CC]">14</td>
-                  <td className="text-right py-1 text-[#19D89A] font-bold">0</td>
-                  <td className="text-right py-1 text-[#AAB5CC]">14.00</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* 3. THIS OVER STRIP CARD */}
-        <div className="bg-[#0D1528] border border-[#173541] rounded-2xl p-2.5 flex items-center justify-between">
-          <span className="text-xs font-bold text-white shrink-0">This over:</span>
-          <div className="flex items-center gap-1.5 overflow-x-auto py-0.5">
-            {['2', '1', '4', '4', '1', '2'].map((ball, idx) => (
-              <span
-                key={idx}
-                className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
-                  ball === '4' || ball === '6'
-                    ? 'bg-amber-600 text-white font-black shadow-sm'
-                    : 'bg-[#111A2D] text-white border border-[#173541]'
-                }`}
+            {/* PLAYER SELECTION TOGGLE */}
+            <div className="flex justify-end pt-0.5">
+              <button 
+                onClick={() => setIsPlayerChangeOpen(!isPlayerChangeOpen)}
+                className="text-[10px] font-bold text-[#AAB5CC] hover:text-white underline"
               >
-                {ball}
+                {isPlayerChangeOpen ? 'Done' : 'Change Player Selection'}
+              </button>
+            </div>
+
+            {isPlayerChangeOpen && (
+              <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[#173541]">
+                <div>
+                  <label className="text-[10px] text-[#71809A] block mb-1">Striker</label>
+                  <select
+                    value={strikerId}
+                    onChange={(e) => setStrikerId(e.target.value)}
+                    className="w-full bg-[#071022] border border-[#173541] text-xs text-white rounded-lg p-1.5"
+                  >
+                    {battingPlayers.map(p => (
+                      <option key={p.id} value={p.id}>{p.full_name || p.display_name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-[10px] text-[#71809A] block mb-1">Non-Striker</label>
+                  <select
+                    value={nonStrikerId}
+                    onChange={(e) => setNonStrikerId(e.target.value)}
+                    className="w-full bg-[#071022] border border-[#173541] text-xs text-white rounded-lg p-1.5"
+                  >
+                    {battingPlayers.map(p => (
+                      <option key={p.id} value={p.id}>{p.full_name || p.display_name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* 4. COMPACT CURRENT BOWLER */}
+          <div className="bg-[#0D1528] border border-[#173541] rounded-2xl p-2 flex items-center justify-between">
+            <div>
+              <span className="text-[9px] font-extrabold text-[#71809A] uppercase tracking-wider block">Bowler</span>
+              <span className="text-xs font-bold text-white block mt-0.5">
+                {bowlerPlayer?.full_name || bowlerPlayer?.display_name || 'Bowler'}
               </span>
-            ))}
+            </div>
+            <div className="flex items-center gap-2.5 text-xs font-extrabold font-mono text-[#AAB5CC]">
+              <div>2.4 <span className="text-[9px] font-semibold text-[#71809A]">OV</span></div>
+              <div>21 <span className="text-[9px] font-semibold text-[#71809A]">R</span></div>
+              <div className="text-[#19D89A]">1 <span className="text-[9px] font-semibold text-[#71809A]">W</span></div>
+            </div>
           </div>
+
+          {/* 5. COMPACT CURRENT OVER STRIP */}
+          <div className="bg-[#0D1528] border border-[#173541] rounded-2xl p-2 space-y-1">
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="font-extrabold text-[#AAB5CC] uppercase tracking-wider">OVER 11</span>
+              <span className="font-bold text-[#19D89A] text-[10px]">13 RUNS</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              {['●', '1', '4', 'W', '2', '0', '6'].map((ball, idx) => (
+                <span 
+                  key={idx}
+                  className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black shadow-sm ${
+                    ball === '4' ? 'bg-[#315BEA] text-white' :
+                    ball === '6' ? 'bg-[#19D89A] text-[#050A1A]' :
+                    ball === 'W' ? 'bg-[#E5232F] text-white' :
+                    'bg-[#111A2D] text-[#AAB5CC] border border-[#173541]'
+                  }`}
+                >
+                  {ball}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* 6. COMPACT BALL HISTORY LIST */}
+          <div className="bg-[#0D1528] border border-[#173541] rounded-2xl p-2 space-y-1">
+            <span className="text-[10px] font-extrabold text-[#71809A] uppercase tracking-wider block mb-0.5">Ball History</span>
+            <div className="grid grid-cols-4 gap-1.5">
+              {recentBalls.map((b, idx) => (
+                <div key={idx} className="bg-[#111A2D] border border-[#173541] rounded-xl p-1 text-center">
+                  <div className="text-[9px] text-[#71809A] font-mono">{b.ball}</div>
+                  <div className={`text-xs font-black font-mono ${b.run === 'W' ? 'text-[#E5232F]' : b.run === 4 ? 'text-[#315BEA]' : b.run === 6 ? 'text-[#19D89A]' : 'text-white'}`}>
+                    {b.run}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="pt-0.5 text-center">
+              <Link href={`/matches/${match.id}`} className="text-[10px] font-bold text-[#19D89A] hover:underline inline-flex items-center gap-1">
+                View Full Scorecard <ChevronRight className="w-3 h-3" />
+              </Link>
+            </div>
+          </div>
+
         </div>
 
-        {/* 4. EXTRAS, WICKET CHECKBOXES & ACTION BUTTONS CARD */}
-        <div className="bg-[#0D1528] border border-[#173541] rounded-2xl p-3 space-y-3">
-          <div className="grid grid-cols-4 gap-2 text-xs font-medium text-white">
-            <label className="flex items-center gap-1.5 cursor-pointer">
-              <input
-                type="checkbox"
-                onChange={(e) => e.target.checked && handleScoreRun(1, 'WIDE')}
-                className="w-4 h-4 rounded border-[#173541] bg-[#071022] accent-[#19D89A]"
-              />
-              <span>Wide</span>
-            </label>
-            <label className="flex items-center gap-1.5 cursor-pointer">
-              <input
-                type="checkbox"
-                onChange={(e) => e.target.checked && handleScoreRun(1, 'NO_BALL')}
-                className="w-4 h-4 rounded border-[#173541] bg-[#071022] accent-[#19D89A]"
-              />
-              <span>No Ball</span>
-            </label>
-            <label className="flex items-center gap-1.5 cursor-pointer">
-              <input
-                type="checkbox"
-                onChange={(e) => e.target.checked && handleScoreRun(1, 'BYE')}
-                className="w-4 h-4 rounded border-[#173541] bg-[#071022] accent-[#19D89A]"
-              />
-              <span>Byes</span>
-            </label>
-            <label className="flex items-center gap-1.5 cursor-pointer">
-              <input
-                type="checkbox"
-                onChange={(e) => e.target.checked && handleScoreRun(1, 'LEG_BYE')}
-                className="w-4 h-4 rounded border-[#173541] bg-[#071022] accent-[#19D89A]"
-              />
-              <span>Leg Byes</span>
-            </label>
-          </div>
-
-          <div className="flex items-center justify-between pt-1 border-t border-[#173541]/40">
-            <label className="flex items-center gap-1.5 text-xs font-medium text-white cursor-pointer">
-              <input
-                type="checkbox"
-                onChange={(e) => e.target.checked && setIsWicketModalOpen(true)}
-                className="w-4 h-4 rounded border-[#173541] bg-[#071022] accent-[#E5232F]"
-              />
-              <span>Wicket</span>
-            </label>
-
-            <div className="flex items-center gap-2">
+        {/* ========================================================== */}
+        {/* RIGHT COLUMN (Run Keypad, Wicket, More, Undo)             */}
+        {/* ========================================================== */}
+        <div className="lg:col-span-6 space-y-2.5">
+          
+          {/* 7. COMPACT SCORING KEYPAD (3x2 GRID) */}
+          <div className="bg-[#111A2D] border border-[#173541] rounded-2xl p-2.5 space-y-2 shadow-xl">
+            <span className="text-[10px] font-extrabold text-[#71809A] uppercase tracking-wider block">Runs</span>
+            
+            <div className="grid grid-cols-3 gap-2">
+              {/* RUN 0 */}
               <button
                 type="button"
-                onClick={() => showToast('Batter retired')}
-                className="px-3 py-1.5 bg-[#17233B] hover:bg-[#1E2D4A] text-xs font-semibold text-[#AAB5CC] hover:text-white rounded-lg transition-colors"
+                disabled={loading}
+                onClick={() => handleScoreRun(0)}
+                className="h-14 sm:h-15 rounded-xl bg-[#071022] hover:bg-[#0D1528] border border-[#173541] text-white font-black text-xl sm:text-2xl transition-all active:scale-95 flex items-center justify-center"
               >
-                Retire
+                0
               </button>
+
+              {/* RUN 1 */}
               <button
                 type="button"
-                onClick={handleSwapBatsmen}
-                className="px-3 py-1.5 bg-[#17233B] hover:bg-[#1E2D4A] text-xs font-semibold text-[#AAB5CC] hover:text-white rounded-lg transition-colors"
+                disabled={loading}
+                onClick={() => handleScoreRun(1)}
+                className="h-14 sm:h-15 rounded-xl bg-[#071022] hover:bg-[#0D1528] border border-[#173541] text-[#19D89A] font-black text-xl sm:text-2xl transition-all active:scale-95 flex items-center justify-center"
               >
-                Swap Batsman
+                1
+              </button>
+
+              {/* RUN 2 */}
+              <button
+                type="button"
+                disabled={loading}
+                onClick={() => handleScoreRun(2)}
+                className="h-14 sm:h-15 rounded-xl bg-[#071022] hover:bg-[#0D1528] border border-[#173541] text-[#19D89A] font-black text-xl sm:text-2xl transition-all active:scale-95 flex items-center justify-center"
+              >
+                2
+              </button>
+
+              {/* RUN 3 */}
+              <button
+                type="button"
+                disabled={loading}
+                onClick={() => handleScoreRun(3)}
+                className="h-14 sm:h-15 rounded-xl bg-[#071022] hover:bg-[#0D1528] border border-[#173541] text-[#19D89A] font-black text-xl sm:text-2xl transition-all active:scale-95 flex items-center justify-center"
+              >
+                3
+              </button>
+
+              {/* RUN 4 */}
+              <button
+                type="button"
+                disabled={loading}
+                onClick={() => handleScoreRun(4)}
+                className="h-14 sm:h-15 rounded-xl bg-[#315BEA] hover:bg-blue-600 text-white font-black text-xl sm:text-2xl shadow-lg shadow-blue-600/20 transition-all active:scale-95 flex items-center justify-center"
+              >
+                4
+              </button>
+
+              {/* RUN 6 */}
+              <button
+                type="button"
+                disabled={loading}
+                onClick={() => handleScoreRun(6)}
+                className="h-14 sm:h-15 rounded-xl bg-[#19D89A] hover:bg-emerald-400 text-[#050A1A] font-black text-xl sm:text-2xl shadow-lg shadow-emerald-500/20 transition-all active:scale-95 flex items-center justify-center"
+              >
+                6
               </button>
             </div>
           </div>
-        </div>
 
-        {/* 5. KEYPAD & ACTION BUTTONS CARD */}
-        <div className="grid grid-cols-12 gap-3 items-stretch">
-          {/* LEFT VERTICAL ACTION BUTTONS */}
-          <div className="col-span-4 flex flex-col gap-2">
+          {/* 8. COMPACT WICKET, MORE, UNDO ACTION BAR */}
+          <div className="grid grid-cols-3 gap-2">
+            {/* WICKET BUTTON */}
+            <button
+              type="button"
+              disabled={loading}
+              onClick={() => setIsWicketModalOpen(true)}
+              className="h-11 rounded-xl bg-[#E5232F] hover:bg-red-600 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-red-600/20 transition-all active:scale-95 flex items-center justify-center"
+            >
+              WICKET
+            </button>
+
+            {/* MORE BUTTON */}
+            <button
+              type="button"
+              disabled={loading}
+              onClick={() => setIsMoreModalOpen(true)}
+              className="h-11 rounded-xl bg-[#0D1528] hover:bg-[#111A2D] border border-[#173541] text-[#19D89A] font-black text-xs uppercase tracking-wider transition-all active:scale-95 flex items-center justify-center gap-1"
+            >
+              <MoreHorizontal className="w-3.5 h-3.5" />
+              MORE
+            </button>
+
+            {/* UNDO BUTTON */}
             <button
               type="button"
               disabled={loading}
               onClick={handleUndo}
-              className="flex-1 py-3 px-2 bg-[#1B7043] hover:bg-[#155A35] text-white font-bold text-xs rounded-xl shadow-sm transition-all active:scale-95 flex items-center justify-center"
+              className="h-11 rounded-xl bg-[#0D1528] hover:bg-[#111A2D] border border-[#173541] text-[#AAB5CC] hover:text-white font-black text-[10px] uppercase tracking-wider transition-all active:scale-95 flex items-center justify-center gap-1"
             >
-              Undo
-            </button>
-            <button
-              type="button"
-              onClick={() => setIsPlayerChangeOpen(!isPlayerChangeOpen)}
-              className="flex-1 py-3 px-2 bg-[#1B7043] hover:bg-[#155A35] text-white font-bold text-xs rounded-xl shadow-sm transition-all active:scale-95 flex items-center justify-center"
-            >
-              Partnerships
-            </button>
-            <button
-              type="button"
-              onClick={() => setIsMoreModalOpen(true)}
-              className="flex-1 py-3 px-2 bg-[#1B7043] hover:bg-[#155A35] text-white font-bold text-xs rounded-xl shadow-sm transition-all active:scale-95 flex items-center justify-center"
-            >
-              Extras
+              <RotateCcw className="w-3.5 h-3.5 text-amber-400" />
+              UNDO
             </button>
           </div>
 
-          {/* RIGHT CIRCULAR RUN KEYPAD (4x2 GRID) */}
-          <div className="col-span-8 bg-[#0D1528] border border-[#173541] rounded-2xl p-3">
-            <div className="grid grid-cols-4 gap-2.5">
-              {[0, 1, 2, 3, 4, 5, 6].map((run) => (
-                <button
-                  key={run}
-                  type="button"
-                  disabled={loading}
-                  onClick={() => handleScoreRun(run)}
-                  className="w-10 h-10 rounded-full border-2 border-[#1B7043] hover:bg-[#1B7043]/30 text-white font-bold text-sm flex items-center justify-center mx-auto transition-all active:scale-95"
-                >
-                  {run}
-                </button>
-              ))}
-              <button
-                type="button"
-                onClick={() => setIsMoreModalOpen(true)}
-                className="w-10 h-10 rounded-full border-2 border-[#1B7043] hover:bg-[#1B7043]/30 text-white font-bold text-sm flex items-center justify-center mx-auto transition-all active:scale-95"
-              >
-                ...
-              </button>
-            </div>
-          </div>
         </div>
-
-        {/* PLAYER CHANGE SELECTION EXPANDABLE */}
-        {isPlayerChangeOpen && (
-          <div className="bg-[#0D1528] border border-[#173541] rounded-2xl p-3 space-y-2">
-            <h4 className="text-xs font-bold text-[#19D89A]">Change Player Selection</h4>
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className="text-[10px] text-[#71809A] block mb-1">Striker</label>
-                <select
-                  value={strikerId}
-                  onChange={(e) => setStrikerId(e.target.value)}
-                  className="w-full bg-[#071022] border border-[#173541] text-xs text-white rounded-lg p-1.5 font-bold"
-                >
-                  {battingPlayers.map(p => (
-                    <option key={p.id} value={p.id}>{p.full_name || p.display_name}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="text-[10px] text-[#71809A] block mb-1">Non-Striker</label>
-                <select
-                  value={nonStrikerId}
-                  onChange={(e) => setNonStrikerId(e.target.value)}
-                  className="w-full bg-[#071022] border border-[#173541] text-xs text-white rounded-lg p-1.5 font-bold"
-                >
-                  {battingPlayers.map(p => (
-                    <option key={p.id} value={p.id}>{p.full_name || p.display_name}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
-        )}
 
       </div>
 
