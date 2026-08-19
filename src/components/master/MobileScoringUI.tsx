@@ -118,7 +118,11 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
   const bowlerWickets = bowlerStats ? bowlerStats.wickets : 0;
 
   // Dynamic current over stats
-  const currentOverNum = Math.floor((liveInningsState?.legalBalls || 0) / 6) + 1;
+  const maxAllowedOvers = match.overs || 20;
+  const isMaxOversReached = (liveInningsState?.legalBalls || 0) >= maxAllowedOvers * 6;
+  const isInningsCompleted = liveInningsState?.isCompleted || isMaxOversReached;
+
+  const currentOverNum = Math.min(Math.floor((liveInningsState?.legalBalls || 0) / 6) + 1, maxAllowedOvers);
   const currentOverBallsList = liveInningsState?.currentOverDeliveries || [];
   const currentOverTotalRuns = liveInningsState?.currentOverRuns || 0;
 
@@ -236,6 +240,13 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
   // 1. FAST SCORE RUN HANDLER
   const handleScoreRun = async (runsBatter: number, extraType: ExtraType = 'NONE') => {
     if (loading) return;
+
+    if (isInningsCompleted) {
+      setErrorMsg(`Innings limit of ${maxAllowedOvers} overs reached.`);
+      showToast(`Innings limit of ${maxAllowedOvers} overs reached.`);
+      return;
+    }
+
     setLoading(true);
     setErrorMsg('');
 
@@ -272,6 +283,13 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
   // 2. WICKET SUBMIT HANDLER
   const handleScoreWicketSubmit = async () => {
     if (loading) return;
+
+    if (isInningsCompleted) {
+      setErrorMsg(`Innings limit of ${maxAllowedOvers} overs reached.`);
+      showToast(`Innings limit of ${maxAllowedOvers} overs reached.`);
+      return;
+    }
+
     setLoading(true);
     setErrorMsg('');
     setIsWicketModalOpen(false);
@@ -639,15 +657,22 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
           
           {/* 7. COMPACT SCORING KEYPAD (3x2 GRID) */}
           <div className="bg-[#111A2D] border border-[#173541] rounded-2xl p-2.5 space-y-2 shadow-xl">
-            <span className="text-[10px] font-extrabold text-[#71809A] uppercase tracking-wider block">Runs</span>
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-extrabold text-[#71809A] uppercase tracking-wider block">Runs</span>
+              {isInningsCompleted && (
+                <span className="text-[10px] font-extrabold text-amber-400 uppercase tracking-wider">
+                  Overs Limit ({maxAllowedOvers} Ov) Reached
+                </span>
+              )}
+            </div>
             
             <div className="grid grid-cols-3 gap-2">
               {/* RUN 0 */}
               <button
                 type="button"
-                disabled={loading}
+                disabled={loading || isInningsCompleted}
                 onClick={() => handleScoreRun(0)}
-                className="h-14 sm:h-15 rounded-xl bg-[#071022] hover:bg-[#0D1528] border border-[#173541] text-white font-black text-xl sm:text-2xl transition-all active:scale-95 flex items-center justify-center"
+                className="h-14 sm:h-15 rounded-xl bg-[#071022] hover:bg-[#0D1528] border border-[#173541] text-white font-black text-xl sm:text-2xl transition-all active:scale-95 flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 0
               </button>
@@ -655,9 +680,9 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
               {/* RUN 1 */}
               <button
                 type="button"
-                disabled={loading}
+                disabled={loading || isInningsCompleted}
                 onClick={() => handleScoreRun(1)}
-                className="h-14 sm:h-15 rounded-xl bg-[#071022] hover:bg-[#0D1528] border border-[#173541] text-[#19D89A] font-black text-xl sm:text-2xl transition-all active:scale-95 flex items-center justify-center"
+                className="h-14 sm:h-15 rounded-xl bg-[#071022] hover:bg-[#0D1528] border border-[#173541] text-[#19D89A] font-black text-xl sm:text-2xl transition-all active:scale-95 flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 1
               </button>
@@ -665,9 +690,9 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
               {/* RUN 2 */}
               <button
                 type="button"
-                disabled={loading}
+                disabled={loading || isInningsCompleted}
                 onClick={() => handleScoreRun(2)}
-                className="h-14 sm:h-15 rounded-xl bg-[#071022] hover:bg-[#0D1528] border border-[#173541] text-[#19D89A] font-black text-xl sm:text-2xl transition-all active:scale-95 flex items-center justify-center"
+                className="h-14 sm:h-15 rounded-xl bg-[#071022] hover:bg-[#0D1528] border border-[#173541] text-[#19D89A] font-black text-xl sm:text-2xl transition-all active:scale-95 flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 2
               </button>
@@ -675,9 +700,9 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
               {/* RUN 3 */}
               <button
                 type="button"
-                disabled={loading}
+                disabled={loading || isInningsCompleted}
                 onClick={() => handleScoreRun(3)}
-                className="h-14 sm:h-15 rounded-xl bg-[#071022] hover:bg-[#0D1528] border border-[#173541] text-[#19D89A] font-black text-xl sm:text-2xl transition-all active:scale-95 flex items-center justify-center"
+                className="h-14 sm:h-15 rounded-xl bg-[#071022] hover:bg-[#0D1528] border border-[#173541] text-[#19D89A] font-black text-xl sm:text-2xl transition-all active:scale-95 flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 3
               </button>
@@ -685,9 +710,9 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
               {/* RUN 4 */}
               <button
                 type="button"
-                disabled={loading}
+                disabled={loading || isInningsCompleted}
                 onClick={() => handleScoreRun(4)}
-                className="h-14 sm:h-15 rounded-xl bg-[#315BEA] hover:bg-blue-600 text-white font-black text-xl sm:text-2xl shadow-lg shadow-blue-600/20 transition-all active:scale-95 flex items-center justify-center"
+                className="h-14 sm:h-15 rounded-xl bg-[#315BEA] hover:bg-blue-600 text-white font-black text-xl sm:text-2xl shadow-lg shadow-blue-600/20 transition-all active:scale-95 flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 4
               </button>
@@ -695,9 +720,9 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
               {/* RUN 6 */}
               <button
                 type="button"
-                disabled={loading}
+                disabled={loading || isInningsCompleted}
                 onClick={() => handleScoreRun(6)}
-                className="h-14 sm:h-15 rounded-xl bg-[#19D89A] hover:bg-emerald-400 text-[#050A1A] font-black text-xl sm:text-2xl shadow-lg shadow-emerald-500/20 transition-all active:scale-95 flex items-center justify-center"
+                className="h-14 sm:h-15 rounded-xl bg-[#19D89A] hover:bg-emerald-400 text-[#050A1A] font-black text-xl sm:text-2xl shadow-lg shadow-emerald-500/20 transition-all active:scale-95 flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 6
               </button>
@@ -710,9 +735,9 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
               {/* WICKET BUTTON */}
               <button
                 type="button"
-                disabled={loading}
+                disabled={loading || isInningsCompleted}
                 onClick={() => setIsWicketModalOpen(true)}
-                className="h-11 rounded-xl bg-[#E5232F] hover:bg-red-600 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-red-600/20 transition-all active:scale-95 flex items-center justify-center"
+                className="h-11 rounded-xl bg-[#E5232F] hover:bg-red-600 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-red-600/20 transition-all active:scale-95 flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 WICKET
               </button>

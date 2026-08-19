@@ -226,15 +226,20 @@ export async function scoreBall(payload: {
     dismissedPlayerId: d.dismissed_player_id || d.striker_id || payload.strikerId
   }));
 
-  // Calculate ball sequence numbers
+  // Calculate current InningsState and check max overs limit
   const currentInningsState = processInningsDeliveries(
     currentDeliveries,
     payload.strikerId,
     payload.nonStrikerId,
     payload.bowlerId,
-    match.overs,
+    match.overs || 20,
     match.target
   );
+
+  const maxAllowedOvers = match.overs || 20;
+  if (currentInningsState.legalBalls >= maxAllowedOvers * 6) {
+    return { error: `Innings completed. Maximum selected overs (${maxAllowedOvers} overs) reached.` };
+  }
 
   const nextOverNumber = currentInningsState.currentOverNumber;
   const nextBallNumber = currentInningsState.currentBallInOver + 1;
