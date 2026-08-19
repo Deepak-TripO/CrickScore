@@ -83,27 +83,11 @@ export default function MatchCard({
   if (isHomePageCard || isHistoryView) {
     const categoryType = (match.category || 'TOURNAMENT').toUpperCase();
 
-    const team1Id = t1?.id || (match as any).team1_id || (match as any).team_a_id;
-    const team2Id = t2?.id || (match as any).team2_id || (match as any).team_b_id;
+    const team1ScoreText = match.current_score || '0/0';
+    const team1OversText = `(${match.current_over || 0.0} Ov)`;
 
-    const inningsList = Array.isArray((match as any).innings) ? (match as any).innings : [];
-
-    const innings1 = inningsList.find((i: any) => i.batting_team_id === team1Id || i.innings_number === 1) || inningsList[0];
-    const innings2 = inningsList.find((i: any) => i.batting_team_id === team2Id || i.innings_number === 2) || inningsList[1];
-
-    const team1Runs = innings1 ? (innings1.total_runs ?? 0) : ((match as any).team1_runs ?? (match.current_score ? match.current_score.split('/')[0] : '0'));
-    const team1Wickets = innings1 ? (innings1.total_wickets ?? 0) : ((match as any).team1_wickets ?? (match.current_score ? match.current_score.split('/')[1] : '0'));
-    const team1Overs = innings1 ? (innings1.total_overs ?? 0.0) : (match.current_over || 0.0);
-
-    const team2Runs = innings2 ? (innings2.total_runs ?? 0) : ((match as any).team2_runs ?? 0);
-    const team2Wickets = innings2 ? (innings2.total_wickets ?? 0) : ((match as any).team2_wickets ?? 0);
-    const team2Overs = innings2 ? (innings2.total_overs ?? 0.0) : ((match as any).team2_overs || 0.0);
-
-    const team1ScoreText = `${team1Runs}/${team1Wickets}`;
-    const team1OversText = `(${Number(team1Overs).toFixed(1)} Ov)`;
-
-    const team2ScoreText = `${team2Runs}/${team2Wickets}`;
-    const team2OversText = `(${Number(team2Overs).toFixed(1)} Ov)`;
+    const team2ScoreText = isLive || isCompleted ? '0/0' : '0/0';
+    const team2OversText = '(0.0 Ov)';
 
     return (
       <div

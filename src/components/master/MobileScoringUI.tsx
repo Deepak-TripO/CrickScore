@@ -131,8 +131,8 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
   // =========================================================================
   if (!isTeamConfirmed) {
     return (
-      <div className="min-h-screen bg-[#050A1A] text-white font-sans p-4 sm:p-6 flex flex-col justify-between max-w-md mx-auto selection:bg-[#19D89A] selection:text-black">
-        <div className="space-y-5">
+      <div className="min-h-screen bg-[#050A1A] text-white font-sans p-4 sm:p-6 flex flex-col justify-start gap-4 max-w-md mx-auto selection:bg-[#19D89A] selection:text-black">
+        <div className="space-y-4">
           {/* HEADER */}
           <header className="flex items-center justify-between pb-3 border-b border-[#173541]">
             <Link href="/master/dashboard" className="flex items-center gap-2 text-[#AAB5CC] hover:text-white transition-colors">
@@ -148,9 +148,9 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
           </header>
 
           {/* QUESTION BOX */}
-          <div className="bg-[#0D1528] border border-[#173541] rounded-3xl p-5 space-y-5 text-center shadow-xl mt-2">
-            <div className="w-12 h-12 rounded-2xl bg-[#19D89A]/15 border border-[#19D89A]/30 flex items-center justify-center text-[#19D89A] mx-auto">
-              <Play className="w-6 h-6 fill-current ml-0.5" />
+          <div className="bg-[#0D1528] border border-[#173541] rounded-3xl p-4 sm:p-5 space-y-4 text-center shadow-xl mt-1">
+            <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-[#19D89A]/15 border border-[#19D89A]/30 flex items-center justify-center text-[#19D89A] mx-auto">
+              <Play className="w-5 h-5 sm:w-6 sm:h-6 fill-current ml-0.5" />
             </div>
 
             <div>
@@ -161,18 +161,18 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
             </div>
 
             {/* TEAM OPTIONS */}
-            <div className="space-y-2.5 pt-1">
+            <div className="space-y-2 pt-1">
               <button
                 type="button"
                 onClick={() => setSelectedBattingTeamId(team1Id)}
-                className={`w-full p-3.5 rounded-2xl border transition-all flex items-center justify-between active:scale-[0.98] ${
+                className={`w-full p-3 sm:p-3.5 rounded-2xl border transition-all flex items-center justify-between active:scale-[0.98] ${
                   selectedBattingTeamId === team1Id
                     ? 'bg-[#19D89A]/15 border-[#19D89A] text-[#19D89A] shadow-md shadow-[#19D89A]/10 font-black'
                     : 'bg-[#111A2D] border-[#173541] text-[#AAB5CC] hover:text-white hover:border-[#AAB5CC]/40 font-bold'
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-[#050A1A] border border-[#173541] p-1 flex items-center justify-center font-black text-xs text-[#19D89A] font-mono overflow-hidden shrink-0">
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#050A1A] border border-[#173541] p-1 flex items-center justify-center font-black text-xs text-[#19D89A] font-mono overflow-hidden shrink-0">
                     {team1Logo ? (
                       <img src={team1Logo} alt={team1Name} className="w-full h-full object-cover rounded-lg" />
                     ) : (
@@ -189,14 +189,14 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
               <button
                 type="button"
                 onClick={() => setSelectedBattingTeamId(team2Id)}
-                className={`w-full p-3.5 rounded-2xl border transition-all flex items-center justify-between active:scale-[0.98] ${
+                className={`w-full p-3 sm:p-3.5 rounded-2xl border transition-all flex items-center justify-between active:scale-[0.98] ${
                   selectedBattingTeamId === team2Id
                     ? 'bg-[#19D89A]/15 border-[#19D89A] text-[#19D89A] shadow-md shadow-[#19D89A]/10 font-black'
                     : 'bg-[#111A2D] border-[#173541] text-[#AAB5CC] hover:text-white hover:border-[#AAB5CC]/40 font-bold'
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-[#050A1A] border border-[#173541] p-1 flex items-center justify-center font-black text-xs text-[#19D89A] font-mono overflow-hidden shrink-0">
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#050A1A] border border-[#173541] p-1 flex items-center justify-center font-black text-xs text-[#19D89A] font-mono overflow-hidden shrink-0">
                     {team2Logo ? (
                       <img src={team2Logo} alt={team2Name} className="w-full h-full object-cover rounded-lg" />
                     ) : (
@@ -210,28 +210,28 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
                 )}
               </button>
             </div>
-          </div>
-        </div>
 
-        {/* START SCORING BUTTON */}
-        <div className="pt-4">
-          <button
-            type="button"
-            disabled={!selectedBattingTeamId || loading}
-            onClick={async () => {
-              if (!selectedBattingTeamId) return;
-              setLoading(true);
-              const bowlingTeamId = selectedBattingTeamId === team1Id ? team2Id : team1Id;
-              try {
-                await setBattingTeam(match.id, safeInningsId, selectedBattingTeamId, bowlingTeamId);
-              } catch {}
-              setLoading(false);
-              setIsTeamConfirmed(true);
-            }}
-            className="w-full py-3.5 bg-[#19D89A] hover:bg-emerald-400 text-[#050A1A] font-black rounded-2xl text-xs uppercase tracking-wider shadow-lg shadow-[#19D89A]/20 transition-all active:scale-95 disabled:opacity-50"
-          >
-            {loading ? 'Starting...' : 'Start'}
-          </button>
+            {/* START SCORING BUTTON */}
+            <div className="pt-2">
+              <button
+                type="button"
+                disabled={!selectedBattingTeamId || loading}
+                onClick={async () => {
+                  if (!selectedBattingTeamId) return;
+                  setLoading(true);
+                  const bowlingTeamId = selectedBattingTeamId === team1Id ? team2Id : team1Id;
+                  try {
+                    await setBattingTeam(match.id, safeInningsId, selectedBattingTeamId, bowlingTeamId);
+                  } catch {}
+                  setLoading(false);
+                  setIsTeamConfirmed(true);
+                }}
+                className="w-full py-3.5 bg-[#19D89A] hover:bg-emerald-400 text-[#050A1A] font-black rounded-2xl text-xs uppercase tracking-wider shadow-lg shadow-[#19D89A]/20 transition-all active:scale-95 disabled:opacity-50"
+              >
+                {loading ? 'Starting...' : 'Start'}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     );
