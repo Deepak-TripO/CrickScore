@@ -139,14 +139,7 @@ export default async function MasterScoringPage({ params }: { params: { matchId:
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
-      <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between border-b border-slate-800">
-        <h1 className="text-lg font-bold text-emerald-400">Scoring: {match.title}</h1>
-        <span className="text-xs px-2.5 py-1 rounded-full bg-red-500/10 border border-red-500/30 text-red-400 font-bold uppercase">
-          {match.status}
-        </span>
-      </div>
-
+    <div className="min-h-screen bg-[#050A1A] text-white font-sans">
       <MobileScoringUI 
         match={match}
         activeInnings={activeInnings}

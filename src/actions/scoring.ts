@@ -491,3 +491,38 @@ export async function selectPlayerOfMatch(matchId: string, playerId: string) {
   revalidatePath(`/matches/${matchId}`);
   return { success: true };
 }
+
+export async function setBattingTeam(matchId: string, inningsId: string, battingTeamId: string, bowlingTeamId: string) {
+  const supabase = createClient();
+  const { user, role: userRole } = await getUserAndRole();
+
+  if (!user) return { error: 'Unauthorized' };
+
+  let db: any = supabase;
+  try {
+    db = createAdminClient();
+  } catch {
+    db = supabase;
+  }
+
+  const { data: match } = await db.from('matches').select('*').eq('id', matchId).maybeSingle();
+  if (!match || !isAuthorizedScorer(user, userRole, match)) {
+    return { error: 'Unauthorized: Only authorized scorers can set batting team.' };
+  }
+
+  const actualInningsId = await ensureValidInningsId(db, match, inningsId);
+
+  await db
+    .from('innings')
+    .update({
+      batting_team_id: battingTeamId,
+      bowling_team_id: bowlingTeamId,
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', actualInningsId);
+
+  revalidatePath(`/master/matches/${matchId}/score`);
+  revalidatePath(`/matches/${matchId}`);
+  return { success: true };
+}
+

@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import { scoreBall, undoLastBall } from '@/actions/scoring';
+import { scoreBall, undoLastBall, setBattingTeam } from '@/actions/scoring';
 import { ExtraType, WicketType } from '@/lib/cricket/engine';
-import { ArrowLeft, RotateCcw, AlertTriangle, ChevronRight, RefreshCw, X, MoreHorizontal } from 'lucide-react';
+import { ArrowLeft, RotateCcw, AlertTriangle, ChevronRight, RefreshCw, X, MoreHorizontal, Play, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 
 interface MobileScoringUIProps {
@@ -14,7 +14,18 @@ interface MobileScoringUIProps {
 }
 
 export default function MobileScoringUI({ match, activeInnings, team1Players, team2Players }: MobileScoringUIProps) {
-  const isBattingTeam1 = activeInnings.batting_team_id === match.team1_id;
+  const team1Id = match.team1?.id || match.team1_id || match.team_a_id || 't1';
+  const team2Id = match.team2?.id || match.team2_id || match.team_b_id || 't2';
+
+  const team1Name = match.team1?.name || match.your_team_name || (match.title ? match.title.split(' vs ')[0] : 'Team 1');
+  const team2Name = match.team2?.name || match.opposite_team_name || (match.title ? match.title.split(' vs ')[1] : 'Team 2');
+
+  const [selectedBattingTeamId, setSelectedBattingTeamId] = useState<string>(
+    activeInnings?.batting_team_id || team1Id
+  );
+  const [isTeamConfirmed, setIsTeamConfirmed] = useState<boolean>(false);
+
+  const isBattingTeam1 = selectedBattingTeamId === team1Id;
   const battingPlayers = isBattingTeam1 ? team1Players : team2Players;
   const bowlingPlayers = isBattingTeam1 ? team2Players : team1Players;
 
@@ -56,6 +67,114 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
     setToastMsg(msg);
     setTimeout(() => setToastMsg(''), 3000);
   };
+
+  // =========================================================================
+  // 1. TEAM SELECTION SCREEN (FIRST STEP BEFORE LIVE SCORING PANEL)
+  // =========================================================================
+  if (!isTeamConfirmed) {
+    return (
+      <div className="min-h-screen bg-[#050A1A] text-white font-sans p-4 sm:p-6 flex flex-col justify-between max-w-md mx-auto selection:bg-[#19D89A] selection:text-black">
+        <div className="space-y-5">
+          {/* HEADER */}
+          <header className="flex items-center justify-between pb-3 border-b border-[#173541]">
+            <Link href="/master/dashboard" className="flex items-center gap-2 text-[#AAB5CC] hover:text-white transition-colors">
+              <ArrowLeft className="w-5 h-5" />
+              <span className="text-xs font-bold">Back</span>
+            </Link>
+            <div className="flex items-center gap-1.5">
+              <span className="text-base font-black tracking-tight text-[#19D89A]">BatScore</span>
+            </div>
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#19D89A]/10 text-[#19D89A] border border-[#19D89A]/30 text-[10px] font-black uppercase tracking-wider">
+              LIVE SCORING
+            </span>
+          </header>
+
+          {/* MATCH TITLE SUBHEADER */}
+          <div className="bg-[#0D1528] border border-[#173541] rounded-2xl p-3 text-center text-xs font-bold text-[#AAB5CC]">
+            {team1Name} <span className="text-[#19D89A]">vs</span> {team2Name}
+          </div>
+
+          {/* QUESTION BOX */}
+          <div className="bg-[#0D1528] border border-[#173541] rounded-3xl p-6 space-y-6 text-center shadow-xl mt-2">
+            <div className="w-14 h-14 rounded-2xl bg-[#19D89A]/15 border border-[#19D89A]/30 flex items-center justify-center text-[#19D89A] mx-auto">
+              <Play className="w-7 h-7 fill-current ml-0.5" />
+            </div>
+
+            <div>
+              <h2 className="text-lg font-black text-white">Which team is batting now?</h2>
+              <p className="text-xs text-[#AAB5CC] mt-1">
+                Select the team currently batting to start updating live scores.
+              </p>
+            </div>
+
+            {/* TEAM OPTIONS */}
+            <div className="space-y-3 pt-1">
+              <button
+                type="button"
+                onClick={() => setSelectedBattingTeamId(team1Id)}
+                className={`w-full p-4 rounded-2xl border transition-all flex items-center justify-between active:scale-[0.98] ${
+                  selectedBattingTeamId === team1Id
+                    ? 'bg-[#19D89A]/15 border-[#19D89A] text-[#19D89A] shadow-md shadow-[#19D89A]/10 font-black'
+                    : 'bg-[#111A2D] border-[#173541] text-[#AAB5CC] hover:text-white hover:border-[#AAB5CC]/40 font-bold'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-[#050A1A] border border-[#173541] flex items-center justify-center font-black text-xs text-[#19D89A] font-mono">
+                    {team1Name.slice(0, 4).toUpperCase()}
+                  </div>
+                  <span className="text-sm font-bold text-white">{team1Name}</span>
+                </div>
+                {selectedBattingTeamId === team1Id && (
+                  <CheckCircle2 className="w-5 h-5 text-[#19D89A]" />
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setSelectedBattingTeamId(team2Id)}
+                className={`w-full p-4 rounded-2xl border transition-all flex items-center justify-between active:scale-[0.98] ${
+                  selectedBattingTeamId === team2Id
+                    ? 'bg-[#19D89A]/15 border-[#19D89A] text-[#19D89A] shadow-md shadow-[#19D89A]/10 font-black'
+                    : 'bg-[#111A2D] border-[#173541] text-[#AAB5CC] hover:text-white hover:border-[#AAB5CC]/40 font-bold'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-[#050A1A] border border-[#173541] flex items-center justify-center font-black text-xs text-[#19D89A] font-mono">
+                    {team2Name.slice(0, 4).toUpperCase()}
+                  </div>
+                  <span className="text-sm font-bold text-white">{team2Name}</span>
+                </div>
+                {selectedBattingTeamId === team2Id && (
+                  <CheckCircle2 className="w-5 h-5 text-[#19D89A]" />
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* START SCORING BUTTON */}
+        <div className="pt-6">
+          <button
+            type="button"
+            disabled={!selectedBattingTeamId || loading}
+            onClick={async () => {
+              if (!selectedBattingTeamId) return;
+              setLoading(true);
+              const bowlingTeamId = selectedBattingTeamId === team1Id ? team2Id : team1Id;
+              try {
+                await setBattingTeam(match.id, safeInningsId, selectedBattingTeamId, bowlingTeamId);
+              } catch {}
+              setLoading(false);
+              setIsTeamConfirmed(true);
+            }}
+            className="w-full py-4 bg-[#19D89A] hover:bg-emerald-400 text-[#050A1A] font-black rounded-2xl text-xs uppercase tracking-wider shadow-lg shadow-[#19D89A]/20 transition-all active:scale-95 disabled:opacity-50"
+          >
+            {loading ? 'Starting...' : 'Continue / Start Scoring'}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // 1. FAST SCORE RUN HANDLER
   const handleScoreRun = async (runsBatter: number, extraType: ExtraType = 'NONE') => {
@@ -158,8 +277,6 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
     ? (((match.target - (activeInnings.total_runs || 0)) / Math.max((match.overs - (activeInnings.total_overs || 0)), 0.1))).toFixed(2)
     : 'N/A';
 
-  const team1Name = match.team1?.name || match.your_team_name || 'Chennai Warriors';
-  const team2Name = match.team2?.name || match.opposite_team_name || 'Super Kings';
   const battingTeamName = isBattingTeam1 ? team1Name : team2Name;
 
   return (
