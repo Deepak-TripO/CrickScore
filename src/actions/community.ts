@@ -13,14 +13,14 @@ export interface CommunityPayload {
   coverImage?: string;
 }
 
-function sanitizeUrl(val: any, fallback: string): string {
-  if (typeof val === 'string' && val.trim().length > 0) {
+function getOriginalImageUrl(val: any): string | null {
+  if (typeof val === 'string') {
     const v = val.trim();
-    if (v.startsWith('http://') || v.startsWith('https://') || v.startsWith('data:') || v.startsWith('/')) {
+    if (v.length > 0 && v !== 'null' && v !== 'undefined') {
       return v;
     }
   }
-  return fallback;
+  return null;
 }
 
 // 1. Fetch all communities for public / normal user display
@@ -43,15 +43,23 @@ export async function getPublicCommunities() {
       .order('created_at', { ascending: false });
 
     if (!error && Array.isArray(list)) {
-      return list.map((c: any) => ({
-        id: c.id,
-        ownerId: c.owner_id,
-        name: c.name,
-        bio: c.bio,
-        profileImage: sanitizeUrl(c.profile_image || c.logo_url || c.avatar_url, defaultProfile),
-        coverImage: sanitizeUrl(c.cover_image || c.banner_url || c.cover_url, defaultCover),
-        createdAt: c.created_at || new Date().toISOString()
-      }));
+      return list.map((c: any) => {
+        const rawProfile = c.profile_image || c.profile_image_url || c.logo_url || c.avatar_url || c.image_url || c.logo;
+        const rawCover = c.cover_image || c.cover_image_url || c.banner_url || c.cover_url || c.banner || c.header_image;
+
+        const originalProfile = getOriginalImageUrl(rawProfile);
+        const originalCover = getOriginalImageUrl(rawCover);
+
+        return {
+          id: c.id,
+          ownerId: c.owner_id,
+          name: c.name,
+          bio: c.bio,
+          profileImage: originalProfile || defaultProfile,
+          coverImage: originalCover || defaultCover,
+          createdAt: c.created_at || new Date().toISOString()
+        };
+      });
     }
   } catch {}
 
@@ -81,15 +89,23 @@ export async function getMasterCommunities(masterId: string) {
       .order('created_at', { ascending: false });
 
     if (!error && Array.isArray(list)) {
-      return list.map((c: any) => ({
-        id: c.id,
-        ownerId: c.owner_id,
-        name: c.name,
-        bio: c.bio,
-        profileImage: sanitizeUrl(c.profile_image || c.logo_url || c.avatar_url, defaultProfile),
-        coverImage: sanitizeUrl(c.cover_image || c.banner_url || c.cover_url, defaultCover),
-        createdAt: c.created_at || new Date().toISOString()
-      }));
+      return list.map((c: any) => {
+        const rawProfile = c.profile_image || c.profile_image_url || c.logo_url || c.avatar_url || c.image_url || c.logo;
+        const rawCover = c.cover_image || c.cover_image_url || c.banner_url || c.cover_url || c.banner || c.header_image;
+
+        const originalProfile = getOriginalImageUrl(rawProfile);
+        const originalCover = getOriginalImageUrl(rawCover);
+
+        return {
+          id: c.id,
+          ownerId: c.owner_id,
+          name: c.name,
+          bio: c.bio,
+          profileImage: originalProfile || defaultProfile,
+          coverImage: originalCover || defaultCover,
+          createdAt: c.created_at || new Date().toISOString()
+        };
+      });
     }
   } catch {}
 

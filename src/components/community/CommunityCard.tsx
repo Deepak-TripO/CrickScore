@@ -18,13 +18,9 @@ interface CommunityCardProps {
 }
 
 export default function CommunityCard({ community }: CommunityCardProps) {
-  const initialCover = community.coverImage && community.coverImage.length > 5 && (community.coverImage.startsWith('http') || community.coverImage.startsWith('/') || community.coverImage.startsWith('data:'))
-    ? community.coverImage
-    : DEFAULT_COVER;
-
-  const initialProfile = community.profileImage && community.profileImage.length > 5 && (community.profileImage.startsWith('http') || community.profileImage.startsWith('/') || community.profileImage.startsWith('data:'))
-    ? community.profileImage
-    : DEFAULT_PROFILE;
+  // Use original uploaded images directly from database as single source of truth
+  const initialCover = community.coverImage || DEFAULT_COVER;
+  const initialProfile = community.profileImage || DEFAULT_PROFILE;
 
   const [coverSrc, setCoverSrc] = useState<string>(initialCover);
   const [profileSrc, setProfileSrc] = useState<string>(initialProfile);
