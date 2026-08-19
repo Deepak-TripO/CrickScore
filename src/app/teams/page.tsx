@@ -4,6 +4,7 @@ import Navbar from '@/components/navigation/Navbar';
 import MobileNav from '@/components/navigation/MobileNav';
 import { getUserAndRole } from '@/lib/auth';
 import { Trophy, Users } from 'lucide-react';
+import { isValidImageUrl, sanitizeImageUrl } from '@/lib/imageUtils';
 
 export default async function PublicTeamsPage() {
   const { user, role: userRole } = await getUserAndRole();
@@ -39,7 +40,7 @@ export default async function PublicTeamsPage() {
               <div key={t.id} className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4 shadow-xl">
                 <div className="flex items-center gap-4">
                   <div className="w-14 h-14 rounded-2xl bg-slate-800 border border-slate-700 p-2 flex items-center justify-center font-black text-xl text-emerald-400">
-                    {t.logo_url ? <img src={t.logo_url} alt={t.name} className="w-full h-full object-contain" /> : t.short_name}
+                    {isValidImageUrl(t.logo_url) ? <img src={sanitizeImageUrl(t.logo_url)} alt={t.name} className="w-full h-full object-contain" /> : t.short_name}
                   </div>
                   <div>
                     <h3 className="font-extrabold text-base text-white">{t.name}</h3>

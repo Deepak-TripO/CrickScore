@@ -5,6 +5,7 @@ import Navbar from '@/components/navigation/Navbar';
 import MobileNav from '@/components/navigation/MobileNav';
 import { getUserAndRole } from '@/lib/auth';
 import { Trophy, Users, ShieldCheck } from 'lucide-react';
+import { isValidImageUrl, sanitizeImageUrl } from '@/lib/imageUtils';
 
 export default async function TeamDetailsPage({ params }: { params: { teamId: string } }) {
   const { user, role: userRole } = await getUserAndRole();
@@ -28,7 +29,7 @@ export default async function TeamDetailsPage({ params }: { params: { teamId: st
         <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 space-y-4 shadow-xl">
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 rounded-2xl bg-slate-800 border border-slate-700 p-2 flex items-center justify-center font-black text-2xl text-emerald-400">
-              {team.logo_url ? <img src={team.logo_url} alt={team.name} className="w-full h-full object-contain" /> : team.short_name}
+              {isValidImageUrl(team.logo_url) ? <img src={sanitizeImageUrl(team.logo_url)} alt={team.name} className="w-full h-full object-contain" /> : team.short_name}
             </div>
             <div>
               <h1 className="text-2xl font-extrabold text-white">{team.name}</h1>

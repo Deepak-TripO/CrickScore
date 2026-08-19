@@ -6,6 +6,7 @@ import { scoreBall, undoLastBall, setBattingTeam, completeMatch } from '@/action
 import { ExtraType, WicketType, InningsState } from '@/lib/cricket/engine';
 import { ArrowLeft, RotateCcw, AlertTriangle, ChevronRight, RefreshCw, X, MoreHorizontal, Play, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
+import { isValidImageUrl, sanitizeImageUrl } from '@/lib/imageUtils';
 
 interface MobileScoringUIProps {
   match: any;
@@ -173,8 +174,8 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
               >
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#050A1A] border border-[#173541] p-1 flex items-center justify-center font-black text-xs text-[#19D89A] font-mono overflow-hidden shrink-0">
-                    {team1Logo ? (
-                      <img src={team1Logo} alt={team1Name} className="w-full h-full object-cover rounded-lg" />
+                    {isValidImageUrl(team1Logo) ? (
+                      <img src={sanitizeImageUrl(team1Logo)} alt={team1Name} className="w-full h-full object-cover rounded-lg" />
                     ) : (
                       team1Short
                     )}
@@ -197,8 +198,8 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
               >
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#050A1A] border border-[#173541] p-1 flex items-center justify-center font-black text-xs text-[#19D89A] font-mono overflow-hidden shrink-0">
-                    {team2Logo ? (
-                      <img src={team2Logo} alt={team2Name} className="w-full h-full object-cover rounded-lg" />
+                    {isValidImageUrl(team2Logo) ? (
+                      <img src={sanitizeImageUrl(team2Logo)} alt={team2Name} className="w-full h-full object-cover rounded-lg" />
                     ) : (
                       team2Short
                     )}
@@ -482,8 +483,8 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
             <div className="flex-1 min-w-0 space-y-0.5">
               <div className="flex items-center gap-1.5">
                 <div className="w-4 h-4 rounded-md bg-[#050A1A] border border-[#173541] p-0.5 flex items-center justify-center overflow-hidden shrink-0">
-                  {battingTeamLogo ? (
-                    <img src={battingTeamLogo} alt={battingTeamName} className="w-full h-full object-cover rounded-sm" />
+                  {isValidImageUrl(battingTeamLogo) ? (
+                    <img src={sanitizeImageUrl(battingTeamLogo)} alt={battingTeamName} className="w-full h-full object-cover rounded-sm" />
                   ) : (
                     <span className="font-black text-[8px] text-[#19D89A] font-mono">{battingTeamShort}</span>
                   )}

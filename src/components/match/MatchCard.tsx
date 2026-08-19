@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Calendar, Play, Pencil, Trash2 } from 'lucide-react';
+import { isValidImageUrl, sanitizeImageUrl } from '@/lib/imageUtils';
 
 interface MatchCardProps {
   match: {
@@ -123,9 +124,9 @@ export default function MatchCard({
           <div className="space-y-1">
             <div className="flex items-center gap-2.5">
               <div className="w-9 h-9 rounded-xl bg-[#050A1A] border border-[#172D42] p-0.5 flex items-center justify-center overflow-hidden shrink-0">
-                {team1Logo ? (
+                {isValidImageUrl(team1Logo) ? (
                   <img
-                    src={team1Logo.includes('/storage/v1/object/') && !team1Logo.includes('/storage/v1/object/public/') ? team1Logo.replace('/storage/v1/object/', '/storage/v1/object/public/') : team1Logo}
+                    src={sanitizeImageUrl(team1Logo)}
                     alt={team1Name}
                     className="w-full h-full object-cover rounded-lg"
                     onError={(e) => {
@@ -154,9 +155,9 @@ export default function MatchCard({
                 {team2ScoreText}
               </span>
               <div className="w-9 h-9 rounded-xl bg-[#050A1A] border border-[#172D42] p-0.5 flex items-center justify-center overflow-hidden shrink-0">
-                {team2Logo ? (
+                {isValidImageUrl(team2Logo) ? (
                   <img
-                    src={team2Logo.includes('/storage/v1/object/') && !team2Logo.includes('/storage/v1/object/public/') ? team2Logo.replace('/storage/v1/object/', '/storage/v1/object/public/') : team2Logo}
+                    src={sanitizeImageUrl(team2Logo)}
                     alt={team2Name}
                     className="w-full h-full object-cover rounded-lg"
                     onError={(e) => {
@@ -241,9 +242,9 @@ export default function MatchCard({
             {/* Team 1 */}
             <div className="col-span-3 flex flex-col items-center text-center space-y-2">
               <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-[#050A1A] border border-[#173541] p-1.5 flex items-center justify-center shadow-lg overflow-hidden shrink-0">
-                {team1Logo ? (
+                {isValidImageUrl(team1Logo) ? (
                   <img 
-                    src={team1Logo.includes('/storage/v1/object/') && !team1Logo.includes('/storage/v1/object/public/') ? team1Logo.replace('/storage/v1/object/', '/storage/v1/object/public/') : team1Logo} 
+                    src={sanitizeImageUrl(team1Logo)} 
                     alt={team1Name} 
                     className="w-full h-full object-cover rounded-xl"
                     onError={(e) => {
@@ -272,9 +273,9 @@ export default function MatchCard({
             {/* Team 2 */}
             <div className="col-span-3 flex flex-col items-center text-center space-y-2">
               <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-[#050A1A] border border-[#173541] p-1.5 flex items-center justify-center shadow-lg overflow-hidden shrink-0">
-                {team2Logo ? (
+                {isValidImageUrl(team2Logo) ? (
                   <img 
-                    src={team2Logo.includes('/storage/v1/object/') && !team2Logo.includes('/storage/v1/object/public/') ? team2Logo.replace('/storage/v1/object/', '/storage/v1/object/public/') : team2Logo} 
+                    src={sanitizeImageUrl(team2Logo)} 
                     alt={team2Name} 
                     className="w-full h-full object-cover rounded-xl" 
                     onError={(e) => {
@@ -399,9 +400,9 @@ export default function MatchCard({
           {/* TEAM 1 */}
           <div className="col-span-3 flex flex-col items-center text-center">
             <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-[#050A1A] border border-[#173541] p-1 flex items-center justify-center shadow-inner overflow-hidden shrink-0">
-              {team1Logo ? (
+              {isValidImageUrl(team1Logo) ? (
                 <img 
-                  src={team1Logo.includes('/storage/v1/object/') && !team1Logo.includes('/storage/v1/object/public/') ? team1Logo.replace('/storage/v1/object/', '/storage/v1/object/public/') : team1Logo} 
+                  src={sanitizeImageUrl(team1Logo)} 
                   alt={team1Name} 
                   className="w-full h-full object-cover rounded-xl"
                   onError={(e) => {
@@ -428,9 +429,9 @@ export default function MatchCard({
           {/* TEAM 2 */}
           <div className="col-span-3 flex flex-col items-center text-center">
             <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-[#050A1A] border border-[#173541] p-1 flex items-center justify-center shadow-inner overflow-hidden shrink-0">
-              {team2Logo ? (
+              {isValidImageUrl(team2Logo) ? (
                 <img 
-                  src={team2Logo.includes('/storage/v1/object/') && !team2Logo.includes('/storage/v1/object/public/') ? team2Logo.replace('/storage/v1/object/', '/storage/v1/object/public/') : team2Logo} 
+                  src={sanitizeImageUrl(team2Logo)} 
                   alt={team2Name} 
                   className="w-full h-full object-cover rounded-xl" 
                   onError={(e) => {

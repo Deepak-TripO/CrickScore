@@ -5,6 +5,7 @@ import MobileNav from '@/components/navigation/MobileNav';
 import Link from 'next/link';
 import { getUserAndRole, getCurrentUserProfile } from '@/lib/auth';
 import { User, Edit, Mail, MapPin } from 'lucide-react';
+import { isValidImageUrl, sanitizeImageUrl } from '@/lib/imageUtils';
 
 export default async function ProfilePage() {
   const { user, role: userRole } = await getUserAndRole();
@@ -22,8 +23,8 @@ export default async function ProfilePage() {
         <div className="bg-[#0D1528] border border-[#173541] rounded-2xl p-6 sm:p-8 space-y-6 shadow-xl">
           <div className="flex items-center gap-4">
             <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-[#111A2D] border-2 border-[#19D89A]/50 shrink-0 overflow-hidden flex items-center justify-center font-black text-2xl text-[#19D89A] uppercase shadow-lg">
-              {profile?.avatar_url ? (
-                <img src={profile.avatar_url} alt={profile?.full_name || 'Profile'} className="w-full h-full object-cover" />
+              {isValidImageUrl(profile?.avatar_url) ? (
+                <img src={sanitizeImageUrl(profile?.avatar_url)} alt={profile?.full_name || 'Profile'} className="w-full h-full object-cover" />
               ) : (
                 <User className="w-10 h-10 text-[#19D89A]" />
               )}
