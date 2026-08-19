@@ -374,6 +374,8 @@ export async function scoreBall(payload: {
 
   revalidatePath(`/master/matches/${payload.matchId}/score`);
   revalidatePath(`/matches/${payload.matchId}`);
+  revalidatePath('/master/dashboard');
+  revalidatePath('/');
   return { success: true, newState };
 }
 
@@ -462,6 +464,8 @@ export async function undoLastBall(matchId: string, inningsId: string) {
 
   revalidatePath(`/master/matches/${matchId}/score`);
   revalidatePath(`/matches/${matchId}`);
+  revalidatePath('/master/dashboard');
+  revalidatePath('/');
   return { success: true, newState };
 }
 

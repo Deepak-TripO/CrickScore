@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { scoreBall, undoLastBall, setBattingTeam } from '@/actions/scoring';
-import { ExtraType, WicketType } from '@/lib/cricket/engine';
+import { ExtraType, WicketType, InningsState } from '@/lib/cricket/engine';
 import { ArrowLeft, RotateCcw, AlertTriangle, ChevronRight, RefreshCw, X, MoreHorizontal, Play, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -45,6 +45,9 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
   const [nonStrikerId, setNonStrikerId] = useState<string>(battingPlayers[1]?.id || '');
   const [bowlerId, setBowlerId] = useState<string>(bowlingPlayers[0]?.id || '');
 
+  // Live Innings State for real-time score & player stats synchronization
+  const [liveInningsState, setLiveInningsState] = useState<InningsState | null>(null);
+
   // Modals / Bottom Sheets
   const [isWicketModalOpen, setIsWicketModalOpen] = useState<boolean>(false);
   const [isMoreModalOpen, setIsMoreModalOpen] = useState<boolean>(false);
@@ -60,14 +63,6 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
   const [loading, setLoading] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string>('');
 
-  // Ball History State
-  const [recentBalls, setRecentBalls] = useState<Array<{ ball: string; run: number | string; type?: string }>>([
-    { ball: '10.1', run: 1 },
-    { ball: '10.2', run: 4 },
-    { ball: '10.3', run: 'W' },
-    { ball: '10.4', run: 2 }
-  ]);
-
   // Always resolve a valid UUID string for inningsId
   const safeInningsId = (activeInnings?.id && activeInnings.id !== 'inn1') ? activeInnings.id : match.id;
 
@@ -79,6 +74,32 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
     setToastMsg(msg);
     setTimeout(() => setToastMsg(''), 3000);
   };
+
+  // Dynamic live score stats
+  const displayRuns = liveInningsState ? liveInningsState.totalRuns : (activeInnings?.total_runs || 0);
+  const displayWickets = liveInningsState ? liveInningsState.totalWickets : (activeInnings?.total_wickets || 0);
+  const displayOvers = liveInningsState ? liveInningsState.oversFormatted : (activeInnings?.total_overs || 0.0).toFixed(1);
+
+  const crrValue = (((activeInnings?.total_runs || 0) / (activeInnings?.total_overs || 1))).toFixed(2);
+  const displayCRR = liveInningsState ? liveInningsState.currentRunRate : crrValue;
+
+  const rrr = match.target 
+    ? (((match.target - displayRuns) / Math.max((match.overs - (activeInnings?.total_overs || 0)), 0.1))).toFixed(2)
+    : 'N/A';
+
+  // Dynamic player stats
+  const strikerStats = liveInningsState?.batters[strikerId];
+  const strikerRuns = strikerStats ? strikerStats.runs : 0;
+  const strikerBalls = strikerStats ? strikerStats.balls : 0;
+
+  const nonStrikerStats = liveInningsState?.batters[nonStrikerId];
+  const nonStrikerRuns = nonStrikerStats ? nonStrikerStats.runs : 0;
+  const nonStrikerBalls = nonStrikerStats ? nonStrikerStats.balls : 0;
+
+  const bowlerStats = liveInningsState?.bowlers[bowlerId];
+  const bowlerOvers = bowlerStats ? bowlerStats.oversFormatted : '0.0';
+  const bowlerRuns = bowlerStats ? bowlerStats.runsConceded : 0;
+  const bowlerWickets = bowlerStats ? bowlerStats.wickets : 0;
 
   // =========================================================================
   // 1. TEAM SELECTION SCREEN (FIRST STEP BEFORE LIVE SCORING PANEL)
@@ -214,12 +235,9 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
       if (res?.error) {
         setErrorMsg(res.error);
       } else if (res?.newState) {
+        setLiveInningsState(res.newState);
         setStrikerId(res.newState.strikerId);
         setNonStrikerId(res.newState.nonStrikerId);
-        
-        const nextBallNum = ((activeInnings.total_overs || 0) + 0.1).toFixed(1);
-        const displayRun = extraType !== 'NONE' ? `${extraType === 'WIDE' ? '1wd' : extraType === 'NO_BALL' ? '1nb' : runsBatter}` : runsBatter;
-        setRecentBalls(prev => [...prev.slice(-3), { ball: nextBallNum, run: displayRun }]);
         
         showToast(extraType !== 'NONE' ? `${extraType.replace('_', ' ')} recorded` : `${runsBatter} run${runsBatter === 1 ? '' : 's'} added`);
       }
@@ -255,6 +273,7 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
       if (res?.error) {
         setErrorMsg(res.error);
       } else if (res?.newState) {
+        setLiveInningsState(res.newState);
         if (nextBatterId) {
           if ((dismissedPlayerId || strikerId) === strikerId) {
             setStrikerId(nextBatterId);
@@ -262,8 +281,6 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
             setNonStrikerId(nextBatterId);
           }
         }
-        const nextBallNum = ((activeInnings.total_overs || 0) + 0.1).toFixed(1);
-        setRecentBalls(prev => [...prev.slice(-3), { ball: nextBallNum, run: 'W' }]);
         showToast('Wicket recorded');
       }
     } catch (err: any) {
@@ -284,8 +301,8 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
 
       if (res?.error) {
         setErrorMsg(res.error);
-      } else {
-        setRecentBalls(prev => prev.slice(0, -1));
+      } else if (res?.newState) {
+        setLiveInningsState(res.newState);
         showToast('Last ball undone');
       }
     } catch (err: any) {
@@ -301,11 +318,6 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
     setNonStrikerId(temp);
     showToast('Striker swapped');
   };
-
-  const crr = (((activeInnings.total_runs || 0) / (activeInnings.total_overs || 1))).toFixed(2);
-  const rrr = match.target 
-    ? (((match.target - (activeInnings.total_runs || 0)) / Math.max((match.overs - (activeInnings.total_overs || 0)), 0.1))).toFixed(2)
-    : 'N/A';
 
   return (
     <div className="min-h-screen bg-[#050A1A] text-white selection:bg-[#19D89A] selection:text-black font-sans pb-16">
@@ -350,7 +362,7 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
       <div className="max-w-4xl mx-auto px-3 py-2.5 lg:grid lg:grid-cols-12 lg:gap-4 lg:items-start space-y-2.5 lg:space-y-0">
         
         {/* ========================================================== */}
-        {/* LEFT COLUMN (Scoreboard, Batters, Bowler, Over, History)   */}
+        {/* LEFT COLUMN (Scoreboard, Batters, Bowler, Over Timeline)   */}
         {/* ========================================================== */}
         <div className="lg:col-span-6 space-y-2.5">
           
@@ -373,10 +385,10 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
 
               <div className="flex items-baseline gap-2">
                 <div className="text-3xl sm:text-4xl font-black font-mono tracking-tight text-[#19D89A]">
-                  {activeInnings.total_runs || 0} <span className="text-white">/</span> {activeInnings.total_wickets || 0}
+                  {displayRuns} <span className="text-white">/</span> {displayWickets}
                 </div>
                 <div className="text-xs font-extrabold text-white font-mono">
-                  {(activeInnings.total_overs || 0.0).toFixed(1)} <span className="text-[9px] text-[#71809A]">OV</span>
+                  {displayOvers} <span className="text-[9px] text-[#71809A]">OV</span>
                 </div>
               </div>
 
@@ -391,11 +403,11 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
             {/* RIGHT SIDE: CRR DISPLAYED AT CENTER OF RIGHT SIDE */}
             <div className="flex flex-col items-center justify-center text-center shrink-0 pl-3 border-l border-[#173541] py-1 min-w-[64px]">
               <span className="text-[9px] font-black text-[#71809A] uppercase tracking-wider block">CRR</span>
-              <span className="text-base font-black text-[#19D89A] font-mono mt-0.5">{crr}</span>
+              <span className="text-base font-black text-[#19D89A] font-mono mt-0.5">{displayCRR}</span>
             </div>
           </div>
 
-          {/* 3. COMPACT ACTIVE BATTERS */}
+          {/* 3. COMPACT ACTIVE BATTERS WITH REAL DYNAMIC RUNS & BALLS */}
           <div className="bg-[#0D1528] border border-[#173541] rounded-2xl p-2.5 space-y-1.5">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-extrabold text-[#71809A] uppercase tracking-wider">Batters</span>
@@ -416,7 +428,7 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
                   <span className="truncate">{strikerPlayer?.full_name || strikerPlayer?.display_name || 'Striker'}</span>
                 </div>
                 <div className="text-xs font-extrabold text-[#19D89A] font-mono mt-0.5">
-                  56 <span className="text-[10px] text-[#AAB5CC] font-normal">(32)</span>
+                  {strikerRuns} <span className="text-[10px] text-[#AAB5CC] font-normal">({strikerBalls})</span>
                 </div>
               </div>
 
@@ -426,7 +438,7 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
                   <span className="truncate">{nonStrikerPlayer?.full_name || nonStrikerPlayer?.display_name || 'Non-Striker'}</span>
                 </div>
                 <div className="text-xs font-extrabold text-white font-mono mt-0.5 pl-2">
-                  24 <span className="text-[10px] text-[#71809A] font-normal">(18)</span>
+                  {nonStrikerRuns} <span className="text-[10px] text-[#71809A] font-normal">({nonStrikerBalls})</span>
                 </div>
               </div>
             </div>
@@ -471,7 +483,7 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
             )}
           </div>
 
-          {/* 4. COMPACT CURRENT BOWLER */}
+          {/* 4. COMPACT CURRENT BOWLER WITH DYNAMIC STATS */}
           <div className="bg-[#0D1528] border border-[#173541] rounded-2xl p-2 flex items-center justify-between">
             <div>
               <span className="text-[9px] font-extrabold text-[#71809A] uppercase tracking-wider block">Bowler</span>
@@ -480,17 +492,17 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
               </span>
             </div>
             <div className="flex items-center gap-2.5 text-xs font-extrabold font-mono text-[#AAB5CC]">
-              <div>2.4 <span className="text-[9px] font-semibold text-[#71809A]">OV</span></div>
-              <div>21 <span className="text-[9px] font-semibold text-[#71809A]">R</span></div>
-              <div className="text-[#19D89A]">1 <span className="text-[9px] font-semibold text-[#71809A]">W</span></div>
+              <div>{bowlerOvers} <span className="text-[9px] font-semibold text-[#71809A]">OV</span></div>
+              <div>{bowlerRuns} <span className="text-[9px] font-semibold text-[#71809A]">R</span></div>
+              <div className="text-[#19D89A]">{bowlerWickets} <span className="text-[9px] font-semibold text-[#71809A]">W</span></div>
             </div>
           </div>
 
           {/* 5. COMPACT CURRENT OVER STRIP */}
           <div className="bg-[#0D1528] border border-[#173541] rounded-2xl p-2 space-y-1">
             <div className="flex items-center justify-between text-[11px]">
-              <span className="font-extrabold text-[#AAB5CC] uppercase tracking-wider">OVER 11</span>
-              <span className="font-bold text-[#19D89A] text-[10px]">13 RUNS</span>
+              <span className="font-extrabold text-[#AAB5CC] uppercase tracking-wider">OVER {Math.floor((liveInningsState?.legalBalls || 0) / 6) + 1}</span>
+              <span className="font-bold text-[#19D89A] text-[10px]">CURRENT INNINGS</span>
             </div>
             <div className="flex items-center gap-1.5">
               {['●', '1', '4', 'W', '2', '0', '6'].map((ball, idx) => (
@@ -506,26 +518,6 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
                   {ball}
                 </span>
               ))}
-            </div>
-          </div>
-
-          {/* 6. COMPACT BALL HISTORY LIST */}
-          <div className="bg-[#0D1528] border border-[#173541] rounded-2xl p-2 space-y-1">
-            <span className="text-[10px] font-extrabold text-[#71809A] uppercase tracking-wider block mb-0.5">Ball History</span>
-            <div className="grid grid-cols-4 gap-1.5">
-              {recentBalls.map((b, idx) => (
-                <div key={idx} className="bg-[#111A2D] border border-[#173541] rounded-xl p-1 text-center">
-                  <div className="text-[9px] text-[#71809A] font-mono">{b.ball}</div>
-                  <div className={`text-xs font-black font-mono ${b.run === 'W' ? 'text-[#E5232F]' : b.run === 4 ? 'text-[#315BEA]' : b.run === 6 ? 'text-[#19D89A]' : 'text-white'}`}>
-                    {b.run}
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="pt-0.5 text-center">
-              <Link href={`/matches/${match.id}`} className="text-[10px] font-bold text-[#19D89A] hover:underline inline-flex items-center gap-1">
-                View Full Scorecard <ChevronRight className="w-3 h-3" />
-              </Link>
             </div>
           </div>
 

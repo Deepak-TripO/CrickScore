@@ -83,11 +83,11 @@ export default function MatchCard({
   if (isHomePageCard || isHistoryView) {
     const categoryType = (match.category || 'TOURNAMENT').toUpperCase();
 
-    const team1ScoreText = match.current_score || (isLive || isCompleted ? '142/6' : '0/0');
-    const team1OversText = match.current_over ? `(${match.current_over} Ov)` : (isLive || isCompleted ? '(16.3 Ov)' : '(0.0 Ov)');
+    const team1ScoreText = match.current_score || '0/0';
+    const team1OversText = `(${match.current_over || 0.0} Ov)`;
 
-    const team2ScoreText = isLive || isCompleted ? '126/8' : '0/0';
-    const team2OversText = isLive || isCompleted ? '(15.5 Ov)' : '(0.0 Ov)';
+    const team2ScoreText = isLive || isCompleted ? '0/0' : '0/0';
+    const team2OversText = '(0.0 Ov)';
 
     return (
       <div
