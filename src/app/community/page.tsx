@@ -1,9 +1,10 @@
 import React from 'react';
 import Navbar from '@/components/navigation/Navbar';
 import MobileNav from '@/components/navigation/MobileNav';
+import CommunityCard from '@/components/community/CommunityCard';
 import { getUserAndRole } from '@/lib/auth';
 import Link from 'next/link';
-import { Users, PlusCircle, Sparkles, Shield } from 'lucide-react';
+import { Users, PlusCircle } from 'lucide-react';
 import { getPublicCommunities } from '@/actions/community';
 
 export default async function CommunityPage() {
@@ -58,69 +59,9 @@ export default async function CommunityPage() {
 
         {/* COMMUNITY DIRECTORY GRID */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {allCommunities.map((c: any) => {
-            const defaultCover = 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?auto=format&fit=crop&w=1200&q=80';
-            const defaultProfile = 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&w=300&q=80';
-
-            const coverUrl = c.coverImage || c.cover_image || c.banner_url || defaultCover;
-            const profileUrl = c.profileImage || c.profile_image || c.logo_url || defaultProfile;
-
-            return (
-              <div 
-                key={c.id} 
-                className="bg-[#0D1528] border border-[#173541] rounded-2xl overflow-hidden shadow-lg hover:border-[#19D89A]/40 transition-all group flex flex-col justify-between"
-              >
-                <div>
-                  {/* COVER IMAGE BANNER */}
-                  <div className="relative h-24 sm:h-28 w-full bg-[#050A1A] overflow-hidden">
-                    <img 
-                      src={coverUrl} 
-                      alt="" 
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      onError={(e) => {
-                        (e.currentTarget as HTMLImageElement).src = defaultCover;
-                      }}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#0D1528] via-transparent to-black/20" />
-                  </div>
-
-                  {/* PROFILE IMAGE & DETAILS */}
-                  <div className="px-4 pb-4 relative space-y-2">
-                    <div className="-mt-7 flex items-end justify-between">
-                      <div className="w-12 h-12 rounded-xl bg-[#050A1A] border-2 border-[#0D1528] overflow-hidden shadow-md shrink-0">
-                        <img 
-                          src={profileUrl} 
-                          alt="" 
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            (e.currentTarget as HTMLImageElement).src = defaultProfile;
-                          }}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-0.5">
-                      <h3 className="text-sm font-black text-white group-hover:text-[#19D89A] transition-colors line-clamp-1">
-                        {c.name}
-                      </h3>
-                      <p className="text-xs text-[#AAB5CC] line-clamp-2 leading-relaxed">
-                        {c.bio || c.desc || 'No community description provided.'}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* ACTION FOOTER */}
-                <div className="px-4 py-2.5 bg-[#050A1A]/60 border-t border-[#173541] flex items-center justify-between">
-                  <span className="text-[10px] font-bold text-[#AAB5CC]">Master Created</span>
-                  <button className="px-3 py-1 bg-[#111A2D] hover:bg-[#19D89A] hover:text-[#050A1A] border border-[#173541] text-xs font-black text-[#19D89A] rounded-lg transition-all shadow-sm">
-                    Join
-                  </button>
-                </div>
-
-              </div>
-            );
-          })}
+          {allCommunities.map((c: any) => (
+            <CommunityCard key={c.id} community={c} />
+          ))}
         </div>
 
       </main>
