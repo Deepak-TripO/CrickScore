@@ -111,6 +111,7 @@ export async function fetchMatchesSafely(options?: {
         const team2Id = m.team2_id || m.team_b_id;
         let team1 = null;
         let team2 = null;
+        let innings = [];
 
         if (team1Id) {
           const { data: t1 } = await db
@@ -130,6 +131,14 @@ export async function fetchMatchesSafely(options?: {
           team2 = t2;
         }
 
+        try {
+          const { data: innData } = await db
+            .from('innings')
+            .select('*')
+            .eq('match_id', m.id);
+          if (Array.isArray(innData)) innings = innData;
+        } catch {}
+
         // Precise Team Name Resolution
         const t1Name = team1?.name || m.your_team_name || m.team1_name || m.team_a_name || (m.title ? m.title.split(' vs ')[0] : null);
         const t1Logo = team1?.logo_url || m.your_team_logo_url || m.team1_logo_url || m.team_a_logo_url || null;
@@ -141,6 +150,7 @@ export async function fetchMatchesSafely(options?: {
 
         return {
           ...m,
+          innings,
           team1: {
             id: team1?.id || team1Id,
             name: t1Name || 'Team 1',

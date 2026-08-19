@@ -37,94 +37,90 @@ export default async function CommunityPage() {
     <div className="min-h-screen bg-[#050A1A] text-white flex flex-col font-sans pb-24 md:pb-0">
       <Navbar user={user} userRole={userRole} />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4">
         
-        {/* HEADER AREA */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-[#0D1528] border border-[#173541] rounded-3xl p-6 sm:p-8 shadow-xl">
-          <div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#19D89A]/10 border border-[#19D89A]/30 text-[#19D89A] text-[10px] font-extrabold uppercase tracking-wider mb-2">
-              <Users className="w-3.5 h-3.5" />
-              <span>Cricket Network</span>
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-black text-white">Cricket Community Directory</h1>
-            <p className="text-xs text-[#AAB5CC] mt-1">Discover, join, and interact with Master-created local cricket clubs and leagues.</p>
-          </div>
+        {/* TABS & CREATE BUTTON */}
+        <div className="flex items-center justify-between border-b border-[#173541] pb-3">
+          <button className="px-3.5 py-1.5 bg-[#19D89A] text-[#050A1A] font-extrabold text-xs rounded-xl shadow-md">
+            Discover Communities
+          </button>
 
-          {/* CREATE COMMUNITY BUTTON — SHOWN ONLY TO MASTER / ADMIN USERS */}
           {isMasterOrAdmin && (
-            <div className="flex items-center gap-2">
-              <Link 
-                href="/master/dashboard?tab=community" 
-                className="px-5 py-3 bg-[#19D89A] hover:bg-emerald-400 text-[#050A1A] font-black text-xs rounded-xl shadow-lg shadow-[#19D89A]/20 transition-all uppercase tracking-wider flex items-center gap-2"
-              >
-                <PlusCircle className="w-4 h-4" /> 
-                <span>Create Community</span>
-              </Link>
-            </div>
+            <Link 
+              href="/master/dashboard?tab=community" 
+              className="px-3.5 py-1.5 bg-[#19D89A]/15 hover:bg-[#19D89A]/25 border border-[#19D89A]/40 text-[#19D89A] font-extrabold text-xs rounded-xl transition-all uppercase tracking-wider flex items-center gap-1.5"
+            >
+              <PlusCircle className="w-3.5 h-3.5" /> 
+              <span>Create</span>
+            </Link>
           )}
         </div>
 
-        {/* TABS */}
-        <div className="flex items-center gap-2 border-b border-[#173541] pb-3">
-          <button className="px-4 py-2 bg-[#19D89A] text-[#050A1A] font-extrabold text-xs rounded-xl shadow-md">
-            Discover Communities
-          </button>
-        </div>
-
         {/* COMMUNITY DIRECTORY GRID */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {allCommunities.map((c: any) => (
-            <div 
-              key={c.id} 
-              className="bg-[#0D1528] border border-[#173541] rounded-3xl overflow-hidden shadow-xl hover:border-[#19D89A]/40 transition-all group flex flex-col justify-between"
-            >
-              <div>
-                {/* COVER IMAGE BANNER */}
-                <div className="relative h-32 w-full bg-[#050A1A] overflow-hidden">
-                  <img 
-                    src={c.coverImage || 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?auto=format&fit=crop&w=1200&q=80'} 
-                    alt={`${c.name} Cover`} 
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#0D1528] via-transparent to-black/20" />
-                </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {allCommunities.map((c: any) => {
+            const defaultCover = 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?auto=format&fit=crop&w=1200&q=80';
+            const defaultProfile = 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&w=300&q=80';
 
-                {/* PROFILE IMAGE & DETAILS */}
-                <div className="px-5 pb-5 relative space-y-3">
-                  <div className="-mt-10 flex items-end justify-between">
-                    <div className="w-16 h-16 rounded-2xl bg-[#050A1A] border-4 border-[#0D1528] overflow-hidden shadow-lg shrink-0">
-                      <img 
-                        src={c.profileImage || 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&w=300&q=80'} 
-                        alt={c.name} 
-                        className="w-full h-full object-cover"
-                      />
+            const coverUrl = c.coverImage || c.cover_image || c.banner_url || defaultCover;
+            const profileUrl = c.profileImage || c.profile_image || c.logo_url || defaultProfile;
+
+            return (
+              <div 
+                key={c.id} 
+                className="bg-[#0D1528] border border-[#173541] rounded-2xl overflow-hidden shadow-lg hover:border-[#19D89A]/40 transition-all group flex flex-col justify-between"
+              >
+                <div>
+                  {/* COVER IMAGE BANNER */}
+                  <div className="relative h-24 sm:h-28 w-full bg-[#050A1A] overflow-hidden">
+                    <img 
+                      src={coverUrl} 
+                      alt="" 
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      onError={(e) => {
+                        (e.currentTarget as HTMLImageElement).src = defaultCover;
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0D1528] via-transparent to-black/20" />
+                  </div>
+
+                  {/* PROFILE IMAGE & DETAILS */}
+                  <div className="px-4 pb-4 relative space-y-2">
+                    <div className="-mt-7 flex items-end justify-between">
+                      <div className="w-12 h-12 rounded-xl bg-[#050A1A] border-2 border-[#0D1528] overflow-hidden shadow-md shrink-0">
+                        <img 
+                          src={profileUrl} 
+                          alt="" 
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.currentTarget as HTMLImageElement).src = defaultProfile;
+                          }}
+                        />
+                      </div>
                     </div>
-                    <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-[#19D89A]/15 text-[#19D89A] border border-[#19D89A]/30">
-                      {c.members || 'Active Club'}
-                    </span>
-                  </div>
 
-                  <div className="space-y-1">
-                    <h3 className="text-base font-black text-white group-hover:text-[#19D89A] transition-colors">
-                      {c.name}
-                    </h3>
-                    <p className="text-xs text-[#AAB5CC] line-clamp-3 leading-relaxed">
-                      {c.bio || c.desc}
-                    </p>
+                    <div className="space-y-0.5">
+                      <h3 className="text-sm font-black text-white group-hover:text-[#19D89A] transition-colors line-clamp-1">
+                        {c.name}
+                      </h3>
+                      <p className="text-xs text-[#AAB5CC] line-clamp-2 leading-relaxed">
+                        {c.bio || c.desc || 'No community description provided.'}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* ACTION FOOTER */}
-              <div className="px-5 py-3.5 bg-[#050A1A]/60 border-t border-[#173541] flex items-center justify-between">
-                <span className="text-[11px] font-bold text-[#AAB5CC]">Master Created</span>
-                <button className="px-4 py-1.5 bg-[#111A2D] hover:bg-[#19D89A] hover:text-[#050A1A] border border-[#173541] text-xs font-extrabold text-[#19D89A] rounded-xl transition-all shadow-sm">
-                  Join Community
-                </button>
-              </div>
+                {/* ACTION FOOTER */}
+                <div className="px-4 py-2.5 bg-[#050A1A]/60 border-t border-[#173541] flex items-center justify-between">
+                  <span className="text-[10px] font-bold text-[#AAB5CC]">Master Created</span>
+                  <button className="px-3 py-1 bg-[#111A2D] hover:bg-[#19D89A] hover:text-[#050A1A] border border-[#173541] text-xs font-black text-[#19D89A] rounded-lg transition-all shadow-sm">
+                    Join
+                  </button>
+                </div>
 
-            </div>
-          ))}
+              </div>
+            );
+          })}
         </div>
 
       </main>
