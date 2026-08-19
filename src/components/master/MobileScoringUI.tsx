@@ -101,6 +101,11 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
   const bowlerRuns = bowlerStats ? bowlerStats.runsConceded : 0;
   const bowlerWickets = bowlerStats ? bowlerStats.wickets : 0;
 
+  // Dynamic current over stats
+  const currentOverNum = Math.floor((liveInningsState?.legalBalls || 0) / 6) + 1;
+  const currentOverBallsList = liveInningsState?.currentOverDeliveries || [];
+  const currentOverTotalRuns = liveInningsState?.currentOverRuns || 0;
+
   // =========================================================================
   // 1. TEAM SELECTION SCREEN (FIRST STEP BEFORE LIVE SCORING PANEL)
   // =========================================================================
@@ -498,26 +503,32 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
             </div>
           </div>
 
-          {/* 5. COMPACT CURRENT OVER STRIP */}
+          {/* 5. DYNAMIC CURRENT OVER STRIP */}
           <div className="bg-[#0D1528] border border-[#173541] rounded-2xl p-2 space-y-1">
             <div className="flex items-center justify-between text-[11px]">
-              <span className="font-extrabold text-[#AAB5CC] uppercase tracking-wider">OVER {Math.floor((liveInningsState?.legalBalls || 0) / 6) + 1}</span>
-              <span className="font-bold text-[#19D89A] text-[10px]">CURRENT INNINGS</span>
+              <span className="font-extrabold text-[#AAB5CC] uppercase tracking-wider">OVER {currentOverNum}</span>
+              <span className="font-bold text-[#19D89A] text-[10px]">{currentOverTotalRuns} RUNS</span>
             </div>
-            <div className="flex items-center gap-1.5">
-              {['●', '1', '4', 'W', '2', '0', '6'].map((ball, idx) => (
-                <span 
-                  key={idx}
-                  className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black shadow-sm ${
-                    ball === '4' ? 'bg-[#315BEA] text-white' :
-                    ball === '6' ? 'bg-[#19D89A] text-[#050A1A]' :
-                    ball === 'W' ? 'bg-[#E5232F] text-white' :
-                    'bg-[#111A2D] text-[#AAB5CC] border border-[#173541]'
-                  }`}
-                >
-                  {ball}
+            <div className="flex items-center gap-1.5 min-h-[26px]">
+              {currentOverBallsList.length > 0 ? (
+                currentOverBallsList.map((ballObj: any, idx: number) => (
+                  <span 
+                    key={idx}
+                    className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-black shadow-sm ${
+                      ballObj.display === '4' ? 'bg-[#315BEA] text-white' :
+                      ballObj.display === '6' ? 'bg-[#19D89A] text-[#050A1A]' :
+                      ballObj.isWicket || ballObj.display === 'W' ? 'bg-[#E5232F] text-white' :
+                      'bg-[#111A2D] text-[#AAB5CC] border border-[#173541]'
+                    }`}
+                  >
+                    {ballObj.display}
+                  </span>
+                ))
+              ) : (
+                <span className="text-[10px] text-[#71809A] font-semibold italic pl-1">
+                  No balls bowled in this over yet
                 </span>
-              ))}
+              )}
             </div>
           </div>
 

@@ -67,6 +67,8 @@ export interface InningsState {
   oversFormatted: string; // e.g. "17.3"
   currentOverNumber: number;
   currentBallInOver: number;
+  currentOverDeliveries?: Array<{ display: string; runs: number; isWicket: boolean; extraType: ExtraType }>;
+  currentOverRuns?: number;
   strikerId: string;
   nonStrikerId: string;
   currentBowlerId: string;
@@ -223,6 +225,9 @@ export function processInningsDeliveries(
   let overLegalBallsCount = 0;
   let overRunsConcededCount = 0;
 
+  let currentOverDeliveries: Array<{ display: string; runs: number; isWicket: boolean; extraType: ExtraType }> = [];
+  let currentOverRuns = 0;
+
   for (let i = 0; i < (deliveries || []).length; i++) {
     const d = deliveries[i];
     if (!d) continue;
@@ -234,16 +239,38 @@ export function processInningsDeliveries(
     const isLegal = isLegalDelivery(d.extraType);
 
     // Calculate ball total runs
-    let deliveryTotalRuns = d.runsBatter + d.runsExtras;
+    let deliveryTotalRuns = (d.runsBatter || 0) + (d.runsExtras || 0);
     if (d.extraType === 'WIDE' || d.extraType === 'NO_BALL') {
       deliveryTotalRuns += 1; // standard penalty run
     }
 
     totalRuns += deliveryTotalRuns;
 
+    // Ball display text for current over strip
+    let ballDisplay = String(d.runsBatter || 0);
+    if (d.wicket) {
+      ballDisplay = 'W';
+    } else if (d.extraType === 'WIDE') {
+      ballDisplay = `${1 + (d.runsExtras || 0)}wd`;
+    } else if (d.extraType === 'NO_BALL') {
+      ballDisplay = `${1 + (d.runsBatter || 0)}nb`;
+    } else if (d.extraType === 'BYE') {
+      ballDisplay = `${d.runsExtras || 1}b`;
+    } else if (d.extraType === 'LEG_BYE') {
+      ballDisplay = `${d.runsExtras || 1}lb`;
+    }
+
+    currentOverDeliveries.push({
+      display: ballDisplay,
+      runs: deliveryTotalRuns,
+      isWicket: Boolean(d.wicket),
+      extraType: d.extraType || 'NONE'
+    });
+    currentOverRuns += deliveryTotalRuns;
+
     // Track Extras
     if (d.extraType === 'WIDE') {
-      const wRuns = 1 + d.runsExtras;
+      const wRuns = 1 + (d.runsExtras || 0);
       extras.wides += wRuns;
       extras.total += wRuns;
       bowlers[currentBowlerId].wides += 1;
@@ -254,17 +281,17 @@ export function processInningsDeliveries(
       extras.noBalls += nbRuns;
       extras.total += nbRuns;
       bowlers[currentBowlerId].noBalls += 1;
-      bowlers[currentBowlerId].runsConceded += nbRuns + d.runsBatter;
-      overRunsConcededCount += nbRuns + d.runsBatter;
+      bowlers[currentBowlerId].runsConceded += nbRuns + (d.runsBatter || 0);
+      overRunsConcededCount += nbRuns + (d.runsBatter || 0);
     } else if (d.extraType === 'BYE') {
-      extras.byes += d.runsExtras;
-      extras.total += d.runsExtras;
+      extras.byes += (d.runsExtras || 0);
+      extras.total += (d.runsExtras || 0);
     } else if (d.extraType === 'LEG_BYE') {
-      extras.legByes += d.runsExtras;
-      extras.total += d.runsExtras;
+      extras.legByes += (d.runsExtras || 0);
+      extras.total += (d.runsExtras || 0);
     } else if (d.extraType === 'PENALTY') {
-      extras.penalty += d.runsExtras;
-      extras.total += d.runsExtras;
+      extras.penalty += (d.runsExtras || 0);
+      extras.total += (d.runsExtras || 0);
     }
 
     // Batter stats
@@ -274,13 +301,13 @@ export function processInningsDeliveries(
     }
 
     if (d.extraType === 'NONE' || d.extraType === 'NO_BALL') {
-      batters[strikerId].runs += d.runsBatter;
+      batters[strikerId].runs += (d.runsBatter || 0);
       if (d.runsBatter === 4) batters[strikerId].fours += 1;
       if (d.runsBatter === 6) batters[strikerId].sixes += 1;
 
       if (d.extraType === 'NONE') {
-        bowlers[currentBowlerId].runsConceded += d.runsBatter;
-        overRunsConcededCount += d.runsBatter;
+        bowlers[currentBowlerId].runsConceded += (d.runsBatter || 0);
+        overRunsConcededCount += (d.runsBatter || 0);
       }
     }
 
@@ -312,8 +339,7 @@ export function processInningsDeliveries(
     // Wickets
     if (d.wicket) {
       totalWickets += 1;
-      const dismissedId = d.dismissedPlayerId || strikerId;
-      ensureBatter(dismissedId);
+      const dismissedId = ensureBatter(d.dismissedPlayerId || strikerId);
       batters[dismissedId].isOut = true;
       batters[dismissedId].dismissalInfo = d.wicketType || 'Out';
 
@@ -332,7 +358,7 @@ export function processInningsDeliveries(
     }
 
     // Strike Rotation (Physical runs swap)
-    const runningRuns = d.extraType === 'BYE' || d.extraType === 'LEG_BYE' ? d.runsExtras : d.runsBatter;
+    const runningRuns = d.extraType === 'BYE' || d.extraType === 'LEG_BYE' ? (d.runsExtras || 0) : (d.runsBatter || 0);
     if (runningRuns % 2 !== 0 && !d.wicket) {
       const temp = strikerId;
       strikerId = nonStrikerId;
@@ -346,6 +372,10 @@ export function processInningsDeliveries(
       }
       overLegalBallsCount = 0;
       overRunsConcededCount = 0;
+
+      // Reset current over deliveries buffer for the upcoming new over
+      currentOverDeliveries = [];
+      currentOverRuns = 0;
 
       // Swap strike at end of over
       const temp = strikerId;
@@ -367,6 +397,8 @@ export function processInningsDeliveries(
     oversFormatted: formatOvers(legalBalls),
     currentOverNumber,
     currentBallInOver,
+    currentOverDeliveries,
+    currentOverRuns,
     strikerId,
     nonStrikerId,
     currentBowlerId,
