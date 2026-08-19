@@ -25,6 +25,14 @@ function HomePageContent({
 
   const categories = ['ALL MATCHS', 'TOURNAMENT', 'LEAGUE', 'CLUB'];
 
+  // Real-time automatic score refresh for Live matches on Home Page
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      router.refresh();
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [router]);
+
   const handleClearSearch = () => {
     const params = new URLSearchParams(searchParams?.toString() || '');
     params.delete('search');
