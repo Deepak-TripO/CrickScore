@@ -184,7 +184,7 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
             }}
             className="w-full py-3.5 bg-[#19D89A] hover:bg-emerald-400 text-[#050A1A] font-black rounded-2xl text-xs uppercase tracking-wider shadow-lg shadow-[#19D89A]/20 transition-all active:scale-95 disabled:opacity-50"
           >
-            {loading ? 'Starting...' : 'Continue / Start Scoring'}
+            {loading ? 'Starting...' : 'Start'}
           </button>
         </div>
       </div>
@@ -296,7 +296,7 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
     <div className="min-h-screen bg-[#050A1A] text-white selection:bg-[#19D89A] selection:text-black font-sans pb-16">
       
       {/* 1. HEADER (CLEAN TOP BAR) */}
-      <header className="bg-[#080F20] border-b border-[#173541] px-4 py-2.5 sticky top-0 z-30 flex items-center justify-between">
+      <header className="bg-[#080F20] border-b border-[#173541] px-4 py-2 sticky top-0 z-30 flex items-center justify-between">
         <Link href="/master/dashboard" className="flex items-center gap-1.5 text-[#AAB5CC] hover:text-white transition-colors">
           <ArrowLeft className="w-4 h-4" />
           <span className="text-xs font-bold">Back</span>
@@ -332,51 +332,56 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
       )}
 
       {/* MAIN COMPACT LAYOUT CONTAINER */}
-      <div className="max-w-4xl mx-auto px-3.5 py-3 lg:grid lg:grid-cols-12 lg:gap-5 lg:items-start space-y-3 lg:space-y-0">
+      <div className="max-w-4xl mx-auto px-3 py-2.5 lg:grid lg:grid-cols-12 lg:gap-4 lg:items-start space-y-2.5 lg:space-y-0">
         
         {/* ========================================================== */}
         {/* LEFT COLUMN (Scoreboard, Batters, Bowler, Over, History)   */}
         {/* ========================================================== */}
-        <div className="lg:col-span-6 space-y-3">
+        <div className="lg:col-span-6 space-y-2.5">
           
-          {/* 2. COMPACT MAIN SCOREBOARD */}
-          <div className="bg-[#0D1528] border border-[#19D89A]/50 rounded-2xl p-3.5 text-center shadow-lg">
-            <div className="flex items-center justify-center gap-2 mb-0.5">
-              <div className="w-5 h-5 rounded-md bg-[#050A1A] border border-[#173541] p-0.5 flex items-center justify-center overflow-hidden shrink-0">
-                {battingTeamLogo ? (
-                  <img src={battingTeamLogo} alt={battingTeamName} className="w-full h-full object-cover rounded-sm" />
-                ) : (
-                  <span className="font-black text-[9px] text-[#19D89A] font-mono">{battingTeamShort}</span>
-                )}
+          {/* 2. COMPACT MAIN SCOREBOARD WITH CRR ON CENTER OF RIGHT SIDE */}
+          <div className="bg-[#0D1528] border border-[#19D89A]/50 rounded-2xl p-2.5 sm:p-3 shadow-lg flex items-center justify-between gap-3">
+            {/* LEFT / CENTER SCORE DETAILS */}
+            <div className="flex-1 min-w-0 space-y-0.5">
+              <div className="flex items-center gap-1.5">
+                <div className="w-4 h-4 rounded-md bg-[#050A1A] border border-[#173541] p-0.5 flex items-center justify-center overflow-hidden shrink-0">
+                  {battingTeamLogo ? (
+                    <img src={battingTeamLogo} alt={battingTeamName} className="w-full h-full object-cover rounded-sm" />
+                  ) : (
+                    <span className="font-black text-[8px] text-[#19D89A] font-mono">{battingTeamShort}</span>
+                  )}
+                </div>
+                <h2 className="text-xs font-black text-[#AAB5CC] uppercase tracking-wider truncate">
+                  {battingTeamName}
+                </h2>
               </div>
-              <h2 className="text-xs font-black text-[#AAB5CC] uppercase tracking-wider">
-                {battingTeamName}
-              </h2>
-            </div>
 
-            <div className="text-4xl sm:text-5xl font-black font-mono tracking-tight text-[#19D89A] py-0.5">
-              {activeInnings.total_runs || 0} <span className="text-white">/</span> {activeInnings.total_wickets || 0}
-            </div>
+              <div className="flex items-baseline gap-2">
+                <div className="text-3xl sm:text-4xl font-black font-mono tracking-tight text-[#19D89A]">
+                  {activeInnings.total_runs || 0} <span className="text-white">/</span> {activeInnings.total_wickets || 0}
+                </div>
+                <div className="text-xs font-extrabold text-white font-mono">
+                  {(activeInnings.total_overs || 0.0).toFixed(1)} <span className="text-[9px] text-[#71809A]">OV</span>
+                </div>
+              </div>
 
-            <div className="text-xs font-extrabold text-white font-mono mb-2">
-              {(activeInnings.total_overs || 0.0).toFixed(1)} <span className="text-[10px] text-[#71809A]">OV</span>
-            </div>
-
-            <div className="flex items-center justify-center gap-3 text-[11px] font-extrabold pt-1.5 border-t border-[#173541] text-[#AAB5CC]">
-              <div>CRR <span className="text-white font-mono ml-1">{crr}</span></div>
               {match.target && (
-                <>
-                  <div className="w-1 h-1 rounded-full bg-[#173541]" />
-                  <div>TARGET <span className="text-[#19D89A] font-mono ml-1">{match.target}</span></div>
-                  <div className="w-1 h-1 rounded-full bg-[#173541]" />
-                  <div>RRR <span className="text-[#315BEA] font-mono ml-1">{rrr}</span></div>
-                </>
+                <div className="text-[10px] font-bold text-[#AAB5CC] font-mono flex items-center gap-2">
+                  <span>TARGET <strong className="text-[#19D89A]">{match.target}</strong></span>
+                  <span>• RRR <strong className="text-[#315BEA]">{rrr}</strong></span>
+                </div>
               )}
+            </div>
+
+            {/* RIGHT SIDE: CRR DISPLAYED AT CENTER OF RIGHT SIDE */}
+            <div className="flex flex-col items-center justify-center text-center shrink-0 pl-3 border-l border-[#173541] py-1 min-w-[64px]">
+              <span className="text-[9px] font-black text-[#71809A] uppercase tracking-wider block">CRR</span>
+              <span className="text-base font-black text-[#19D89A] font-mono mt-0.5">{crr}</span>
             </div>
           </div>
 
           {/* 3. COMPACT ACTIVE BATTERS */}
-          <div className="bg-[#0D1528] border border-[#173541] rounded-2xl p-3 space-y-2">
+          <div className="bg-[#0D1528] border border-[#173541] rounded-2xl p-2.5 space-y-1.5">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-extrabold text-[#71809A] uppercase tracking-wider">Batters</span>
               <button 
@@ -452,7 +457,7 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
           </div>
 
           {/* 4. COMPACT CURRENT BOWLER */}
-          <div className="bg-[#0D1528] border border-[#173541] rounded-2xl p-2.5 flex items-center justify-between">
+          <div className="bg-[#0D1528] border border-[#173541] rounded-2xl p-2 flex items-center justify-between">
             <div>
               <span className="text-[9px] font-extrabold text-[#71809A] uppercase tracking-wider block">Bowler</span>
               <span className="text-xs font-bold text-white block mt-0.5">
@@ -467,7 +472,7 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
           </div>
 
           {/* 5. COMPACT CURRENT OVER STRIP */}
-          <div className="bg-[#0D1528] border border-[#173541] rounded-2xl p-2.5 space-y-1.5">
+          <div className="bg-[#0D1528] border border-[#173541] rounded-2xl p-2 space-y-1">
             <div className="flex items-center justify-between text-[11px]">
               <span className="font-extrabold text-[#AAB5CC] uppercase tracking-wider">OVER 11</span>
               <span className="font-bold text-[#19D89A] text-[10px]">13 RUNS</span>
@@ -490,11 +495,11 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
           </div>
 
           {/* 6. COMPACT BALL HISTORY LIST */}
-          <div className="bg-[#0D1528] border border-[#173541] rounded-2xl p-2.5 space-y-1.5">
+          <div className="bg-[#0D1528] border border-[#173541] rounded-2xl p-2 space-y-1">
             <span className="text-[10px] font-extrabold text-[#71809A] uppercase tracking-wider block mb-0.5">Ball History</span>
             <div className="grid grid-cols-4 gap-1.5">
               {recentBalls.map((b, idx) => (
-                <div key={idx} className="bg-[#111A2D] border border-[#173541] rounded-xl p-1.5 text-center">
+                <div key={idx} className="bg-[#111A2D] border border-[#173541] rounded-xl p-1 text-center">
                   <div className="text-[9px] text-[#71809A] font-mono">{b.ball}</div>
                   <div className={`text-xs font-black font-mono ${b.run === 'W' ? 'text-[#E5232F]' : b.run === 4 ? 'text-[#315BEA]' : b.run === 6 ? 'text-[#19D89A]' : 'text-white'}`}>
                     {b.run}
@@ -502,8 +507,8 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
                 </div>
               ))}
             </div>
-            <div className="pt-1 text-center">
-              <Link href={`/matches/${match.id}`} className="text-[11px] font-bold text-[#19D89A] hover:underline inline-flex items-center gap-1">
+            <div className="pt-0.5 text-center">
+              <Link href={`/matches/${match.id}`} className="text-[10px] font-bold text-[#19D89A] hover:underline inline-flex items-center gap-1">
                 View Full Scorecard <ChevronRight className="w-3 h-3" />
               </Link>
             </div>
@@ -514,19 +519,19 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
         {/* ========================================================== */}
         {/* RIGHT COLUMN (Run Keypad, Wicket, More, Undo)             */}
         {/* ========================================================== */}
-        <div className="lg:col-span-6 space-y-3">
+        <div className="lg:col-span-6 space-y-2.5">
           
           {/* 7. COMPACT SCORING KEYPAD (3x2 GRID) */}
-          <div className="bg-[#111A2D] border border-[#173541] rounded-2xl p-3 space-y-2.5 shadow-xl">
+          <div className="bg-[#111A2D] border border-[#173541] rounded-2xl p-2.5 space-y-2 shadow-xl">
             <span className="text-[10px] font-extrabold text-[#71809A] uppercase tracking-wider block">Runs</span>
             
-            <div className="grid grid-cols-3 gap-2.5">
+            <div className="grid grid-cols-3 gap-2">
               {/* RUN 0 */}
               <button
                 type="button"
                 disabled={loading}
                 onClick={() => handleScoreRun(0)}
-                className="h-16 rounded-xl bg-[#071022] hover:bg-[#0D1528] border border-[#173541] text-white font-black text-2xl transition-all active:scale-95 flex items-center justify-center"
+                className="h-14 sm:h-15 rounded-xl bg-[#071022] hover:bg-[#0D1528] border border-[#173541] text-white font-black text-xl sm:text-2xl transition-all active:scale-95 flex items-center justify-center"
               >
                 0
               </button>
@@ -536,7 +541,7 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
                 type="button"
                 disabled={loading}
                 onClick={() => handleScoreRun(1)}
-                className="h-16 rounded-xl bg-[#071022] hover:bg-[#0D1528] border border-[#173541] text-[#19D89A] font-black text-2xl transition-all active:scale-95 flex items-center justify-center"
+                className="h-14 sm:h-15 rounded-xl bg-[#071022] hover:bg-[#0D1528] border border-[#173541] text-[#19D89A] font-black text-xl sm:text-2xl transition-all active:scale-95 flex items-center justify-center"
               >
                 1
               </button>
@@ -546,7 +551,7 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
                 type="button"
                 disabled={loading}
                 onClick={() => handleScoreRun(2)}
-                className="h-16 rounded-xl bg-[#071022] hover:bg-[#0D1528] border border-[#173541] text-[#19D89A] font-black text-2xl transition-all active:scale-95 flex items-center justify-center"
+                className="h-14 sm:h-15 rounded-xl bg-[#071022] hover:bg-[#0D1528] border border-[#173541] text-[#19D89A] font-black text-xl sm:text-2xl transition-all active:scale-95 flex items-center justify-center"
               >
                 2
               </button>
@@ -556,7 +561,7 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
                 type="button"
                 disabled={loading}
                 onClick={() => handleScoreRun(3)}
-                className="h-16 rounded-xl bg-[#071022] hover:bg-[#0D1528] border border-[#173541] text-[#19D89A] font-black text-2xl transition-all active:scale-95 flex items-center justify-center"
+                className="h-14 sm:h-15 rounded-xl bg-[#071022] hover:bg-[#0D1528] border border-[#173541] text-[#19D89A] font-black text-xl sm:text-2xl transition-all active:scale-95 flex items-center justify-center"
               >
                 3
               </button>
@@ -566,7 +571,7 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
                 type="button"
                 disabled={loading}
                 onClick={() => handleScoreRun(4)}
-                className="h-16 rounded-xl bg-[#315BEA] hover:bg-blue-600 text-white font-black text-2xl shadow-lg shadow-blue-600/20 transition-all active:scale-95 flex items-center justify-center"
+                className="h-14 sm:h-15 rounded-xl bg-[#315BEA] hover:bg-blue-600 text-white font-black text-xl sm:text-2xl shadow-lg shadow-blue-600/20 transition-all active:scale-95 flex items-center justify-center"
               >
                 4
               </button>
@@ -576,7 +581,7 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
                 type="button"
                 disabled={loading}
                 onClick={() => handleScoreRun(6)}
-                className="h-16 rounded-xl bg-[#19D89A] hover:bg-emerald-400 text-[#050A1A] font-black text-2xl shadow-lg shadow-emerald-500/20 transition-all active:scale-95 flex items-center justify-center"
+                className="h-14 sm:h-15 rounded-xl bg-[#19D89A] hover:bg-emerald-400 text-[#050A1A] font-black text-xl sm:text-2xl shadow-lg shadow-emerald-500/20 transition-all active:scale-95 flex items-center justify-center"
               >
                 6
               </button>
@@ -584,13 +589,13 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
           </div>
 
           {/* 8. COMPACT WICKET, MORE, UNDO ACTION BAR */}
-          <div className="grid grid-cols-3 gap-2.5">
+          <div className="grid grid-cols-3 gap-2">
             {/* WICKET BUTTON */}
             <button
               type="button"
               disabled={loading}
               onClick={() => setIsWicketModalOpen(true)}
-              className="h-12 rounded-xl bg-[#E5232F] hover:bg-red-600 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-red-600/20 transition-all active:scale-95 flex items-center justify-center"
+              className="h-11 rounded-xl bg-[#E5232F] hover:bg-red-600 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-red-600/20 transition-all active:scale-95 flex items-center justify-center"
             >
               WICKET
             </button>
@@ -600,9 +605,9 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
               type="button"
               disabled={loading}
               onClick={() => setIsMoreModalOpen(true)}
-              className="h-12 rounded-xl bg-[#0D1528] hover:bg-[#111A2D] border border-[#173541] text-[#19D89A] font-black text-xs uppercase tracking-wider transition-all active:scale-95 flex items-center justify-center gap-1"
+              className="h-11 rounded-xl bg-[#0D1528] hover:bg-[#111A2D] border border-[#173541] text-[#19D89A] font-black text-xs uppercase tracking-wider transition-all active:scale-95 flex items-center justify-center gap-1"
             >
-              <MoreHorizontal className="w-4 h-4" />
+              <MoreHorizontal className="w-3.5 h-3.5" />
               MORE
             </button>
 
@@ -611,7 +616,7 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
               type="button"
               disabled={loading}
               onClick={handleUndo}
-              className="h-12 rounded-xl bg-[#0D1528] hover:bg-[#111A2D] border border-[#173541] text-[#AAB5CC] hover:text-white font-black text-[11px] uppercase tracking-wider transition-all active:scale-95 flex items-center justify-center gap-1"
+              className="h-11 rounded-xl bg-[#0D1528] hover:bg-[#111A2D] border border-[#173541] text-[#AAB5CC] hover:text-white font-black text-[10px] uppercase tracking-wider transition-all active:scale-95 flex items-center justify-center gap-1"
             >
               <RotateCcw className="w-3.5 h-3.5 text-amber-400" />
               UNDO
