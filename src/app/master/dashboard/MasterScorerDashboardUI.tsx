@@ -208,19 +208,26 @@ export default function MasterScorerDashboardUI({
 
   const latestMatch = React.useMemo(() => {
     if (!Array.isArray(currentMatches) || currentMatches.length === 0) return null;
+
+    // Filter out DELETED and COMPLETED matches for "Latest Created Match"
+    const activeMatches = currentMatches.filter(
+      (m: any) => m && m.status !== 'DELETED' && m.status !== 'COMPLETED'
+    );
+
+    if (activeMatches.length === 0) return null;
     if (isLatestMatchDeleted && !latestCreatedMatchId) return null;
 
     if (latestCreatedMatchId) {
-      const found = currentMatches.find((m: any) => m.id === latestCreatedMatchId && m.status !== 'DELETED');
-      return found || null;
+      const found = activeMatches.find((m: any) => m.id === latestCreatedMatchId);
+      if (found) return found;
     }
 
-    const sorted = [...currentMatches].sort((a, b) => {
+    const sorted = [...activeMatches].sort((a, b) => {
       const timeA = new Date(a.created_at || a.scheduled_start || a.scheduled_at || 0).getTime();
       const timeB = new Date(b.created_at || b.scheduled_start || b.scheduled_at || 0).getTime();
       return timeB - timeA;
     });
-    return sorted.find((m: any) => m.status !== 'DELETED') || null;
+    return sorted[0] || null;
   }, [currentMatches, latestCreatedMatchId, isLatestMatchDeleted]);
 
   const sortedMatches = React.useMemo(() => {
