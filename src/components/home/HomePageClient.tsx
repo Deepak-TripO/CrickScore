@@ -32,53 +32,55 @@ function HomePageContent({
   };
 
   // Filter matches dynamically based strictly on TEAM NAME ONLY, status toggle, and active category
-  const filteredMatches = allMatches.filter((m: any) => {
-    // 1. STRICT TEAM NAME ONLY SEARCH FILTER (Team 1 OR Team 2)
-    if (searchQuery.trim()) {
-      const q = searchQuery.trim().toLowerCase();
+  const filteredMatches = useMemo(() => {
+    return allMatches.filter((m: any) => {
+      // 1. STRICT TEAM NAME ONLY SEARCH FILTER (Team 1 OR Team 2)
+      if (searchQuery.trim()) {
+        const q = searchQuery.trim().toLowerCase();
 
-      const t1 = Array.isArray(m.team1) ? m.team1[0] : m.team1;
-      const t2 = Array.isArray(m.team2) ? m.team2[0] : m.team2;
+        const t1 = Array.isArray(m.team1) ? m.team1[0] : m.team1;
+        const t2 = Array.isArray(m.team2) ? m.team2[0] : m.team2;
 
-      // Extract Team 1 & Team 2 names strictly from database fields
-      const team1Name = (t1?.name || m.your_team_name || (m.title ? m.title.split(' vs ')[0] : '') || '').toLowerCase();
-      const team2Name = (t2?.name || m.opposite_team_name || (m.title ? m.title.split(' vs ')[1] : '') || '').toLowerCase();
+        // Extract Team 1 & Team 2 names strictly from database fields
+        const team1Name = (t1?.name || m.your_team_name || (m.title ? m.title.split(' vs ')[0] : '') || '').toLowerCase();
+        const team2Name = (t2?.name || m.opposite_team_name || (m.title ? m.title.split(' vs ')[1] : '') || '').toLowerCase();
 
-      const matchesTeam1 = team1Name.includes(q);
-      const matchesTeam2 = team2Name.includes(q);
+        const matchesTeam1 = team1Name.includes(q);
+        const matchesTeam2 = team2Name.includes(q);
 
-      // Require Team 1 Name OR Team 2 Name match only (ignore player names, categories, venues, etc.)
-      if (!matchesTeam1 && !matchesTeam2) {
-        return false;
+        // Require Team 1 Name OR Team 2 Name match only (ignore player names, categories, venues, etc.)
+        if (!matchesTeam1 && !matchesTeam2) {
+          return false;
+        }
       }
-    }
 
-    // 2. Status Filter (LIVE vs COMPLETED)
-    const mStatus = (m.status || '').toString().toUpperCase();
-    if (statusToggle === 'LIVE') {
-      if (mStatus === 'COMPLETED' || mStatus === 'FINISHED') return false;
-    } else if (statusToggle === 'COMPLETED') {
-      if (mStatus !== 'COMPLETED' && mStatus !== 'FINISHED') return false;
-    }
+      // 2. Status Filter (LIVE vs COMPLETED)
+      const mStatus = (m.status || '').toString().toUpperCase();
+      if (statusToggle === 'LIVE') {
+        if (mStatus === 'COMPLETED' || mStatus === 'FINISHED') return false;
+      } else if (statusToggle === 'COMPLETED') {
+        if (mStatus !== 'COMPLETED' && mStatus !== 'FINISHED') return false;
+      }
 
-    // 3. Category Filter
-    if (activeCategory === 'ALL MATCHS' || activeCategory === 'All') return true;
+      // 3. Category Filter
+      if (activeCategory === 'ALL MATCHS' || activeCategory === 'All') return true;
 
-    const matchCategory = (m.category || m.format || m.match_type || '').toString().toLowerCase();
-    const targetCategory = activeCategory.toLowerCase();
+      const matchCategory = (m.category || m.format || m.match_type || '').toString().toLowerCase();
+      const targetCategory = activeCategory.toLowerCase();
 
-    if (targetCategory === 'tournament') {
-      return matchCategory.includes('tournament') || matchCategory.includes('t20');
-    }
-    if (targetCategory === 'league') {
-      return matchCategory.includes('league') || matchCategory.includes('premier');
-    }
-    if (targetCategory === 'club') {
-      return matchCategory.includes('club') || matchCategory.includes('friendly');
-    }
+      if (targetCategory === 'tournament') {
+        return matchCategory.includes('tournament') || matchCategory.includes('t20');
+      }
+      if (targetCategory === 'league') {
+        return matchCategory.includes('league') || matchCategory.includes('premier');
+      }
+      if (targetCategory === 'club') {
+        return matchCategory.includes('club') || matchCategory.includes('friendly');
+      }
 
-    return true;
-  });
+      return true;
+    });
+  }, [allMatches, searchQuery, statusToggle, activeCategory]);
 
   return (
     <div className="space-y-6 font-sans">
