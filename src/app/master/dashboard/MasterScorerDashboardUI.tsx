@@ -3,9 +3,24 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import CreateMatchForm from '../matches/create/CreateMatchForm';
-import CommunityCreateSection from '@/components/community/CommunityCreateSection';
+import dynamic from 'next/dynamic';
 import MatchCard from '@/components/match/MatchCard';
+
+const CreateMatchForm = dynamic(() => import('../matches/create/CreateMatchForm'), {
+  loading: () => (
+    <div className="bg-[#0D1528] border border-[#173541] rounded-3xl p-8 text-center text-xs text-[#AAB5CC] font-bold shadow-xl">
+      Loading match creation form...
+    </div>
+  )
+});
+
+const CommunityCreateSection = dynamic(() => import('@/components/community/CommunityCreateSection'), {
+  loading: () => (
+    <div className="bg-[#0D1528] border border-[#173541] rounded-3xl p-8 text-center text-xs text-[#AAB5CC] font-bold shadow-xl">
+      Loading community manager...
+    </div>
+  )
+});
 import { getMatchDetailsForEdit, deleteMatch } from '@/actions/matches';
 import { 
   LayoutDashboard, 

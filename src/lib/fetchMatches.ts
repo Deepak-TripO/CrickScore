@@ -104,58 +104,60 @@ export async function fetchMatchesSafely(options?: {
 
     if (!rawMatches || rawMatches.length === 0) return [];
 
-    // Resolve Teams dynamically for each match using select('*') to prevent missing column PostgREST errors
-    const resolvedMatches = await Promise.all(
-      rawMatches.map(async (m: any) => {
-        const team1Id = m.team1_id || m.team_a_id;
-        const team2Id = m.team2_id || m.team_b_id;
-        let team1 = null;
-        let team2 = null;
+    // Collect all team IDs into a Set for single-batch database fetch (eliminates N+1 query bottleneck)
+    const teamIdsSet = new Set<string>();
+    rawMatches.forEach((m: any) => {
+      const t1Id = m.team1_id || m.team_a_id;
+      const t2Id = m.team2_id || m.team_b_id;
+      if (t1Id) teamIdsSet.add(t1Id);
+      if (t2Id) teamIdsSet.add(t2Id);
+    });
 
-        if (team1Id) {
-          const { data: t1 } = await db
-            .from('teams')
-            .select('*')
-            .eq('id', team1Id)
-            .maybeSingle();
-          team1 = t1;
+    const teamsMap = new Map<string, any>();
+    if (teamIdsSet.size > 0) {
+      const { data: teamsList } = await db
+        .from('teams')
+        .select('*')
+        .in('id', Array.from(teamIdsSet));
+      if (teamsList && Array.isArray(teamsList)) {
+        teamsList.forEach((t: any) => {
+          if (t && t.id) teamsMap.set(t.id, t);
+        });
+      }
+    }
+
+    // Resolve Teams in-memory
+    const resolvedMatches = rawMatches.map((m: any) => {
+      const team1Id = m.team1_id || m.team_a_id;
+      const team2Id = m.team2_id || m.team_b_id;
+      const team1 = team1Id ? teamsMap.get(team1Id) : null;
+      const team2 = team2Id ? teamsMap.get(team2Id) : null;
+
+      // Precise Team Name Resolution
+      const t1Name = team1?.name || m.your_team_name || m.team1_name || m.team_a_name || (m.title ? m.title.split(' vs ')[0] : null);
+      const t1Logo = team1?.logo_url || m.your_team_logo_url || m.team1_logo_url || m.team_a_logo_url || null;
+      const t1Short = team1?.short_name || (t1Name ? t1Name.replace(/[^a-zA-Z0-9]/g, '').slice(0, 4).toUpperCase() : 'T1');
+
+      const t2Name = team2?.name || m.opposite_team_name || m.team2_name || m.team_b_name || (m.title ? m.title.split(' vs ')[1] : null);
+      const t2Logo = team2?.logo_url || m.opposite_team_logo_url || m.team2_logo_url || m.team_b_logo_url || null;
+      const t2Short = team2?.short_name || (t2Name ? t2Name.replace(/[^a-zA-Z0-9]/g, '').slice(0, 4).toUpperCase() : 'T2');
+
+      return {
+        ...m,
+        team1: {
+          id: team1?.id || team1Id,
+          name: t1Name || 'Team 1',
+          short_name: t1Short,
+          logo_url: t1Logo
+        },
+        team2: {
+          id: team2?.id || team2Id,
+          name: t2Name || 'Team 2',
+          short_name: t2Short,
+          logo_url: t2Logo
         }
-
-        if (team2Id) {
-          const { data: t2 } = await db
-            .from('teams')
-            .select('*')
-            .eq('id', team2Id)
-            .maybeSingle();
-          team2 = t2;
-        }
-
-        // Precise Team Name Resolution
-        const t1Name = team1?.name || m.your_team_name || m.team1_name || m.team_a_name || (m.title ? m.title.split(' vs ')[0] : null);
-        const t1Logo = team1?.logo_url || m.your_team_logo_url || m.team1_logo_url || m.team_a_logo_url || null;
-        const t1Short = team1?.short_name || (t1Name ? t1Name.replace(/[^a-zA-Z0-9]/g, '').slice(0, 4).toUpperCase() : 'T1');
-
-        const t2Name = team2?.name || m.opposite_team_name || m.team2_name || m.team_b_name || (m.title ? m.title.split(' vs ')[1] : null);
-        const t2Logo = team2?.logo_url || m.opposite_team_logo_url || m.team2_logo_url || m.team_b_logo_url || null;
-        const t2Short = team2?.short_name || (t2Name ? t2Name.replace(/[^a-zA-Z0-9]/g, '').slice(0, 4).toUpperCase() : 'T2');
-
-        return {
-          ...m,
-          team1: {
-            id: team1?.id || team1Id,
-            name: t1Name || 'Team 1',
-            short_name: t1Short,
-            logo_url: t1Logo
-          },
-          team2: {
-            id: team2?.id || team2Id,
-            name: t2Name || 'Team 2',
-            short_name: t2Short,
-            logo_url: t2Logo
-          }
-        };
-      })
-    );
+      };
+    });
 
     return resolvedMatches;
   } catch {
