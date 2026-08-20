@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, Suspense } from 'react';
+import React, { useState, useMemo, Suspense } from 'react';
 import MatchCard from '@/components/match/MatchCard';
 import { Trophy, Search, Filter, X } from 'lucide-react';
 import { useSearchParams, useRouter } from 'next/navigation';
