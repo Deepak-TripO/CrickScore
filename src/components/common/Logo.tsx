@@ -9,7 +9,7 @@ interface LogoProps {
 
 export default function Logo({ size = 'md', className = '', href = '/' }: LogoProps) {
   const heightClass = {
-    sm: 'h-10 sm:h-12',
+    sm: 'h-10 sm:h-11',
     md: 'h-12 sm:h-14',
     lg: 'h-16 sm:h-20',
     xl: 'h-24 sm:h-28'
