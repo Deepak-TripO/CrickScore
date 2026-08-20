@@ -203,7 +203,7 @@ export default function MasterScorerDashboardUI({
     },
     {
       id: 'community',
-      label: 'Community Create',
+      label: 'Community',
       icon: Users,
     },
     {

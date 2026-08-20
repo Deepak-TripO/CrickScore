@@ -27,9 +27,10 @@ export async function submitMasterApplication(formData: FormData) {
   try {
     const { data: existing, error: checkErr } = await adminClient
       .from('master_applications')
-      .select('id, status')
+      .select('id, status, reviewed_at, created_at')
       .eq('user_id', user.id)
-      .eq('status', 'PENDING')
+      .order('created_at', { ascending: false })
+      .limit(1)
       .maybeSingle();
 
     if (checkErr && checkErr.message?.includes('schema cache')) {
@@ -39,7 +40,18 @@ export async function submitMasterApplication(formData: FormData) {
     }
 
     if (existing) {
-      return { error: 'You already have a pending Master application under review.' };
+      if (existing.status === 'PENDING') {
+        return { error: 'You already have a pending Master application under review.' };
+      }
+      if (existing.status === 'REJECTED') {
+        const rejectionTime = new Date(existing.reviewed_at || existing.created_at).getTime();
+        const now = Date.now();
+        const diffHours = (now - rejectionTime) / (1000 * 60 * 60);
+        if (diffHours < 24) {
+          const remainingHours = Math.ceil(24 - diffHours);
+          return { error: `Your previous application was rejected. Please wait ${remainingHours} hour(s) before re-applying.` };
+        }
+      }
     }
   } catch (e: any) {
     // continue

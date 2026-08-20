@@ -33,6 +33,22 @@ export default async function ApplyMasterPage() {
     redirect('/master/dashboard');
   }
 
+  let canReapply = false;
+  let remainingHours = 0;
+
+  if (existingApp?.status === 'REJECTED') {
+    const rejectionTime = new Date(existingApp.reviewed_at || existingApp.created_at).getTime();
+    const now = Date.now();
+    const diffHours = (now - rejectionTime) / (1000 * 60 * 60);
+    if (diffHours >= 24) {
+      canReapply = true;
+    } else {
+      remainingHours = Math.max(1, Math.ceil(24 - diffHours));
+    }
+  }
+
+  const showStatusCard = existingApp && (!canReapply || existingApp.status === 'PENDING');
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
       <Navbar user={user} userRole={userRole} />
@@ -46,7 +62,7 @@ export default async function ApplyMasterPage() {
           </h1>
         </div>
 
-        {existingApp ? (
+        {showStatusCard ? (
           <div className="bg-white border border-slate-200 rounded-3xl p-6 space-y-4 text-center shadow-sm text-slate-900">
             <h2 className="text-base font-bold text-slate-900">Application Status</h2>
             
@@ -58,17 +74,15 @@ export default async function ApplyMasterPage() {
                 </div>
               )}
 
-              {existingApp.status === 'APPROVED' && (
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-orange-50 text-orange-700 border border-orange-200 font-bold text-xs">
-                  <CheckCircle2 className="w-4 h-4" />
-                  Master Approved! Access your Master Panel in navigation.
-                </div>
-              )}
-
               {existingApp.status === 'REJECTED' && (
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-red-50 text-red-700 border border-red-200 font-bold text-xs">
-                  <XCircle className="w-4 h-4" />
-                  Application Rejected: {existingApp.rejection_reason || 'Criteria not met.'}
+                <div className="flex flex-col items-center gap-2 px-4 py-3 rounded-2xl bg-red-50 text-red-700 border border-red-200 font-bold text-xs">
+                  <div className="flex items-center gap-2">
+                    <XCircle className="w-4 h-4 text-red-600 shrink-0" />
+                    <span>Application Rejected: {existingApp.rejection_reason || 'Criteria not met.'}</span>
+                  </div>
+                  <span className="text-[11px] text-red-600 font-extrabold bg-red-100/60 px-3 py-1 rounded-full">
+                    ⏳ You can re-apply in {remainingHours} hour(s)
+                  </span>
                 </div>
               )}
             </div>

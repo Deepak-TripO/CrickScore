@@ -99,7 +99,7 @@ export default async function MatchDetailsPage({ params }: { params: { matchId: 
   const team2Players = fullDetails?.team2Players || [];
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
+    <div className="min-h-screen bg-white text-slate-900">
       <PublicMatchView
         initialMatch={normalizedMatch}
         initialInnings={innings}

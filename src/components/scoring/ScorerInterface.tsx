@@ -124,14 +124,14 @@ export const ScorerInterface: React.FC<ScorerInterfaceProps> = ({
   };
 
   return (
-    <div className="max-w-xl mx-auto space-y-4 p-4 sm:p-6 bg-slate-900 text-white rounded-3xl shadow-2xl border border-slate-800">
+    <div className="max-w-xl mx-auto space-y-4 p-4 sm:p-6 bg-white text-slate-900 rounded-3xl shadow-md border border-slate-200">
       {/* Live Match Info Header */}
-      <div className="bg-slate-800/80 rounded-2xl p-4 border border-slate-700/80 space-y-2 text-center">
-        <span className="text-xs font-black uppercase text-emerald-400 tracking-wider">
+      <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200 space-y-2 text-center">
+        <span className="text-xs font-black uppercase text-orange-600 tracking-wider">
           LIVE SCORER CONSOLE • {battingTeamName}
         </span>
-        <div className="text-4xl sm:text-5xl font-black text-white tracking-tight">
-          {runs}/{wickets} <span className="text-xl text-slate-400 font-semibold">({overs} Ov)</span>
+        <div className="text-4xl sm:text-5xl font-black text-slate-900 tracking-tight">
+          {runs}/{wickets} <span className="text-xl text-slate-500 font-semibold">({overs} Ov)</span>
         </div>
       </div>
 

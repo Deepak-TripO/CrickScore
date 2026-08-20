@@ -44,18 +44,26 @@ export default async function ProfilePage() {
                 
                 <div className="flex flex-wrap items-center gap-1.5 pt-1">
                   {profile?.roles?.map((role: string) => (
-                    <span 
-                      key={role}
-                      className={`px-2.5 py-0.5 rounded-full font-extrabold text-[10px] uppercase border ${
-                        role === 'ADMIN'
-                          ? 'bg-purple-50 text-purple-600 border-purple-200'
-                          : role === 'MASTER'
-                          ? 'bg-orange-50 text-orange-600 border-orange-200'
-                          : 'bg-slate-50 text-slate-600 border-slate-200'
-                      }`}
-                    >
-                      {role}
-                    </span>
+                    role === 'MASTER' ? (
+                      <span key={role} className="inline-flex items-center gap-1 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded-full" title="Master User">
+                        <img 
+                          src="/master-badge.png" 
+                          alt="Master User Icon" 
+                          className="h-4 w-4 object-contain shrink-0" 
+                        />
+                      </span>
+                    ) : (
+                      <span 
+                        key={role}
+                        className={`px-2.5 py-0.5 rounded-full font-extrabold text-[10px] uppercase border ${
+                          role === 'ADMIN'
+                            ? 'bg-purple-50 text-purple-600 border-purple-200'
+                            : 'bg-slate-50 text-slate-600 border-slate-200'
+                        }`}
+                      >
+                        {role}
+                      </span>
+                    )
                   ))}
                 </div>
               </div>
