@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { notFound } from 'next/navigation';
 import PublicMatchView from '@/components/match/PublicMatchView';
+import { getMatchDetailsForEdit } from '@/actions/matches';
 
 export async function generateMetadata({ params }: { params: { matchId: string } }) {
   let db: any = createClient();
@@ -66,8 +67,8 @@ export default async function MatchDetailsPage({ params }: { params: { matchId: 
     team2: team2 || { name: match.opposite_team_name || (match.title ? match.title.split(' vs ')[1] : 'Team 2'), logo_url: match.opposite_team_logo_url || null }
   };
 
-  // Fetch innings, commentary, and team players in parallel safely
-  const [inningsResult, commentaryResult, t1Result, t2Result] = await Promise.all([
+  // Fetch innings, commentary, and full match player details in parallel
+  const [inningsResult, commentaryResult, fullDetails] = await Promise.all([
     db
       .from('innings')
       .select('*')
@@ -78,8 +79,7 @@ export default async function MatchDetailsPage({ params }: { params: { matchId: 
       .select('*')
       .eq('match_id', params.matchId)
       .order('created_at', { ascending: false }),
-    team1Id ? db.from('team_players').select('players(*)').eq('team_id', team1Id) : Promise.resolve({ data: [] }),
-    team2Id ? db.from('team_players').select('players(*)').eq('team_id', team2Id) : Promise.resolve({ data: [] }),
+    getMatchDetailsForEdit(params.matchId)
   ]);
 
   const innings = inningsResult.data || [];
@@ -95,8 +95,8 @@ export default async function MatchDetailsPage({ params }: { params: { matchId: 
         .order('created_at', { ascending: true })
     : { data: [] };
 
-  const team1Players = t1Result.data ? t1Result.data.map((tp: any) => tp.players).filter(Boolean) : [];
-  const team2Players = t2Result.data ? t2Result.data.map((tp: any) => tp.players).filter(Boolean) : [];
+  const team1Players = fullDetails?.team1Players || [];
+  const team2Players = fullDetails?.team2Players || [];
 
   return (
     <div className="min-h-screen bg-slate-950 text-white">

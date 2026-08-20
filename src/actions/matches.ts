@@ -293,20 +293,41 @@ export async function createFullTwoStepMatch(payload: {
   };
 
   const insertPlayer = async (p: { name: string; type: string; avatarUrl?: string }, teamId: string) => {
+    const pName = p.name.trim();
+    if (!pName) return null;
+
     const roleMapping = p.type === 'WK' ? 'WICKETKEEPER' : p.type === 'Batsman' ? 'BATSMAN' : p.type === 'Bowler' ? 'BOWLER' : 'ALL_ROUNDER';
+
+    // 1. Reuse existing player record for this owner/user if present
+    try {
+      const { data: existing } = await db
+        .from('players')
+        .select('*')
+        .eq('full_name', pName)
+        .eq('owner_id', user.id)
+        .maybeSingle();
+
+      if (existing) {
+        if (teamId) {
+          try { await db.from('team_players').upsert({ team_id: teamId, player_id: existing.id }); } catch {}
+          try { await db.from('players').update({ team_id: teamId }).eq('id', existing.id); } catch {}
+        }
+        return existing;
+      }
+    } catch {}
 
     let { data, error } = await db.from('players').insert({
       owner_id: user.id,
-      full_name: p.name,
-      display_name: p.name,
+      full_name: pName,
+      display_name: pName,
       role: roleMapping,
       photo_url: p.avatarUrl || null
     }).select().single();
 
     if (error || !data) {
       const res2 = await db.from('players').insert({
-        full_name: p.name,
-        display_name: p.name,
+        full_name: pName,
+        display_name: pName,
         role: roleMapping
       }).select().single();
       data = res2.data;
