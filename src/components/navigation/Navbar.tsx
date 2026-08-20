@@ -272,27 +272,9 @@ export default function Navbar({ user, userRole = 'USER' }: NavbarProps) {
             )}
           </nav>
 
-          {/* 3. RIGHT HEADER ACTIONS: [ SEARCH ICON 🔍 ] [ NOTIFICATION 🔔 ] [ LOGOUT 🚪 ] */}
+          {/* 3. RIGHT HEADER ACTIONS: [ NOTIFICATION 🔔 ] [ LOGOUT 🚪 ] */}
           <div className="flex items-center gap-2 sm:gap-3">
             
-            {/* DESKTOP SEARCH CONTROL */}
-            <Suspense fallback={
-              <button className="hidden md:flex p-2 rounded-xl text-[#AAB5CC]" title="Search">
-                <Search className="w-4 h-4" />
-              </button>
-            }>
-              <NavSearchControl />
-            </Suspense>
-
-            {/* MOBILE SEARCH CONTROL */}
-            <Suspense fallback={
-              <button className="md:hidden p-2 rounded-xl text-[#AAB5CC]" title="Search">
-                <Search className="w-4 h-4" />
-              </button>
-            }>
-              <MobileNavSearch />
-            </Suspense>
-
             {/* NOTIFICATION BELL BUTTON */}
             <button className="p-2 rounded-xl text-[#AAB5CC] hover:text-white hover:bg-[#0D1528] transition-colors relative" title="Notification">
               <Bell className="w-4 h-4" />

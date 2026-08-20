@@ -458,13 +458,13 @@ export default function MasterScorerDashboardUI({
       )}
 
       {/* ============================================================ */}
-      {/* 🧭 SIMPLE & LIGHTWEIGHT MASTER DASHBOARD BOTTOM NAVIGATION    */}
+      {/* 🧭 MASTER DASHBOARD BOTTOM NAVIGATION (HOMEPAGE DESIGN UI)     */}
       {/* ============================================================ */}
       <nav 
         aria-label="Master Dashboard Bottom Navigation"
-        className="fixed bottom-0 left-0 right-0 z-50 bg-[#070D1D]/95 backdrop-blur-md border-t border-[#173541] py-2 px-3 sm:px-6"
+        className="fixed bottom-0 inset-x-0 z-50 bg-[#070D1D]/95 backdrop-blur-md border-t border-[#1E2D4A] py-2 px-3 w-full pb-[calc(0.5rem+env(safe-area-inset-bottom))]"
       >
-        <div className="max-w-lg mx-auto flex items-center justify-around gap-1 sm:gap-3">
+        <div className="grid grid-cols-4 w-full max-w-md mx-auto items-center">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -473,15 +473,15 @@ export default function MasterScorerDashboardUI({
                 key={item.id}
                 type="button"
                 onClick={() => handleTabChange(item.id)}
-                className={`flex-1 flex flex-col items-center justify-center py-1.5 px-2 rounded-xl transition-colors ${
+                className={`flex flex-col items-center justify-center py-1 px-2 rounded-lg transition-colors text-center w-full ${
                   isActive
-                    ? 'text-[#19D89A] bg-[#19D89A]/10 font-bold border border-[#19D89A]/20'
-                    : 'text-[#8F9BB3] hover:text-white font-medium border border-transparent'
+                    ? 'text-[#19D89A]'
+                    : 'text-[#8F9BB3] hover:text-white'
                 }`}
               >
                 <Icon className="w-5 h-5 stroke-[2px]" />
-                <span className={`text-[11px] sm:text-xs tracking-tight mt-1 text-center whitespace-nowrap ${
-                  isActive ? 'text-[#19D89A] font-bold' : 'text-[#8F9BB3]'
+                <span className={`text-[11px] tracking-tight block mt-1 ${
+                  isActive ? 'font-bold' : 'font-medium'
                 }`}>
                   {item.label}
                 </span>

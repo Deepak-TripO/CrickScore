@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { createClient } from './supabase/server';
 import { createAdminClient } from './supabase/admin';
 
@@ -22,7 +23,7 @@ export async function getCurrentUser() {
   return user;
 }
 
-export async function getCurrentUserProfile(existingUser?: any): Promise<UserProfile | null> {
+export const getCurrentUserProfile = cache(async function getCurrentUserProfile(existingUser?: any): Promise<UserProfile | null> {
   const user = existingUser || await getCurrentUser();
   if (!user) return null;
 
@@ -53,7 +54,7 @@ export async function getCurrentUserProfile(existingUser?: any): Promise<UserPro
     ...profileResult.data,
     roles
   };
-}
+});
 
 export async function getUserRole(): Promise<'ADMIN' | 'MASTER' | 'USER'> {
   const { role } = await getUserAndRole();
@@ -64,7 +65,7 @@ export async function getUserRole(): Promise<'ADMIN' | 'MASTER' | 'USER'> {
  * Combined helper: fetches user + role in minimal DB calls.
  * Use this instead of separate getCurrentUser() + getUserRole() calls.
  */
-export async function getUserAndRole(): Promise<{ user: any; role: 'ADMIN' | 'MASTER' | 'USER' }> {
+export const getUserAndRole = cache(async function getUserAndRole(): Promise<{ user: any; role: 'ADMIN' | 'MASTER' | 'USER' }> {
   const supabase = createClient();
   const { data: { user }, error } = await supabase.auth.getUser();
   if (error || !user) return { user: null, role: 'USER' };
@@ -108,4 +109,5 @@ export async function getUserAndRole(): Promise<{ user: any; role: 'ADMIN' | 'MA
   else if (isApprovedMaster) role = 'MASTER';
 
   return { user, role };
-}
+});
+

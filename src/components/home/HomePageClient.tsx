@@ -83,6 +83,39 @@ function HomePageContent({
   return (
     <div className="space-y-6 font-sans">
       
+      {/* HOME PAGE MOBILE SEARCH BAR (LIGHTWEIGHT, SIMPLE, FIT FOR MOBILE) */}
+      <div className="md:hidden w-full space-y-2">
+        <div className="flex items-center gap-2 bg-[#0D1528] border border-[#173541] focus-within:border-[#19D89A] rounded-xl px-3 py-2.5 transition-colors shadow-md">
+          <Search className="w-4 h-4 text-[#19D89A] shrink-0" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => {
+              const val = e.target.value;
+              const params = new URLSearchParams(searchParams?.toString() || '');
+              if (val.trim()) {
+                params.set('search', val);
+              } else {
+                params.delete('search');
+              }
+              router.replace(`/${params.toString() ? `?${params.toString()}` : ''}`, { scroll: false });
+            }}
+            placeholder="Search team name..."
+            className="w-full bg-transparent text-white text-xs outline-none placeholder-[#71809A] font-medium"
+          />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={handleClearSearch}
+              className="p-1 text-[#AAB5CC] hover:text-white rounded transition-colors shrink-0"
+              title="Clear search"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* HOME PAGE CONTROL ROW: STATUS TOGGLE ON LEFT, ICON-ONLY FILTER ON FAR RIGHT */}
       <div className="space-y-3">
         <div className="flex items-center justify-between gap-2 w-full">

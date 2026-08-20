@@ -61,6 +61,8 @@ export default function CommunityCard({ community, onSelect }: CommunityCardProp
           <img 
             src={coverSrc} 
             alt={`${community.name} Cover`} 
+            loading="lazy"
+            decoding="async"
             onError={() => setCoverSrc(DEFAULT_COVER)}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
@@ -74,6 +76,8 @@ export default function CommunityCard({ community, onSelect }: CommunityCardProp
               <img 
                 src={profileSrc} 
                 alt={community.name} 
+                loading="lazy"
+                decoding="async"
                 onError={() => setProfileSrc(DEFAULT_PROFILE)}
                 className="w-full h-full object-cover"
               />
