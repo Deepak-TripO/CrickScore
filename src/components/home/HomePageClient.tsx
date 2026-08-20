@@ -85,6 +85,39 @@ function HomePageContent({
   return (
     <div className="space-y-6 font-sans">
 
+      {/* 1. SEARCH BAR DIRECTLY BELOW TOP NAVIGATION BAR */}
+      <div className="w-full">
+        <div className="flex items-center gap-2.5 bg-white border border-slate-200 focus-within:border-orange-500 rounded-xl px-3.5 py-2.5 transition-all shadow-sm">
+          <Search className="w-4 h-4 text-orange-500 shrink-0" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => {
+              const val = e.target.value;
+              const params = new URLSearchParams(searchParams?.toString() || '');
+              if (val.trim()) {
+                params.set('search', val);
+              } else {
+                params.delete('search');
+              }
+              router.replace(`/${params.toString() ? `?${params.toString()}` : ''}`, { scroll: false });
+            }}
+            placeholder="Search team name..."
+            className="w-full bg-transparent text-slate-900 text-xs outline-none placeholder-slate-400 font-medium"
+          />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={handleClearSearch}
+              className="p-1 text-slate-400 hover:text-slate-600 rounded transition-colors shrink-0"
+              title="Clear search"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* HOME PAGE CONTROL ROW: STATUS TOGGLE ON LEFT, ICON-ONLY FILTER ON FAR RIGHT */}
       <div className="space-y-3">
         <div className="flex items-center justify-between gap-2 w-full">
