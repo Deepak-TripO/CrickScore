@@ -8,7 +8,7 @@ import MatchCard from '@/components/match/MatchCard';
 
 const CreateMatchForm = dynamic(() => import('../matches/create/CreateMatchForm'), {
   loading: () => (
-    <div className="bg-[#0D1528] border border-[#173541] rounded-3xl p-8 text-center text-xs text-[#AAB5CC] font-bold shadow-xl">
+    <div className="bg-white border border-slate-200 rounded-3xl p-8 text-center text-xs text-slate-500 font-bold shadow-sm">
       Loading match creation form...
     </div>
   )
@@ -16,7 +16,7 @@ const CreateMatchForm = dynamic(() => import('../matches/create/CreateMatchForm'
 
 const CommunityCreateSection = dynamic(() => import('@/components/community/CommunityCreateSection'), {
   loading: () => (
-    <div className="bg-[#0D1528] border border-[#173541] rounded-3xl p-8 text-center text-xs text-[#AAB5CC] font-bold shadow-xl">
+    <div className="bg-white border border-slate-200 rounded-3xl p-8 text-center text-xs text-slate-500 font-bold shadow-sm">
       Loading community manager...
     </div>
   )
@@ -72,6 +72,7 @@ export default function MasterScorerDashboardUI({
   const [isDeleting, setIsDeleting] = useState(false);
 
   const [toastMsg, setToastMsg] = useState('');
+  const toastTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
   React.useEffect(() => {
     if (initialTab) {
@@ -79,10 +80,19 @@ export default function MasterScorerDashboardUI({
     }
   }, [initialTab]);
 
-  const showToast = (msg: string) => {
+  React.useEffect(() => {
+    return () => {
+      if (toastTimeoutRef.current) {
+        clearTimeout(toastTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const showToast = React.useCallback((msg: string) => {
     setToastMsg(msg);
-    setTimeout(() => setToastMsg(''), 3000);
-  };
+    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+    toastTimeoutRef.current = setTimeout(() => setToastMsg(''), 3000);
+  }, []);
 
   // Open Edit Modal with Loaded Match Details
   const handleOpenEditModal = async (matchItem: any) => {
@@ -103,8 +113,12 @@ export default function MasterScorerDashboardUI({
         your_team_logo_url: fullDetails?.your_team_logo_url || matchItem.your_team_logo_url || t1?.logo_url || '',
         opposite_team_name: fullDetails?.opposite_team_name || matchItem.opposite_team_name || t2?.name || (matchItem.title ? matchItem.title.split(' vs ')[1] : ''),
         opposite_team_logo_url: fullDetails?.opposite_team_logo_url || matchItem.opposite_team_logo_url || t2?.logo_url || '',
-        team1Players: fullDetails?.team1Players || [],
-        team2Players: fullDetails?.team2Players || []
+        team1Players: (fullDetails?.team1Players && fullDetails.team1Players.length > 0)
+          ? fullDetails.team1Players
+          : (matchItem.team1Players || matchItem.your_team_players || matchItem.yourTeamPlayers || []),
+        team2Players: (fullDetails?.team2Players && fullDetails.team2Players.length > 0)
+          ? fullDetails.team2Players
+          : (matchItem.team2Players || matchItem.opposite_team_players || matchItem.oppositeTeamPlayers || [])
       };
 
       setFullEditingMatch(mergedMatch);
@@ -199,14 +213,14 @@ export default function MasterScorerDashboardUI({
     },
   ] as const;
 
-  const handleTabChange = (tabId: 'overview' | 'create' | 'community' | 'history') => {
+  const handleTabChange = React.useCallback((tabId: 'overview' | 'create' | 'community' | 'history') => {
     setActiveTab(tabId);
     if (typeof window !== 'undefined') {
       const url = new URL(window.location.href);
       url.searchParams.set('tab', tabId);
       window.history.pushState({}, '', url.toString());
     }
-  };
+  }, []);
 
   const handleMatchCreatedSuccess = (newMatchId?: string) => {
     if (newMatchId) {
@@ -286,7 +300,7 @@ export default function MasterScorerDashboardUI({
 
       {/* TOAST NOTIFICATION */}
       {toastMsg && (
-        <div className="fixed top-14 left-1/2 -translate-x-1/2 z-50 bg-[#19D89A] text-[#050A1A] font-extrabold text-xs px-4 py-2.5 rounded-full shadow-lg border border-[#19D89A] flex items-center gap-1.5 animate-in fade-in slide-in-from-top-2">
+        <div className="fixed top-14 left-1/2 -translate-x-1/2 z-50 bg-orange-500 text-white font-extrabold text-xs px-4 py-2.5 rounded-full shadow-lg border border-orange-400 flex items-center gap-1.5 animate-in fade-in slide-in-from-top-2">
           <CheckCircle2 className="w-4 h-4" />
           <span>{toastMsg}</span>
         </div>
@@ -300,27 +314,27 @@ export default function MasterScorerDashboardUI({
           
           {/* REAL STATS CARDS */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="bg-[#0D1528] border border-[#173541] rounded-2xl p-4 space-y-1 shadow-lg">
-              <div className="flex items-center justify-between text-[#AAB5CC]">
+            <div className="bg-white border border-slate-200 rounded-2xl p-4 space-y-1 shadow-sm">
+              <div className="flex items-center justify-between text-slate-500">
                 <span className="text-[11px] font-bold uppercase tracking-wider">Total Matches</span>
-                <Trophy className="w-4 h-4 text-[#19D89A]" />
+                <Trophy className="w-4 h-4 text-orange-500" />
               </div>
-              <div className="text-3xl font-black text-white font-mono">{sortedMatches?.length || 0}</div>
+              <div className="text-3xl font-black text-slate-900 font-mono">{sortedMatches?.length || 0}</div>
             </div>
           </div>
 
           {/* CREATED MATCHES - SHOWS ONLY 1 LATEST CREATED MATCH */}
           <div className="space-y-4">
-            <div className="flex items-center justify-between border-b border-[#173541] pb-3">
-              <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                <Trophy className="w-5 h-5 text-[#19D89A]" />
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+              <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                <Trophy className="w-5 h-5 text-orange-500" />
                 Latest Created Match
               </h2>
             </div>
 
             {!latestMatch ? (
-              <div className="bg-[#0D1528]/60 border border-[#173541] rounded-3xl p-10 text-center space-y-3">
-                <p className="text-[#AAB5CC] text-sm">No matches created yet.</p>
+              <div className="bg-white border border-slate-200 rounded-3xl p-10 text-center space-y-3 shadow-sm">
+                <p className="text-slate-500 text-sm">No matches created yet.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -361,18 +375,18 @@ export default function MasterScorerDashboardUI({
       {/* ============================================================ */}
       {activeTab === 'history' && (
         <div className="space-y-6 animate-in fade-in duration-200">
-          <div className="flex items-center justify-between border-b border-[#173541] pb-3">
+          <div className="flex items-center justify-between border-b border-slate-200 pb-3">
             <div>
-              <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                <History className="w-5 h-5 text-[#19D89A]" />
+              <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                <History className="w-5 h-5 text-orange-500" />
                 Match History ({sortedMatches.length})
               </h2>
             </div>
           </div>
 
           {sortedMatches.length === 0 ? (
-            <div className="bg-[#0D1528]/60 border border-[#173541] rounded-3xl p-10 text-center space-y-3">
-              <p className="text-[#AAB5CC] text-sm">No matches found in history.</p>
+            <div className="bg-white border border-slate-200 rounded-3xl p-10 text-center space-y-3 shadow-sm">
+              <p className="text-slate-500 text-sm">No matches found in history.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -393,16 +407,16 @@ export default function MasterScorerDashboardUI({
       {/* ✏️ EDIT MATCH FORM MODAL (REUSES CREATEMATCHFORM INTERFACE)  */}
       {/* ============================================================ */}
       {isEditModalOpen && editingMatch && (
-        <div className="fixed inset-0 z-[60] bg-[#050A1A]/90 backdrop-blur-md flex items-center justify-center p-2 sm:p-6 pb-20 sm:pb-6 overflow-y-auto">
+        <div className="fixed inset-0 z-[60] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-2 sm:p-6 pb-20 sm:pb-6 overflow-y-auto">
           <div className="w-full max-w-4xl my-auto animate-in zoom-in-95 duration-200">
             {loadingEdit || !fullEditingMatch ? (
-              <div className="bg-[#0D1528] border border-[#173541] rounded-3xl p-12 flex flex-col items-center justify-center space-y-4 shadow-2xl">
-                <div className="w-8 h-8 border-3 border-[#19D89A] border-t-transparent rounded-full animate-spin" />
-                <p className="text-sm text-[#AAB5CC] font-bold">Loading match details...</p>
+              <div className="bg-white border border-slate-200 rounded-3xl p-12 flex flex-col items-center justify-center space-y-4 shadow-2xl">
+                <div className="w-8 h-8 border-3 border-orange-500 border-t-transparent rounded-full animate-spin" />
+                <p className="text-sm text-slate-600 font-bold">Loading match details...</p>
                 <button
                   type="button"
                   onClick={handleCloseEditModal}
-                  className="text-xs text-[#AAB5CC] hover:text-white font-bold mt-2"
+                  className="text-xs text-slate-500 hover:text-slate-800 font-bold mt-2"
                 >
                   Cancel
                 </button>
@@ -422,22 +436,22 @@ export default function MasterScorerDashboardUI({
       {/* 🗑️ DELETE MATCH CONFIRMATION DIALOG MODAL                     */}
       {/* ============================================================ */}
       {isDeleteModalOpen && deletingMatch && (
-        <div className="fixed inset-0 z-50 bg-[#050A1A]/90 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-[#0D1528] border border-[#173541] rounded-3xl p-6 sm:p-8 max-w-md w-full space-y-5 shadow-2xl animate-in zoom-in-95 duration-200 text-white">
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 max-w-md w-full space-y-5 shadow-2xl animate-in zoom-in-95 duration-200 text-slate-900">
             
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-[#E5232F]/15 border border-[#E5232F]/40 flex items-center justify-center text-[#E5232F] shrink-0">
+              <div className="w-12 h-12 rounded-2xl bg-red-50 border border-red-200 flex items-center justify-center text-red-600 shrink-0">
                 <Trash2 className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-base font-black text-white">Delete Match?</h3>
-                <p className="text-xs text-[#AAB5CC] font-medium mt-0.5">
+                <h3 className="text-base font-black text-slate-900">Delete Match?</h3>
+                <p className="text-xs text-slate-500 font-medium mt-0.5">
                   {deletingMatch.title || 'Selected Match'}
                 </p>
               </div>
             </div>
 
-            <p className="text-xs text-[#AAB5CC] leading-relaxed bg-[#050A1A] p-4 rounded-2xl border border-[#173541]">
+            <p className="text-xs text-slate-600 leading-relaxed bg-slate-50 p-4 rounded-2xl border border-slate-200">
               Are you sure you want to permanently delete this match and its associated data?
             </p>
 
@@ -446,7 +460,7 @@ export default function MasterScorerDashboardUI({
                 type="button"
                 onClick={handleCloseDeleteModal}
                 disabled={isDeleting}
-                className="px-5 py-2.5 bg-[#111A2D] hover:bg-[#173541] text-[#AAB5CC] hover:text-white font-bold rounded-xl text-xs transition-all disabled:opacity-50"
+                className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition-all disabled:opacity-50"
               >
                 Cancel
               </button>
@@ -455,7 +469,7 @@ export default function MasterScorerDashboardUI({
                 type="button"
                 onClick={handleConfirmDelete}
                 disabled={isDeleting}
-                className="px-6 py-2.5 bg-[#E5232F] hover:bg-red-600 text-white font-black rounded-xl text-xs flex items-center gap-2 shadow-lg shadow-[#E5232F]/30 transition-all disabled:opacity-50"
+                className="px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white font-black rounded-xl text-xs flex items-center gap-2 shadow-sm transition-all disabled:opacity-50"
               >
                 {isDeleting ? (
                   <>
@@ -477,7 +491,7 @@ export default function MasterScorerDashboardUI({
       {/* ============================================================ */}
       <nav 
         aria-label="Master Dashboard Bottom Navigation"
-        className="fixed bottom-0 inset-x-0 z-50 bg-[#070D1D]/95 backdrop-blur-md border-t border-[#1E2D4A] py-2 px-3 w-full pb-[calc(0.5rem+env(safe-area-inset-bottom))]"
+        className="fixed bottom-0 inset-x-0 z-50 bg-white/95 backdrop-blur-md border-t border-x border-slate-200/80 rounded-t-2xl sm:rounded-t-3xl py-2 px-3 w-full pb-[calc(0.5rem+env(safe-area-inset-bottom))] shadow-[0_-4px_16px_rgba(0,0,0,0.04)]"
       >
         <div className="grid grid-cols-4 w-full max-w-md mx-auto items-center">
           {navItems.map((item) => {
@@ -490,8 +504,8 @@ export default function MasterScorerDashboardUI({
                 onClick={() => handleTabChange(item.id)}
                 className={`flex flex-col items-center justify-center py-1 px-2 rounded-lg transition-colors text-center w-full ${
                   isActive
-                    ? 'text-[#19D89A]'
-                    : 'text-[#8F9BB3] hover:text-white'
+                    ? 'text-orange-600'
+                    : 'text-slate-500 hover:text-slate-900'
                 }`}
               >
                 <Icon className="w-5 h-5 stroke-[2px]" />

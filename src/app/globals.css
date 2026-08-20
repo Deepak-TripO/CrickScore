@@ -3,16 +3,17 @@
 @tailwind utilities;
 
 :root {
-  --bg-main: #050A1A;
-  --bg-surface: #0D1528;
-  --bg-card: #111A2D;
-  --border-subtle: #123E42;
-  --accent-green: #19D89A;
-  --accent-blue: #315BEA;
-  --accent-pink: #D927A8;
-  --accent-red: #E5232F;
-  --text-primary: #FFFFFF;
-  --text-secondary: #AAB5CC;
+  --bg-main: #FAFAFA;
+  --bg-surface: #FFFFFF;
+  --bg-card: #FFFFFF;
+  --border-subtle: #E2E8F0;
+  --accent-orange: #F97316;
+  --accent-orange-hover: #EA580C;
+  --accent-green: #16A34A;
+  --accent-blue: #2563EB;
+  --accent-red: #DC2626;
+  --text-primary: #0F172A;
+  --text-secondary: #64748B;
 }
 
 body {
@@ -39,27 +40,28 @@ a, button, input, select, textarea, [role="button"] {
 }
 
 ::-webkit-scrollbar-track {
-  background: #050A1A;
+  background: #F1F5F9;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #123E42;
+  background: #CBD5E1;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #19D89A;
+  background: #F97316;
 }
 
 /* Ball pill styles */
 .ball-dot {
   @apply inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-black transition-all shadow-sm;
 }
-.ball-0 { @apply bg-[#0D1528] text-[#AAB5CC] border border-[#123E42]; }
-.ball-1 { @apply bg-[#111A2D] text-[#19D89A] border border-[#123E42]; }
-.ball-2 { @apply bg-[#111A2D] text-[#315BEA] border border-[#123E42]; }
-.ball-3 { @apply bg-[#111A2D] text-[#D927A8] border border-[#123E42]; }
-.ball-4 { @apply bg-[#315BEA] text-white font-black; }
-.ball-6 { @apply bg-[#D927A8] text-white font-black; }
-.ball-w { @apply bg-[#E5232F] text-white font-black animate-pulse; }
-.ball-extra { @apply bg-amber-500/20 text-amber-400 border border-amber-500/40 font-bold; }
+.ball-0 { @apply bg-slate-100 text-slate-600 border border-slate-200; }
+.ball-1 { @apply bg-orange-50 text-orange-600 border border-orange-200; }
+.ball-2 { @apply bg-orange-100 text-orange-700 border border-orange-300; }
+.ball-3 { @apply bg-orange-200 text-orange-800 border border-orange-400; }
+.ball-4 { @apply bg-orange-500 text-white font-black; }
+.ball-6 { @apply bg-orange-600 text-white font-black; }
+.ball-w { @apply bg-red-600 text-white font-black animate-pulse; }
+.ball-extra { @apply bg-amber-50 text-amber-600 border border-amber-300 font-bold; }
+

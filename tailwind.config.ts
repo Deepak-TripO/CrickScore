@@ -10,15 +10,15 @@ const config: Config = {
     extend: {
       colors: {
         batscore: {
-          dark: '#050A1A',
-          surface: '#0D1528',
-          card: '#111A2D',
-          border: '#123E42',
-          green: '#19D89A',
-          blue: '#315BEA',
-          pink: '#D927A8',
-          red: '#E5232F',
-          muted: '#AAB5CC',
+          dark: '#FAFAFA',
+          surface: '#FFFFFF',
+          card: '#FFFFFF',
+          border: '#E2E8F0',
+          green: '#F97316',
+          blue: '#EA580C',
+          pink: '#F97316',
+          red: '#DC2626',
+          muted: '#64748B',
         },
         cricket: {
           50: '#f0fdf4',

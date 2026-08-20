@@ -50,16 +50,21 @@ const createDefaultSquad = (prefix: string): PlayerInput[] => [
   { id: `${prefix}_bowl3`, name: '', type: 'Bowler', imageFile: null, previewUrl: '' },
 ];
 
-const mapPlayersToInput = (rawPlayers: any[], prefix: string): PlayerInput[] => {
+const mapPlayersToInput = (rawPlayers: any, prefix: string): PlayerInput[] => {
   const defaults = createDefaultSquad(prefix);
-  if (!rawPlayers || rawPlayers.length === 0) return defaults;
+  let parsed = rawPlayers;
+  if (typeof parsed === 'string') {
+    try { parsed = JSON.parse(parsed); } catch {}
+  }
+  if (!Array.isArray(parsed) || parsed.length === 0) return defaults;
 
-  const mapped: PlayerInput[] = rawPlayers.map((p: any, idx: number) => {
+  const mapped: PlayerInput[] = parsed.map((p: any, idx: number) => {
     let type: PlayerRoleType = 'Batsman';
     const role = (p.role || p.type || p.player_type || p.roleMapping || '').toUpperCase();
     if (role.includes('WICKET') || role === 'WK' || role.includes('KEEPER')) type = 'WK';
     else if (role.includes('BOWLER') || role === 'BOWL') type = 'Bowler';
     else if (role.includes('ALL') || role === 'AR' || role.includes('ROUND')) type = 'Allrounder';
+    else type = 'Batsman';
 
     const pName = p.name || 
       p.full_name || 
@@ -77,10 +82,10 @@ const mapPlayersToInput = (rawPlayers: any[], prefix: string): PlayerInput[] => 
 
     return {
       id: p.id || `${prefix}_p_${idx}_${Date.now()}`,
-      name: pName,
+      name: String(pName || '').trim(),
       type,
       imageFile: null,
-      previewUrl: p.avatar_url || p.image_url || p.profile_image || p.avatarUrl || ''
+      previewUrl: p.avatar_url || p.image_url || p.profile_image || p.avatarUrl || p.photo_url || p.photoUrl || ''
     };
   });
 
@@ -193,13 +198,28 @@ export default function CreateMatchForm({ initialMatch, onCancel, onSuccess }: C
       setStatus(initialMatch.status || 'UPCOMING');
       setOvers(initialMatch.overs || 20);
 
-      const t1Players = initialMatch.team1Players || initialMatch.yourTeamPlayers || initialMatch.your_team_players || initialMatch.team1_players;
-      const t2Players = initialMatch.team2Players || initialMatch.oppositeTeamPlayers || initialMatch.opposite_team_players || initialMatch.team2_players;
+      const t1Players = initialMatch.team1Players || 
+        initialMatch.yourTeamPlayers || 
+        initialMatch.your_team_players || 
+        initialMatch.team1_players || 
+        initialMatch.team_1_players || 
+        initialMatch.players_a || 
+        initialMatch.team1_playing_xi ||
+        initialMatch.team1?.players;
 
-      if (t1Players && t1Players.length > 0) {
+      const t2Players = initialMatch.team2Players || 
+        initialMatch.oppositeTeamPlayers || 
+        initialMatch.opposite_team_players || 
+        initialMatch.team2_players || 
+        initialMatch.team_2_players || 
+        initialMatch.players_b || 
+        initialMatch.team2_playing_xi ||
+        initialMatch.team2?.players;
+
+      if (t1Players) {
         setYourTeamPlayers(mapPlayersToInput(t1Players, 'y'));
       }
-      if (t2Players && t2Players.length > 0) {
+      if (t2Players) {
         setOppositeTeamPlayers(mapPlayersToInput(t2Players, 'o'));
       }
     }
@@ -530,14 +550,14 @@ export default function CreateMatchForm({ initialMatch, onCancel, onSuccess }: C
   const t2Stats = countTeamRoles(oppositeTeamPlayers);
 
   return (
-    <div className="bg-[#0D1528] border border-[#173541] rounded-3xl p-3.5 sm:p-8 space-y-3 sm:space-y-6 shadow-2xl relative text-white">
+    <div className="bg-white border border-slate-200 rounded-3xl p-3.5 sm:p-8 space-y-3 sm:space-y-6 shadow-2xl relative text-slate-900">
       
       {/* CANCEL BUTTON IF RENDERED IN MODAL */}
       {onCancel && (
         <button 
           type="button" 
           onClick={onCancel}
-          className="absolute top-3.5 right-3.5 sm:top-6 sm:right-6 p-1.5 sm:p-2 text-[#AAB5CC] hover:text-white bg-[#111A2D] hover:bg-[#173541] rounded-xl transition-all"
+          className="absolute top-3.5 right-3.5 sm:top-6 sm:right-6 p-1.5 sm:p-2 text-slate-400 hover:text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all"
           title="Cancel"
         >
           <X className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -545,7 +565,7 @@ export default function CreateMatchForm({ initialMatch, onCancel, onSuccess }: C
       )}
 
       {/* 2-STEP PROGRESS INDICATOR */}
-      <div className="flex items-center justify-between border-b border-[#173541] pb-2 sm:pb-4 pr-6 sm:pr-8">
+      <div className="flex items-center justify-between border-b border-slate-100 pb-2 sm:pb-4 pr-6 sm:pr-8">
         {[
           { num: 1, label: 'Step 1' },
           { num: 2, label: 'Step 2' },
@@ -556,15 +576,15 @@ export default function CreateMatchForm({ initialMatch, onCancel, onSuccess }: C
             <div key={s.num} className="flex items-center gap-2 sm:gap-3">
               <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-black text-xs sm:text-sm transition-all ${
                 isActive 
-                  ? 'bg-[#19D89A] text-[#050A1A] shadow-lg shadow-[#19D89A]/30 scale-105' 
+                  ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20 scale-105' 
                   : isDone 
-                  ? 'bg-[#19D89A]/20 text-[#19D89A] border border-[#19D89A]/40' 
-                  : 'bg-[#111A2D] text-[#AAB5CC] border border-[#173541]'
+                  ? 'bg-orange-50 text-orange-600 border border-orange-200' 
+                  : 'bg-slate-100 text-slate-500 border border-slate-200'
               }`}>
                 {isDone ? <Check className="w-4 h-4 sm:w-5 sm:h-5 stroke-[3]" /> : s.num}
               </div>
               <div className="flex flex-col">
-                <span className={`text-xs sm:text-sm font-black uppercase tracking-wider ${isActive ? 'text-[#19D89A]' : 'text-[#AAB5CC]'}`}>
+                <span className={`text-xs sm:text-sm font-black uppercase tracking-wider ${isActive ? 'text-orange-600' : 'text-slate-500'}`}>
                   {s.label}
                 </span>
               </div>
@@ -575,16 +595,16 @@ export default function CreateMatchForm({ initialMatch, onCancel, onSuccess }: C
 
       {/* INLINE VALIDATION ERROR MESSAGE */}
       {errorMsg && (
-        <div className="p-3 sm:p-4 bg-[#E5232F]/15 border border-[#E5232F]/50 rounded-2xl text-red-200 text-xs flex items-center gap-2.5 font-semibold animate-in fade-in">
-          <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-[#E5232F] shrink-0" />
+        <div className="p-3 sm:p-4 bg-red-50 border border-red-200 rounded-2xl text-red-700 text-xs flex items-center gap-2.5 font-semibold animate-in fade-in">
+          <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-red-600 shrink-0" />
           <span>{errorMsg}</span>
         </div>
       )}
 
       {/* SUCCESS MESSAGE */}
       {successMsg && (
-        <div className="p-3 sm:p-4 bg-[#19D89A]/20 border border-[#19D89A]/60 rounded-2xl text-[#19D89A] text-xs sm:text-sm flex items-center gap-2.5 font-extrabold shadow-lg shadow-[#19D89A]/20 animate-in fade-in">
-          <Check className="w-4 h-4 sm:w-5 sm:h-5 text-[#19D89A] shrink-0" />
+        <div className="p-3 sm:p-4 bg-orange-50 border border-orange-200 rounded-2xl text-orange-700 text-xs sm:text-sm flex items-center gap-2.5 font-extrabold shadow-sm animate-in fade-in">
+          <Check className="w-4 h-4 sm:w-5 sm:h-5 text-orange-600 shrink-0" />
           <span>{successMsg}</span>
         </div>
       )}
@@ -597,26 +617,26 @@ export default function CreateMatchForm({ initialMatch, onCancel, onSuccess }: C
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-6">
             
             {/* TEAM 1 NAME & LOGO */}
-            <div className="bg-[#050A1A] border border-[#173541] rounded-2xl p-3 sm:p-5 space-y-2 sm:space-y-4 shadow-lg">
-              <label className="text-[10px] sm:text-xs font-black text-[#19D89A] uppercase tracking-wider block">
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3 sm:p-5 space-y-2 sm:space-y-4 shadow-sm">
+              <label className="text-[10px] sm:text-xs font-black text-orange-600 uppercase tracking-wider block">
                 Team 1 Name *
               </label>
               
               <div className="flex items-center gap-3 sm:gap-4">
                 <div 
                   onClick={() => yourTeamInputRef.current?.click()}
-                  className="relative group cursor-pointer w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-[#0D1528] border-2 border-dashed border-[#173541] flex flex-col items-center justify-center overflow-hidden hover:border-[#19D89A] transition-all shrink-0"
+                  className="relative group cursor-pointer w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-white border-2 border-dashed border-slate-200 flex flex-col items-center justify-center overflow-hidden hover:border-orange-500 transition-all shrink-0"
                 >
                   {yourTeamPreview ? (
                     <img src={yourTeamPreview} alt="Team 1 Logo" className="w-full h-full object-cover" />
                   ) : (
-                    <div className="flex flex-col items-center gap-0.5 text-[#AAB5CC]">
+                    <div className="flex flex-col items-center gap-0.5 text-slate-400">
                       <Camera className="w-4 h-4 sm:w-5 sm:h-5" />
                       <span className="text-[8px] font-bold">Logo *</span>
                     </div>
                   )}
-                  <div className="absolute inset-0 bg-[#050A1A]/80 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-opacity text-white text-[9px] font-bold">
-                    <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#19D89A]" />
+                  <div className="absolute inset-0 bg-slate-900/70 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-opacity text-white text-[9px] font-bold">
+                    <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-orange-400" />
                     <span>Upload</span>
                   </div>
                 </div>
@@ -627,7 +647,7 @@ export default function CreateMatchForm({ initialMatch, onCancel, onSuccess }: C
                     value={yourTeamName}
                     onChange={(e) => setYourTeamName(e.target.value)}
                     placeholder="Enter Team 1 Name (e.g. Royal Strikers)"
-                    className="w-full bg-[#0D1528] border border-[#173541] rounded-xl px-3 py-1.5 sm:px-3.5 sm:py-2.5 text-xs text-white placeholder-[#AAB5CC]/50 focus:outline-none focus:border-[#19D89A]"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-1.5 sm:px-3.5 sm:py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-orange-500"
                   />
                   <input 
                     ref={yourTeamInputRef}
@@ -639,7 +659,7 @@ export default function CreateMatchForm({ initialMatch, onCancel, onSuccess }: C
                   <button 
                     type="button" 
                     onClick={() => yourTeamInputRef.current?.click()}
-                    className="text-[10px] text-[#19D89A] font-bold hover:underline block"
+                    className="text-[10px] text-orange-600 font-bold hover:underline block"
                   >
                     + Upload Team 1 Logo *
                   </button>
@@ -648,26 +668,26 @@ export default function CreateMatchForm({ initialMatch, onCancel, onSuccess }: C
             </div>
 
             {/* TEAM 2 NAME & LOGO */}
-            <div className="bg-[#050A1A] border border-[#173541] rounded-2xl p-3 sm:p-5 space-y-2 sm:space-y-4 shadow-lg">
-              <label className="text-[10px] sm:text-xs font-black text-[#19D89A] uppercase tracking-wider block">
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3 sm:p-5 space-y-2 sm:space-y-4 shadow-sm">
+              <label className="text-[10px] sm:text-xs font-black text-orange-600 uppercase tracking-wider block">
                 Team 2 Name *
               </label>
               
               <div className="flex items-center gap-3 sm:gap-4">
                 <div 
                   onClick={() => oppositeTeamInputRef.current?.click()}
-                  className="relative group cursor-pointer w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-[#0D1528] border-2 border-dashed border-[#173541] flex flex-col items-center justify-center overflow-hidden hover:border-[#19D89A] transition-all shrink-0"
+                  className="relative group cursor-pointer w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-white border-2 border-dashed border-slate-200 flex flex-col items-center justify-center overflow-hidden hover:border-orange-500 transition-all shrink-0"
                 >
                   {oppositeTeamPreview ? (
                     <img src={oppositeTeamPreview} alt="Team 2 Logo" className="w-full h-full object-cover" />
                   ) : (
-                    <div className="flex flex-col items-center gap-0.5 text-[#AAB5CC]">
+                    <div className="flex flex-col items-center gap-0.5 text-slate-400">
                       <Camera className="w-4 h-4 sm:w-5 sm:h-5" />
                       <span className="text-[8px] font-bold">Logo *</span>
                     </div>
                   )}
-                  <div className="absolute inset-0 bg-[#050A1A]/80 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-opacity text-white text-[9px] font-bold">
-                    <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#19D89A]" />
+                  <div className="absolute inset-0 bg-slate-900/70 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-opacity text-white text-[9px] font-bold">
+                    <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-orange-400" />
                     <span>Upload</span>
                   </div>
                 </div>
@@ -678,7 +698,7 @@ export default function CreateMatchForm({ initialMatch, onCancel, onSuccess }: C
                     value={oppositeTeamName}
                     onChange={(e) => setOppositeTeamName(e.target.value)}
                     placeholder="Enter Team 2 Name (e.g. Mumbai Kings)"
-                    className="w-full bg-[#0D1528] border border-[#173541] rounded-xl px-3 py-1.5 sm:px-3.5 sm:py-2.5 text-xs text-white placeholder-[#AAB5CC]/50 focus:outline-none focus:border-[#19D89A]"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-1.5 sm:px-3.5 sm:py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-orange-500"
                   />
                   <input 
                     ref={oppositeTeamInputRef}
@@ -690,7 +710,7 @@ export default function CreateMatchForm({ initialMatch, onCancel, onSuccess }: C
                   <button 
                     type="button" 
                     onClick={() => oppositeTeamInputRef.current?.click()}
-                    className="text-[10px] text-[#19D89A] font-bold hover:underline block"
+                    className="text-[10px] text-orange-600 font-bold hover:underline block"
                   >
                     + Upload Team 2 Logo *
                   </button>
@@ -701,8 +721,8 @@ export default function CreateMatchForm({ initialMatch, onCancel, onSuccess }: C
           </div>
 
           {/* SELECT MATCH CATEGORY */}
-          <div className="bg-[#050A1A] border border-[#173541] rounded-2xl p-3 sm:p-5 space-y-2 sm:space-y-3 shadow-lg">
-            <label className="text-[10px] sm:text-xs font-black text-[#19D89A] uppercase tracking-wider block">
+          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3 sm:p-5 space-y-2 sm:space-y-3 shadow-sm">
+            <label className="text-[10px] sm:text-xs font-black text-orange-600 uppercase tracking-wider block">
               Select Match Category *
             </label>
             <div className="grid grid-cols-3 gap-2 sm:gap-3">
@@ -713,8 +733,8 @@ export default function CreateMatchForm({ initialMatch, onCancel, onSuccess }: C
                   onClick={() => setCategory(cat)}
                   className={`py-1.5 px-2 sm:py-2.5 sm:px-3 rounded-xl text-[10px] sm:text-xs font-bold transition-all border text-center ${
                     category === cat
-                      ? 'bg-[#19D89A] text-[#050A1A] border-[#19D89A] shadow-md shadow-[#19D89A]/20 scale-102 font-black'
-                      : 'bg-[#0D1528] text-[#AAB5CC] border-[#173541] hover:text-white hover:border-[#19D89A]/50'
+                      ? 'bg-orange-500 text-white border-orange-500 shadow-sm scale-102 font-black'
+                      : 'bg-white text-slate-700 border-slate-200 hover:border-orange-400'
                   }`}
                 >
                   {cat}
@@ -724,12 +744,12 @@ export default function CreateMatchForm({ initialMatch, onCancel, onSuccess }: C
           </div>
 
           {/* STEP 1 NEXT / CONTINUE ACTION */}
-          <div className="pt-2 sm:pt-4 flex items-center justify-between border-t border-[#173541]">
+          <div className="pt-2 sm:pt-4 flex items-center justify-between border-t border-slate-100">
             {onCancel ? (
               <button
                 type="button"
                 onClick={onCancel}
-                className="px-4 py-2 sm:px-5 sm:py-2.5 bg-[#111A2D] hover:bg-[#173541] text-[#AAB5CC] hover:text-white font-bold rounded-xl text-xs"
+                className="px-4 py-2 sm:px-5 sm:py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs"
               >
                 Cancel
               </button>
@@ -738,7 +758,7 @@ export default function CreateMatchForm({ initialMatch, onCancel, onSuccess }: C
             <button
               type="button"
               onClick={handleProceedToStep2}
-              className="px-6 py-2.5 sm:px-8 sm:py-3 bg-[#19D89A] hover:bg-emerald-400 text-[#050A1A] font-black rounded-xl text-xs flex items-center gap-2 shadow-lg shadow-[#19D89A]/20 transition-all uppercase tracking-wider"
+              className="px-6 py-2.5 sm:px-8 sm:py-3 bg-orange-500 hover:bg-orange-600 text-white font-black rounded-xl text-xs flex items-center gap-2 shadow-sm transition-all uppercase tracking-wider"
             >
               <span>Next Step</span>
               <ArrowRight className="w-4 h-4" />
@@ -758,29 +778,29 @@ export default function CreateMatchForm({ initialMatch, onCancel, onSuccess }: C
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             
             {/* TEAM 1 SQUAD */}
-            <div className="bg-[#050A1A] border border-[#173541] rounded-2xl p-5 space-y-4 shadow-xl">
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-4 shadow-sm">
               
               {/* TEAM 1 HEADER & LIVE VALIDATION STATS */}
-              <div className="space-y-3 border-b border-[#173541] pb-4">
+              <div className="space-y-3 border-b border-slate-200 pb-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl overflow-hidden bg-[#0D1528] border border-[#19D89A]/40 flex items-center justify-center shrink-0">
+                    <div className="w-10 h-10 rounded-xl overflow-hidden bg-white border border-slate-200 flex items-center justify-center shrink-0">
                       {yourTeamPreview ? (
                         <img src={yourTeamPreview} alt={yourTeamName} className="w-full h-full object-cover" />
                       ) : (
-                        <Shield className="w-5 h-5 text-[#19D89A]" />
+                        <Shield className="w-5 h-5 text-orange-500" />
                       )}
                     </div>
                     <div>
-                      <span className="text-[10px] font-bold text-[#19D89A] uppercase tracking-wider">Team 1</span>
-                      <h4 className="text-base font-extrabold text-white">{yourTeamName || 'Team 1'}</h4>
+                      <span className="text-[10px] font-bold text-orange-600 uppercase tracking-wider">Team 1</span>
+                      <h4 className="text-base font-extrabold text-slate-900">{yourTeamName || 'Team 1'}</h4>
                     </div>
                   </div>
 
                   <span className={`px-3 py-1 rounded-full text-xs font-black border ${
                     t1Stats.isValidCount 
-                      ? 'bg-[#19D89A]/20 text-[#19D89A] border-[#19D89A]/40' 
-                      : 'bg-amber-500/20 text-amber-400 border-amber-500/40'
+                      ? 'bg-orange-50 text-orange-600 border-orange-200' 
+                      : 'bg-amber-50 text-amber-600 border-amber-200'
                   }`}>
                     {t1Stats.totalNamed} / 11 Players {t1Stats.isValidCount ? '✓' : ''}
                   </span>
@@ -792,18 +812,18 @@ export default function CreateMatchForm({ initialMatch, onCancel, onSuccess }: C
                 {yourTeamPlayers.map((p, idx) => (
                   <div 
                     key={p.id} 
-                    className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 p-2 bg-[#0D1528] border border-[#173541] rounded-xl hover:border-[#19D89A]/40 transition-all"
+                    className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 p-2 bg-white border border-slate-200 rounded-xl hover:border-orange-400 transition-all"
                   >
-                    <span className="text-[10px] font-bold text-[#AAB5CC] w-5 text-center shrink-0">
+                    <span className="text-[10px] font-bold text-slate-400 w-5 text-center shrink-0">
                       #{idx + 1}
                     </span>
 
                     {/* PHOTO UPLOAD */}
-                    <label className="relative group cursor-pointer w-9 h-9 rounded-full bg-[#050A1A] border border-[#173541] flex items-center justify-center overflow-hidden shrink-0 hover:border-[#19D89A]">
+                    <label className="relative group cursor-pointer w-9 h-9 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center overflow-hidden shrink-0 hover:border-orange-500">
                       {p.previewUrl ? (
                         <img src={p.previewUrl} alt={p.name} className="w-full h-full object-cover" />
                       ) : (
-                        <Camera className="w-3.5 h-3.5 text-[#19D89A]" />
+                        <Camera className="w-3.5 h-3.5 text-orange-500" />
                       )}
                       <input 
                         type="file" 
@@ -819,14 +839,14 @@ export default function CreateMatchForm({ initialMatch, onCancel, onSuccess }: C
                       value={p.name}
                       onChange={(e) => handleUpdatePlayer(1, p.id, 'name', e.target.value)}
                       placeholder={`Player ${idx + 1} Name *`}
-                      className="flex-1 bg-[#050A1A] border border-[#173541] rounded-lg px-3 py-1.5 text-xs text-white placeholder-[#AAB5CC]/40 focus:outline-none focus:border-[#19D89A]"
+                      className="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-orange-500"
                     />
 
                     {/* ROLE DROPDOWN */}
                     <select
                       value={p.type}
                       onChange={(e) => handleUpdatePlayer(1, p.id, 'type', e.target.value as PlayerRoleType)}
-                      className="bg-[#050A1A] border border-[#173541] rounded-lg px-2.5 py-1.5 text-[11px] font-black text-[#19D89A] focus:outline-none focus:border-[#19D89A]"
+                      className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-[11px] font-black text-orange-600 focus:outline-none focus:border-orange-500"
                     >
                       <option value="WK">WK – Wicket Keeper</option>
                       <option value="Batsman">BAT – Batsman</option>
@@ -838,7 +858,7 @@ export default function CreateMatchForm({ initialMatch, onCancel, onSuccess }: C
                     <button 
                       type="button"
                       onClick={() => handleRemovePlayer(1, p.id)}
-                      className="p-1.5 text-[#AAB5CC] hover:text-[#E5232F] rounded-lg hover:bg-[#111A2D] transition-colors shrink-0"
+                      className="p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition-colors shrink-0"
                       title="Remove Player"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -852,7 +872,7 @@ export default function CreateMatchForm({ initialMatch, onCancel, onSuccess }: C
                 type="button"
                 onClick={() => handleAddPlayer(1)}
                 disabled={yourTeamPlayers.length >= 11}
-                className="w-full py-2.5 bg-[#0D1528] border border-dashed border-[#173541] hover:border-[#19D89A] text-[#19D89A] font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                className="w-full py-2.5 bg-white border border-dashed border-slate-300 hover:border-orange-500 text-orange-600 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <Plus className="w-4 h-4" />
                 <span>+ Add Player for Team 1 ({yourTeamPlayers.length}/11)</span>
@@ -861,29 +881,29 @@ export default function CreateMatchForm({ initialMatch, onCancel, onSuccess }: C
             </div>
 
             {/* TEAM 2 SQUAD */}
-            <div className="bg-[#050A1A] border border-[#173541] rounded-2xl p-5 space-y-4 shadow-xl">
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-4 shadow-sm">
               
               {/* TEAM 2 HEADER & LIVE VALIDATION STATS */}
-              <div className="space-y-3 border-b border-[#173541] pb-4">
+              <div className="space-y-3 border-b border-slate-200 pb-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl overflow-hidden bg-[#0D1528] border border-[#19D89A]/40 flex items-center justify-center shrink-0">
+                    <div className="w-10 h-10 rounded-xl overflow-hidden bg-white border border-slate-200 flex items-center justify-center shrink-0">
                       {oppositeTeamPreview ? (
                         <img src={oppositeTeamPreview} alt={oppositeTeamName} className="w-full h-full object-cover" />
                       ) : (
-                        <Shield className="w-5 h-5 text-[#19D89A]" />
+                        <Shield className="w-5 h-5 text-orange-500" />
                       )}
                     </div>
                     <div>
-                      <span className="text-[10px] font-bold text-[#19D89A] uppercase tracking-wider">Team 2</span>
-                      <h4 className="text-base font-extrabold text-[#ffffff]">{oppositeTeamName || 'Team 2'}</h4>
+                      <span className="text-[10px] font-bold text-orange-600 uppercase tracking-wider">Team 2</span>
+                      <h4 className="text-base font-extrabold text-slate-900">{oppositeTeamName || 'Team 2'}</h4>
                     </div>
                   </div>
 
                   <span className={`px-3 py-1 rounded-full text-xs font-black border ${
                     t2Stats.isValidCount 
-                      ? 'bg-[#19D89A]/20 text-[#19D89A] border-[#19D89A]/40' 
-                      : 'bg-amber-500/20 text-amber-400 border-amber-500/40'
+                      ? 'bg-orange-50 text-orange-600 border-orange-200' 
+                      : 'bg-amber-50 text-amber-600 border-amber-200'
                   }`}>
                     {t2Stats.totalNamed} / 11 Players {t2Stats.isValidCount ? '✓' : ''}
                   </span>
@@ -895,18 +915,18 @@ export default function CreateMatchForm({ initialMatch, onCancel, onSuccess }: C
                 {oppositeTeamPlayers.map((p, idx) => (
                   <div 
                     key={p.id} 
-                    className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 p-2 bg-[#0D1528] border border-[#173541] rounded-xl hover:border-[#19D89A]/40 transition-all"
+                    className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 p-2 bg-white border border-slate-200 rounded-xl hover:border-orange-400 transition-all"
                   >
-                    <span className="text-[10px] font-bold text-[#AAB5CC] w-5 text-center shrink-0">
+                    <span className="text-[10px] font-bold text-slate-400 w-5 text-center shrink-0">
                       #{idx + 1}
                     </span>
 
                     {/* PHOTO UPLOAD */}
-                    <label className="relative group cursor-pointer w-9 h-9 rounded-full bg-[#050A1A] border border-[#173541] flex items-center justify-center overflow-hidden shrink-0 hover:border-[#19D89A]">
+                    <label className="relative group cursor-pointer w-9 h-9 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center overflow-hidden shrink-0 hover:border-orange-500">
                       {p.previewUrl ? (
                         <img src={p.previewUrl} alt={p.name} className="w-full h-full object-cover" />
                       ) : (
-                        <Camera className="w-3.5 h-3.5 text-[#19D89A]" />
+                        <Camera className="w-3.5 h-3.5 text-orange-500" />
                       )}
                       <input 
                         type="file" 
@@ -922,14 +942,14 @@ export default function CreateMatchForm({ initialMatch, onCancel, onSuccess }: C
                       value={p.name}
                       onChange={(e) => handleUpdatePlayer(2, p.id, 'name', e.target.value)}
                       placeholder={`Player ${idx + 1} Name *`}
-                      className="flex-1 bg-[#050A1A] border border-[#173541] rounded-lg px-3 py-1.5 text-xs text-white placeholder-[#AAB5CC]/40 focus:outline-none focus:border-[#19D89A]"
+                      className="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-orange-500"
                     />
 
                     {/* ROLE DROPDOWN */}
                     <select
                       value={p.type}
                       onChange={(e) => handleUpdatePlayer(2, p.id, 'type', e.target.value as PlayerRoleType)}
-                      className="bg-[#050A1A] border border-[#173541] rounded-lg px-2.5 py-1.5 text-[11px] font-black text-[#19D89A] focus:outline-none focus:border-[#19D89A]"
+                      className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-[11px] font-black text-orange-600 focus:outline-none focus:border-orange-500"
                     >
                       <option value="WK">WK – Wicket Keeper</option>
                       <option value="Batsman">BAT – Batsman</option>
@@ -941,7 +961,7 @@ export default function CreateMatchForm({ initialMatch, onCancel, onSuccess }: C
                     <button 
                       type="button"
                       onClick={() => handleRemovePlayer(2, p.id)}
-                      className="p-1.5 text-[#AAB5CC] hover:text-[#E5232F] rounded-lg hover:bg-[#111A2D] transition-colors shrink-0"
+                      className="p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition-colors shrink-0"
                       title="Remove Player"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -955,7 +975,7 @@ export default function CreateMatchForm({ initialMatch, onCancel, onSuccess }: C
                 type="button"
                 onClick={() => handleAddPlayer(2)}
                 disabled={oppositeTeamPlayers.length >= 11}
-                className="w-full py-2.5 bg-[#0D1528] border border-dashed border-[#173541] hover:border-[#19D89A] text-[#19D89A] font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                className="w-full py-2.5 bg-white border border-dashed border-slate-300 hover:border-orange-500 text-orange-600 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <Plus className="w-4 h-4" />
                 <span>+ Add Player for Team 2 ({oppositeTeamPlayers.length}/11)</span>
@@ -966,8 +986,8 @@ export default function CreateMatchForm({ initialMatch, onCancel, onSuccess }: C
           </div>
 
           {/* MATCH OVERS DISPLAY IN STEP 2 */}
-          <div className="bg-[#050A1A] border border-[#173541] rounded-2xl p-5 space-y-3 shadow-lg max-w-lg">
-            <label className="text-xs font-black text-[#19D89A] uppercase tracking-wider block">
+          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-3 shadow-sm max-w-lg">
+            <label className="text-xs font-black text-orange-600 uppercase tracking-wider block">
               Match Overs *
             </label>
             <div className="flex flex-wrap items-center gap-2">
@@ -978,8 +998,8 @@ export default function CreateMatchForm({ initialMatch, onCancel, onSuccess }: C
                   onClick={() => setOvers(ov)}
                   className={`flex-1 min-w-[65px] py-2 rounded-xl text-xs font-bold border transition-all ${
                     overs === ov
-                      ? 'bg-[#19D89A] text-[#050A1A] border-[#19D89A] shadow-md shadow-[#19D89A]/20 font-black'
-                      : 'bg-[#0D1528] text-[#AAB5CC] border-[#173541] hover:text-white'
+                      ? 'bg-orange-500 text-white border-orange-500 shadow-sm font-black'
+                      : 'bg-white text-slate-700 border-slate-200 hover:border-orange-400'
                   }`}
                 >
                   {ov} Overs
@@ -992,18 +1012,18 @@ export default function CreateMatchForm({ initialMatch, onCancel, onSuccess }: C
                   max={100}
                   value={overs}
                   onChange={(e) => setOvers(Number(e.target.value))}
-                  className="w-full bg-[#0D1528] border border-[#173541] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#19D89A]"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-orange-500"
                 />
               </div>
             </div>
           </div>
 
           {/* STEP 2 ACTION BUTTONS */}
-          <div className="pt-4 flex items-center justify-between gap-4 border-t border-[#173541]">
+          <div className="pt-4 flex items-center justify-between gap-4 border-t border-slate-100">
             <button
               type="button"
               onClick={() => setStep(1)}
-              className="px-6 py-3 bg-[#111A2D] hover:bg-[#173541] text-[#AAB5CC] hover:text-white font-bold rounded-xl text-xs flex items-center gap-2 transition-all"
+              className="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-2 transition-all"
             >
               <ArrowLeft className="w-4 h-4" />
               <span>Back</span>
@@ -1013,15 +1033,15 @@ export default function CreateMatchForm({ initialMatch, onCancel, onSuccess }: C
               type="button"
               disabled={loading}
               onClick={handleSubmitFinal}
-              className={`px-8 py-3 rounded-xl font-black text-xs flex items-center gap-2 transition-all uppercase tracking-wider shadow-lg ${
+              className={`px-8 py-3 rounded-xl font-black text-xs flex items-center gap-2 transition-all uppercase tracking-wider shadow-md ${
                 loading
-                  ? 'bg-[#111A2D] text-[#AAB5CC] cursor-not-allowed'
-                  : 'bg-[#19D89A] hover:bg-emerald-400 text-[#050A1A] shadow-[#19D89A]/25'
+                  ? 'bg-slate-200 text-slate-500 cursor-not-allowed'
+                  : 'bg-orange-500 hover:bg-orange-600 text-white'
               }`}
             >
               {loading ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin text-[#050A1A]" />
+                  <Loader2 className="w-4 h-4 animate-spin text-white" />
                   <span>Saving Match...</span>
                 </>
               ) : (

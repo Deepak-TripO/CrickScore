@@ -87,8 +87,8 @@ function HomePageContent({
       
       {/* HOME PAGE MOBILE SEARCH BAR (LIGHTWEIGHT, SIMPLE, FIT FOR MOBILE) */}
       <div className="md:hidden w-full space-y-2">
-        <div className="flex items-center gap-2 bg-[#0D1528] border border-[#173541] focus-within:border-[#19D89A] rounded-xl px-3 py-2.5 transition-colors shadow-md">
-          <Search className="w-4 h-4 text-[#19D89A] shrink-0" />
+        <div className="flex items-center gap-2 bg-white border border-slate-200 focus-within:border-orange-500 rounded-xl px-3 py-2.5 transition-colors shadow-sm">
+          <Search className="w-4 h-4 text-orange-500 shrink-0" />
           <input
             type="text"
             value={searchQuery}
@@ -103,13 +103,13 @@ function HomePageContent({
               router.replace(`/${params.toString() ? `?${params.toString()}` : ''}`, { scroll: false });
             }}
             placeholder="Search team name..."
-            className="w-full bg-transparent text-white text-xs outline-none placeholder-[#71809A] font-medium"
+            className="w-full bg-transparent text-slate-900 text-xs outline-none placeholder-slate-400 font-medium"
           />
           {searchQuery && (
             <button
               type="button"
               onClick={handleClearSearch}
-              className="p-1 text-[#AAB5CC] hover:text-white rounded transition-colors shrink-0"
+              className="p-1 text-slate-400 hover:text-slate-600 rounded transition-colors shrink-0"
               title="Clear search"
             >
               <X className="w-3.5 h-3.5" />
@@ -122,14 +122,14 @@ function HomePageContent({
       <div className="space-y-3">
         <div className="flex items-center justify-between gap-2 w-full">
           {/* SEGMENTED TOGGLE BUTTON [ LIVE ] [ COMPLETED ] */}
-          <div className="flex items-center bg-[#0D1528] border border-[#173541] rounded-xl p-1 shadow-md">
+          <div className="flex items-center bg-white border border-slate-200 rounded-xl p-1 shadow-sm">
             <button
               type="button"
               onClick={() => setStatusToggle('LIVE')}
               className={`py-1.5 px-3 sm:px-4 rounded-lg text-xs font-black tracking-wider uppercase transition-all duration-200 ${
                 statusToggle === 'LIVE'
-                  ? 'bg-[#19D89A] text-[#050A1A] shadow-md shadow-[#19D89A]/20'
-                  : 'text-[#AAB5CC] hover:text-white hover:bg-[#111A2D]'
+                  ? 'bg-orange-500 text-white shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
               }`}
             >
               LIVE
@@ -139,8 +139,8 @@ function HomePageContent({
               onClick={() => setStatusToggle('COMPLETED')}
               className={`py-1.5 px-3 sm:px-4 rounded-lg text-xs font-black tracking-wider uppercase transition-all duration-200 ${
                 statusToggle === 'COMPLETED'
-                  ? 'bg-[#19D89A] text-[#050A1A] shadow-md shadow-[#19D89A]/20'
-                  : 'text-[#AAB5CC] hover:text-white hover:bg-[#111A2D]'
+                  ? 'bg-orange-500 text-white shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
               }`}
             >
               COMPLETED
@@ -151,27 +151,27 @@ function HomePageContent({
           <button
             type="button"
             onClick={() => setIsFilterOpen(!isFilterOpen)}
-            className={`p-2.5 rounded-xl transition-all duration-200 shadow-md active:scale-95 border flex items-center justify-center relative ${
+            className={`p-2.5 rounded-xl transition-all duration-200 shadow-sm active:scale-95 border flex items-center justify-center relative ${
               isFilterOpen || (activeCategory !== 'ALL MATCHS' && activeCategory !== 'All')
-                ? 'bg-[#0D1528] border-[#19D89A] text-[#19D89A] shadow-[#19D89A]/10'
-                : 'bg-[#0D1528] border-[#173541] text-[#AAB5CC] hover:text-white hover:border-[#19D89A]/50'
+                ? 'bg-white border-orange-500 text-orange-500'
+                : 'bg-white border-slate-200 text-slate-600 hover:text-slate-900 hover:border-orange-400'
             }`}
             title="Filter Categories"
             aria-label="Filter Categories"
           >
             <Filter className="w-4 h-4" />
             {activeCategory !== 'ALL MATCHS' && activeCategory !== 'All' && (
-              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-[#19D89A] rounded-full border border-[#050A1A]" />
+              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-orange-500 rounded-full border border-white" />
             )}
           </button>
         </div>
 
         {/* EXPANDABLE FILTER PANEL CONTAINING CATEGORY OPTIONS */}
         {isFilterOpen && (
-          <div className="w-full bg-[#0D1528] border border-[#173541] rounded-2xl p-3 sm:p-4 shadow-xl space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
-            <div className="flex items-center justify-between pb-2 border-b border-[#173541]/60">
-              <div className="flex items-center gap-2 text-xs font-extrabold uppercase text-white tracking-wider">
-                <Filter className="w-3.5 h-3.5 text-[#19D89A]" />
+          <div className="w-full bg-white border border-slate-200 rounded-2xl p-3 sm:p-4 shadow-md space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+              <div className="flex items-center gap-2 text-xs font-extrabold uppercase text-slate-900 tracking-wider">
+                <Filter className="w-3.5 h-3.5 text-orange-500" />
                 <span>Select Category</span>
               </div>
             </div>
@@ -189,8 +189,8 @@ function HomePageContent({
                     }}
                     className={`w-full py-2.5 px-2 rounded-xl text-[10px] sm:text-xs font-black tracking-tight sm:tracking-wider uppercase transition-all duration-200 text-center truncate ${
                       isActive
-                        ? 'bg-[#19D89A] text-[#050A1A] shadow-md shadow-[#19D89A]/20 font-extrabold scale-[1.01]'
-                        : 'bg-[#050A1A]/80 text-[#AAB5CC] hover:text-white hover:bg-[#111A2D] border border-[#173541]/50'
+                        ? 'bg-orange-500 text-white shadow-sm font-extrabold scale-[1.01]'
+                        : 'bg-slate-50 text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-slate-200'
                     }`}
                   >
                     {cat}
@@ -205,8 +205,8 @@ function HomePageContent({
       {/* 2. CATEGORY / SEARCH RESULTS LIST */}
       <section className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-extrabold text-white uppercase tracking-wider flex items-center gap-2">
-            <Trophy className="w-4 h-4 text-[#19D89A]" />
+          <h2 className="text-sm font-extrabold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+            <Trophy className="w-4 h-4 text-orange-500" />
             {searchQuery.trim()
               ? `Team Search Results for "${searchQuery}"`
               : activeCategory !== 'ALL MATCHS' && activeCategory !== 'All'
@@ -223,29 +223,29 @@ function HomePageContent({
           </div>
         ) : searchQuery.trim() ? (
           /* NO TEAMS FOUND STATE */
-          <div className="bg-[#0D1528] border border-[#173541] rounded-2xl p-10 text-center space-y-3 shadow-md">
-            <div className="w-12 h-12 rounded-2xl bg-[#19D89A]/10 border border-[#19D89A]/30 flex items-center justify-center text-[#19D89A] mx-auto">
+          <div className="bg-white border border-slate-200 rounded-2xl p-10 text-center space-y-3 shadow-sm">
+            <div className="w-12 h-12 rounded-2xl bg-orange-50 border border-orange-200 flex items-center justify-center text-orange-500 mx-auto">
               <Search className="w-6 h-6" />
             </div>
-            <h3 className="text-sm font-extrabold text-white">No teams found</h3>
-            <p className="text-xs text-[#71809A]">
+            <h3 className="text-sm font-extrabold text-slate-900">No teams found</h3>
+            <p className="text-xs text-slate-500">
               No matches found with team name matching &quot;{searchQuery}&quot;.
             </p>
             <button
               onClick={handleClearSearch}
-              className="px-4 py-2 bg-[#19D89A] text-[#050A1A] font-black text-xs uppercase tracking-wider rounded-xl shadow-md transition-all active:scale-95"
+              className="px-4 py-2 bg-orange-500 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-sm transition-all active:scale-95 hover:bg-orange-600"
             >
               Clear Search
             </button>
           </div>
         ) : (
           /* NO CATEGORY MATCHES FOUND STATE */
-          <div className="bg-[#0D1528] border border-[#173541] rounded-2xl p-10 text-center space-y-3">
-            <p className="text-xs font-bold text-[#AAB5CC]">No {activeCategory.toLowerCase()} matches found.</p>
-            <p className="text-[11px] text-[#71809A]">Try selecting another category to discover cricket content.</p>
+          <div className="bg-white border border-slate-200 rounded-2xl p-10 text-center space-y-3 shadow-sm">
+            <p className="text-xs font-bold text-slate-700">No {activeCategory.toLowerCase()} matches found.</p>
+            <p className="text-[11px] text-slate-500">Try selecting another category to discover cricket content.</p>
             <button
               onClick={() => setActiveCategory('ALL MATCHS')}
-              className="px-4 py-2 bg-[#19D89A] text-[#050A1A] font-black text-xs uppercase tracking-wider rounded-xl shadow-md"
+              className="px-4 py-2 bg-orange-500 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-sm hover:bg-orange-600"
             >
               View ALL MATCHS
             </button>

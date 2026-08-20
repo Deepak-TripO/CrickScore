@@ -43,7 +43,7 @@ export default function MobileNav({ userRole = 'USER' }: MobileNavProps) {
   ];
 
   return (
-    <nav className="md:hidden fixed bottom-0 inset-x-0 z-50 bg-[#070D1D]/95 backdrop-blur-md border-t border-[#1E2D4A] py-2 px-3 w-full pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
+    <nav className="md:hidden fixed bottom-0 inset-x-0 z-50 bg-white/95 backdrop-blur-md border-t border-x border-slate-200/80 rounded-t-2xl sm:rounded-t-3xl py-2 px-3 w-full pb-[calc(0.5rem+env(safe-area-inset-bottom))] shadow-[0_-4px_16px_rgba(0,0,0,0.04)]">
       <div className="grid grid-cols-4 w-full max-w-md mx-auto items-center">
         {navItems.map((item) => {
           const Icon = item.icon;
@@ -53,8 +53,8 @@ export default function MobileNav({ userRole = 'USER' }: MobileNavProps) {
               href={item.href}
               className={`flex flex-col items-center justify-center py-1 px-2 rounded-lg transition-colors text-center w-full ${
                 item.isActive
-                  ? 'text-[#19D89A]'
-                  : 'text-[#8F9BB3] hover:text-white'
+                  ? 'text-orange-600'
+                  : 'text-slate-500 hover:text-slate-900'
               }`}
             >
               <Icon className="w-5 h-5 stroke-[2px]" />

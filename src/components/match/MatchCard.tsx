@@ -101,18 +101,18 @@ export default function MatchCard({
             handleCardClick();
           }
         }}
-        className="bg-[#0A1224] border border-[#172D42] hover:border-[#19D89A]/50 rounded-2xl p-4 sm:p-5 text-white transition-all duration-300 shadow-md cursor-pointer hover:scale-[1.01] active:scale-[0.99] flex flex-col justify-between space-y-4 select-none"
+        className="bg-white border border-slate-200 hover:border-orange-500 rounded-2xl p-4 sm:p-5 text-slate-900 transition-all duration-300 shadow-sm cursor-pointer hover:scale-[1.01] active:scale-[0.99] flex flex-col justify-between space-y-4 select-none"
       >
         {/* 1. CLEAN TOP HEADER ROW: TOP LEFT CATEGORY | TOP RIGHT DATE */}
-        <div className="flex items-center justify-between text-xs border-b border-[#172D42]/60 pb-2.5">
+        <div className="flex items-center justify-between text-xs border-b border-slate-100 pb-2.5">
           {/* Top Left: Match Category / Type */}
-          <span className="text-[#19D89A] font-extrabold text-xs uppercase tracking-wider">
+          <span className="text-orange-600 font-extrabold text-xs uppercase tracking-wider">
             {categoryType}
           </span>
 
           {/* Top Right: Match Date */}
-          <div className="flex items-center gap-1.5 text-[#AAB5CC] text-xs font-semibold">
-            <Calendar className="w-3.5 h-3.5 text-[#19D89A]" />
+          <div className="flex items-center gap-1.5 text-slate-500 text-xs font-semibold">
+            <Calendar className="w-3.5 h-3.5 text-orange-500" />
             <span suppressHydrationWarning>{formattedDate}</span>
           </div>
         </div>
@@ -123,7 +123,7 @@ export default function MatchCard({
           {/* LEFT TEAM (TEAM 1) */}
           <div className="space-y-1">
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-[#050A1A] border border-[#172D42] p-0.5 flex items-center justify-center overflow-hidden shrink-0">
+              <div className="w-9 h-9 rounded-xl bg-slate-50 border border-slate-200 p-0.5 flex items-center justify-center overflow-hidden shrink-0">
                 {isValidImageUrl(team1Logo) ? (
                   <img
                     src={sanitizeImageUrl(team1Logo)}
@@ -134,27 +134,27 @@ export default function MatchCard({
                     }}
                   />
                 ) : (
-                  <span className="font-black text-xs text-[#19D89A] font-mono">{team1Short}</span>
+                  <span className="font-black text-xs text-orange-600 font-mono">{team1Short}</span>
                 )}
               </div>
-              <span className="text-xl sm:text-2xl font-black text-white font-mono tracking-tight">
+              <span className="text-xl sm:text-2xl font-black text-slate-900 font-mono tracking-tight">
                 {team1ScoreText}
               </span>
             </div>
 
             <div className="flex items-center gap-2 pl-0.5 text-xs">
-              <span className="font-black text-white">{team1Short}</span>
-              <span className="text-[#AAB5CC] font-mono text-[11px]">{team1OversText}</span>
+              <span className="font-black text-slate-900">{team1Short}</span>
+              <span className="text-slate-500 font-mono text-[11px]">{team1OversText}</span>
             </div>
           </div>
 
           {/* RIGHT TEAM (TEAM 2) */}
           <div className="space-y-1 text-right">
             <div className="flex items-center justify-end gap-2.5">
-              <span className="text-xl sm:text-2xl font-black text-white font-mono tracking-tight">
+              <span className="text-xl sm:text-2xl font-black text-slate-900 font-mono tracking-tight">
                 {team2ScoreText}
               </span>
-              <div className="w-9 h-9 rounded-xl bg-[#050A1A] border border-[#172D42] p-0.5 flex items-center justify-center overflow-hidden shrink-0">
+              <div className="w-9 h-9 rounded-xl bg-slate-50 border border-slate-200 p-0.5 flex items-center justify-center overflow-hidden shrink-0">
                 {isValidImageUrl(team2Logo) ? (
                   <img
                     src={sanitizeImageUrl(team2Logo)}
@@ -165,14 +165,14 @@ export default function MatchCard({
                     }}
                   />
                 ) : (
-                  <span className="font-black text-xs text-[#19D89A] font-mono">{team2Short}</span>
+                  <span className="font-black text-xs text-orange-600 font-mono">{team2Short}</span>
                 )}
               </div>
             </div>
 
             <div className="flex items-center justify-end gap-2 pr-0.5 text-xs">
-              <span className="text-[#AAB5CC] font-mono text-[11px]">{team2OversText}</span>
-              <span className="font-black text-white">{team2Short}</span>
+              <span className="text-slate-500 font-mono text-[11px]">{team2OversText}</span>
+              <span className="font-black text-slate-900">{team2Short}</span>
             </div>
           </div>
 
@@ -180,14 +180,14 @@ export default function MatchCard({
 
         {/* 3. OPTIONAL ACTION BAR FOR HISTORY MATCH CARDS (DELETE ONLY) */}
         {onDelete && (
-          <div className="pt-3 border-t border-[#172D42]/60 flex items-center justify-end">
+          <div className="pt-3 border-t border-slate-100 flex items-center justify-end">
             <button
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 onDelete();
               }}
-              className="py-1.5 px-3 bg-[#E5232F]/10 hover:bg-[#E5232F]/20 text-[#E5232F] border border-[#E5232F]/30 hover:border-[#E5232F] font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 transition-all shrink-0 active:scale-95 shadow-sm"
+              className="py-1.5 px-3 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 transition-all shrink-0 active:scale-95 shadow-sm"
               title="Delete Match"
             >
               <Trash2 className="w-3.5 h-3.5" />
@@ -205,32 +205,32 @@ export default function MatchCard({
   /* ========================================================================= */
   if (isLatestOverviewCard) {
     return (
-      <div className="relative rounded-3xl bg-gradient-to-br from-[#0D1629] via-[#0A1120] to-[#050A1A] border border-[#19D89A]/35 hover:border-[#19D89A]/70 shadow-xl overflow-hidden flex flex-col justify-between transition-all duration-300">
+      <div className="relative rounded-3xl bg-white border border-orange-200 hover:border-orange-500 shadow-md overflow-hidden flex flex-col justify-between transition-all duration-300">
         
-        {/* Top Emerald Accent Line */}
-        <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-[#19D89A] to-transparent" />
+        {/* Top Orange Accent Line */}
+        <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-orange-500 to-transparent" />
 
         {/* Header: Category Badge & Date */}
-        <div className="flex items-center justify-between px-5 py-3.5 bg-[#050A1A]/70 border-b border-[#173541]/80">
+        <div className="flex items-center justify-between px-5 py-3.5 bg-slate-50 border-b border-slate-100">
           <div className="flex items-center gap-2">
             {isLive ? (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#E5232F]/15 text-[#E5232F] border border-[#E5232F]/30 font-black text-[11px] uppercase tracking-wider">
-                <span className="w-2 h-2 rounded-full bg-[#E5232F] animate-ping" />
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-50 text-red-600 border border-red-200 font-black text-[11px] uppercase tracking-wider">
+                <span className="w-2 h-2 rounded-full bg-red-600 animate-ping" />
                 LIVE MATCH
               </span>
             ) : isCompleted ? (
-              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-[#111A2D] text-[#AAB5CC] font-bold text-[11px]">
+              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-slate-100 text-slate-600 font-bold text-[11px]">
                 COMPLETED
               </span>
             ) : (
-              <span className="text-[#19D89A] bg-[#19D89A]/10 border border-[#19D89A]/20 px-3 py-1 rounded-full font-extrabold text-[11px] uppercase tracking-wider">
+              <span className="text-orange-600 bg-orange-50 border border-orange-200 px-3 py-1 rounded-full font-extrabold text-[11px] uppercase tracking-wider">
                 {match.category || match.format || 'Cricket Match'}
               </span>
             )}
           </div>
 
-          <div className="flex items-center gap-1.5 text-[#AAB5CC] text-xs font-semibold">
-            <Calendar className="w-3.5 h-3.5 text-[#19D89A]" />
+          <div className="flex items-center gap-1.5 text-slate-500 text-xs font-semibold">
+            <Calendar className="w-3.5 h-3.5 text-orange-500" />
             <span>{formattedDate}</span>
           </div>
         </div>
@@ -241,7 +241,7 @@ export default function MatchCard({
             
             {/* Team 1 */}
             <div className="col-span-3 flex flex-col items-center text-center space-y-2">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-[#050A1A] border border-[#173541] p-1.5 flex items-center justify-center shadow-lg overflow-hidden shrink-0">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-slate-50 border border-slate-200 p-1.5 flex items-center justify-center shadow-sm overflow-hidden shrink-0">
                 {isValidImageUrl(team1Logo) ? (
                   <img 
                     src={sanitizeImageUrl(team1Logo)} 
@@ -252,12 +252,12 @@ export default function MatchCard({
                     }} 
                   />
                 ) : (
-                  <span className="font-black text-xl text-[#19D89A] font-mono">{team1Short}</span>
+                  <span className="font-black text-xl text-orange-600 font-mono">{team1Short}</span>
                 )}
               </div>
-              <h3 className="font-extrabold text-sm sm:text-base text-white line-clamp-1">{team1Name}</h3>
-              <div className="bg-[#050A1A] border border-[#173541] px-3 py-1 rounded-xl">
-                <p className="text-xs text-[#19D89A] font-black font-mono">
+              <h3 className="font-extrabold text-sm sm:text-base text-slate-900 line-clamp-1">{team1Name}</h3>
+              <div className="bg-orange-50 border border-orange-200 px-3 py-1 rounded-xl">
+                <p className="text-xs text-orange-600 font-black font-mono">
                   {isLive || isCompleted ? match.current_score || '0/0' : 'Yet to Bat'}
                 </p>
               </div>
@@ -265,14 +265,14 @@ export default function MatchCard({
 
             {/* VS Badge */}
             <div className="col-span-1 flex flex-col items-center justify-center">
-              <div className="w-9 h-9 rounded-full bg-[#050A1A] border border-[#19D89A]/40 flex items-center justify-center text-[#19D89A] font-black text-xs shadow-md">
+              <div className="w-9 h-9 rounded-full bg-orange-500 text-white font-black text-xs shadow-sm flex items-center justify-center">
                 VS
               </div>
             </div>
 
             {/* Team 2 */}
             <div className="col-span-3 flex flex-col items-center text-center space-y-2">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-[#050A1A] border border-[#173541] p-1.5 flex items-center justify-center shadow-lg overflow-hidden shrink-0">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-slate-50 border border-slate-200 p-1.5 flex items-center justify-center shadow-sm overflow-hidden shrink-0">
                 {isValidImageUrl(team2Logo) ? (
                   <img 
                     src={sanitizeImageUrl(team2Logo)} 
@@ -283,12 +283,12 @@ export default function MatchCard({
                     }}
                   />
                 ) : (
-                  <span className="font-black text-xl text-[#19D89A] font-mono">{team2Short}</span>
+                  <span className="font-black text-xl text-orange-600 font-mono">{team2Short}</span>
                 )}
               </div>
-              <h3 className="font-extrabold text-sm sm:text-base text-white line-clamp-1">{team2Name}</h3>
-              <div className="bg-[#050A1A] border border-[#173541] px-3 py-1 rounded-xl">
-                <p className="text-xs text-[#19D89A] font-black font-mono">
+              <h3 className="font-extrabold text-sm sm:text-base text-slate-900 line-clamp-1">{team2Name}</h3>
+              <div className="bg-orange-50 border border-orange-200 px-3 py-1 rounded-xl">
+                <p className="text-xs text-orange-600 font-black font-mono">
                   {isLive || isCompleted ? 'Innings' : 'Yet to Bat'}
                 </p>
               </div>
@@ -299,7 +299,7 @@ export default function MatchCard({
           {/* Result Summary Badge */}
           {match.result_summary && (
             <div className="pt-2 text-center">
-              <p className="text-xs font-bold text-[#19D89A] bg-[#19D89A]/10 py-1.5 px-4 rounded-xl border border-[#19D89A]/20 inline-block shadow-sm">
+              <p className="text-xs font-bold text-orange-700 bg-orange-50 py-1.5 px-4 rounded-xl border border-orange-200 inline-block shadow-sm">
                 🏆 {match.result_summary}
               </p>
             </div>
@@ -307,12 +307,12 @@ export default function MatchCard({
         </div>
 
         {/* Action Bar */}
-        <div className="p-4 bg-[#050A1A]/80 border-t border-[#173541]/80 flex items-center gap-2.5">
+        <div className="p-4 bg-slate-50 border-t border-slate-100 flex items-center gap-2.5">
           <Link 
             href={`/master/matches/${match.id}/score`}
-            className="flex-1 py-3 px-4 bg-[#19D89A] hover:bg-emerald-400 text-[#050A1A] font-black rounded-xl text-xs text-center flex items-center justify-center gap-2 transition-all shadow-lg active:scale-95 uppercase tracking-wider"
+            className="flex-1 py-3 px-4 bg-orange-500 hover:bg-orange-600 text-white font-black rounded-xl text-xs text-center flex items-center justify-center gap-2 transition-all shadow-md active:scale-95 uppercase tracking-wider"
           >
-            <Play className="w-4 h-4 fill-current text-[#050A1A]" />
+            <Play className="w-4 h-4 fill-current text-white" />
             <span>Live Scoring</span>
           </Link>
 
@@ -320,10 +320,10 @@ export default function MatchCard({
             <button
               type="button"
               onClick={onEdit}
-              className="h-10 px-4 bg-[#111A2D] hover:bg-[#173541] text-white border border-[#173541] hover:border-[#19D89A] font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 transition-all shrink-0 active:scale-95 shadow-sm"
+              className="h-10 px-4 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 hover:border-orange-500 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 transition-all shrink-0 active:scale-95 shadow-sm"
               title="Edit Match"
             >
-              <Pencil className="w-3.5 h-3.5 text-[#19D89A]" />
+              <Pencil className="w-3.5 h-3.5 text-orange-500" />
               <span className="hidden sm:inline">Edit</span>
             </button>
           )}
@@ -332,7 +332,7 @@ export default function MatchCard({
             <button
               type="button"
               onClick={onDelete}
-              className="h-10 px-4 bg-[#E5232F]/10 hover:bg-[#E5232F]/20 text-[#E5232F] border border-[#E5232F]/30 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 transition-all shrink-0 active:scale-95 shadow-sm"
+              className="h-10 px-4 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 transition-all shrink-0 active:scale-95 shadow-sm"
               title="Delete Match"
             >
               <Trash2 className="w-3.5 h-3.5" />
@@ -359,36 +359,36 @@ export default function MatchCard({
           handleCardClick();
         }
       }}
-      className={`relative rounded-2xl bg-[#0D1528] border transition-all duration-300 overflow-hidden shadow-md flex flex-col justify-between select-none ${
+      className={`relative rounded-2xl bg-white border transition-all duration-300 overflow-hidden shadow-sm flex flex-col justify-between select-none ${
         isHistoryView 
-          ? 'cursor-pointer hover:border-[#19D89A] hover:scale-[1.01] active:scale-[0.99]' 
+          ? 'cursor-pointer hover:border-orange-500 hover:scale-[1.01] active:scale-[0.99]' 
           : ''
       } ${
         isLive 
-          ? 'border-[#19D89A]/50 hover:border-[#19D89A]' 
-          : 'border-[#173541] hover:border-[#19D89A]/40'
+          ? 'border-orange-300 hover:border-orange-500' 
+          : 'border-slate-200 hover:border-orange-400'
       }`}
     >
       
       {/* 1. HEADER BAR: Status / Category & Date */}
-      <div className="flex items-center justify-between px-4 py-2.5 bg-[#050A1A]/80 border-b border-[#173541] text-xs">
+      <div className="flex items-center justify-between px-4 py-2.5 bg-slate-50 border-b border-slate-100 text-xs">
         <div className="flex items-center gap-2">
           {isLive ? (
-            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-[#E5232F]/20 text-[#E5232F] border border-[#E5232F]/40 font-black text-[10px] uppercase tracking-wider">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#E5232F] animate-ping" />
+            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-red-50 text-red-600 border border-red-200 font-black text-[10px] uppercase tracking-wider">
+              <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-ping" />
               LIVE
             </span>
           ) : isCompleted ? (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#111A2D] text-[#AAB5CC] font-bold text-[10px]">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 font-bold text-[10px]">
               COMPLETED
             </span>
           ) : match.category ? (
-            <span className="text-[#19D89A] font-bold text-[11px]">{match.category}</span>
+            <span className="text-orange-600 font-bold text-[11px]">{match.category}</span>
           ) : null}
         </div>
 
-        <div className="flex items-center gap-1 text-[#AAB5CC] text-[11px] font-medium">
-          <Calendar className="w-3.5 h-3.5 text-[#19D89A]" />
+        <div className="flex items-center gap-1 text-slate-500 text-[11px] font-medium">
+          <Calendar className="w-3.5 h-3.5 text-orange-500" />
           <span>{formattedDate}</span>
         </div>
       </div>
@@ -399,7 +399,7 @@ export default function MatchCard({
           
           {/* TEAM 1 */}
           <div className="col-span-3 flex flex-col items-center text-center">
-            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-[#050A1A] border border-[#173541] p-1 flex items-center justify-center shadow-inner overflow-hidden shrink-0">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-slate-50 border border-slate-200 p-1 flex items-center justify-center shadow-inner overflow-hidden shrink-0">
               {isValidImageUrl(team1Logo) ? (
                 <img 
                   src={sanitizeImageUrl(team1Logo)} 
@@ -410,25 +410,25 @@ export default function MatchCard({
                   }} 
                 />
               ) : (
-                <span className="font-black text-lg text-[#19D89A]">{team1Short}</span>
+                <span className="font-black text-lg text-orange-600">{team1Short}</span>
               )}
             </div>
-            <h4 className="mt-2 font-bold text-xs sm:text-sm text-white line-clamp-1">{team1Name}</h4>
-            <p className="text-[11px] text-[#19D89A] font-extrabold mt-0.5 font-mono">
+            <h4 className="mt-2 font-bold text-xs sm:text-sm text-slate-900 line-clamp-1">{team1Name}</h4>
+            <p className="text-[11px] text-orange-600 font-extrabold mt-0.5 font-mono">
               {isLive || isCompleted ? match.current_score || '0/0' : 'Yet to bat'}
             </p>
           </div>
 
           {/* VS BADGE */}
           <div className="col-span-1 flex flex-col items-center justify-center">
-            <span className="w-7 h-7 rounded-full bg-[#050A1A] border border-[#173541] flex items-center justify-center text-[#AAB5CC] font-black text-[10px] shadow-sm">
+            <span className="w-7 h-7 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 font-black text-[10px] shadow-sm">
               VS
             </span>
           </div>
 
           {/* TEAM 2 */}
           <div className="col-span-3 flex flex-col items-center text-center">
-            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-[#050A1A] border border-[#173541] p-1 flex items-center justify-center shadow-inner overflow-hidden shrink-0">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-slate-50 border border-slate-200 p-1 flex items-center justify-center shadow-inner overflow-hidden shrink-0">
               {isValidImageUrl(team2Logo) ? (
                 <img 
                   src={sanitizeImageUrl(team2Logo)} 
@@ -439,11 +439,11 @@ export default function MatchCard({
                   }}
                 />
               ) : (
-                <span className="font-black text-lg text-[#19D89A]">{team2Short}</span>
+                <span className="font-black text-lg text-orange-600">{team2Short}</span>
               )}
             </div>
-            <h4 className="mt-2 font-bold text-xs sm:text-sm text-white line-clamp-1">{team2Name}</h4>
-            <p className="text-[11px] text-[#19D89A] font-extrabold mt-0.5 font-mono">
+            <h4 className="mt-2 font-bold text-xs sm:text-sm text-slate-900 line-clamp-1">{team2Name}</h4>
+            <p className="text-[11px] text-orange-600 font-extrabold mt-0.5 font-mono">
               {isLive || isCompleted ? 'Innings' : 'Yet to bat'}
             </p>
           </div>
@@ -452,8 +452,8 @@ export default function MatchCard({
 
         {/* RESULT SUMMARY IF COMPLETED */}
         {match.result_summary && (
-          <div className="pt-2 border-t border-[#173541] text-center">
-            <p className="text-xs font-bold text-[#19D89A] bg-[#19D89A]/10 py-1 px-3 rounded-lg border border-[#19D89A]/20 inline-block">
+          <div className="pt-2 border-t border-slate-100 text-center">
+            <p className="text-xs font-bold text-orange-700 bg-orange-50 py-1 px-3 rounded-lg border border-orange-200 inline-block">
               🏆 {match.result_summary}
             </p>
           </div>
@@ -462,15 +462,15 @@ export default function MatchCard({
 
       {/* 3. ACTION BAR (RENDERED IF LIVE SCORING OR EDIT/DELETE BUTTONS ARE PRESENT) */}
       {(!isHistoryView || onEdit || onDelete) && (
-        <div className="p-2.5 bg-[#050A1A]/50 border-t border-[#173541] flex items-center gap-2">
+        <div className="p-2.5 bg-slate-50 border-t border-slate-100 flex items-center gap-2">
           {!isHistoryView && (
             /* OVERVIEW LATEST MATCH ACTION: LIVE SCORING PANEL */
             <Link 
               href={`/master/matches/${match.id}/score`}
               onClick={(e) => e.stopPropagation()}
-              className="flex-1 py-2 px-3 bg-[#19D89A] hover:bg-emerald-400 text-[#050A1A] font-black rounded-xl text-xs text-center flex items-center justify-center gap-1.5 transition-all shadow-md uppercase tracking-wider"
+              className="flex-1 py-2 px-3 bg-orange-500 hover:bg-orange-600 text-white font-black rounded-xl text-xs text-center flex items-center justify-center gap-1.5 transition-all shadow-sm uppercase tracking-wider"
             >
-              <Play className="w-3.5 h-3.5 fill-current text-[#050A1A]" />
+              <Play className="w-3.5 h-3.5 fill-current text-white" />
               <span>Live Scoring</span>
             </Link>
           )}
@@ -482,10 +482,10 @@ export default function MatchCard({
                 e.stopPropagation();
                 onEdit();
               }}
-              className="h-8 px-3 bg-[#111A2D] hover:bg-[#173541] text-white border border-[#173541] hover:border-[#19D89A] font-bold rounded-xl text-xs flex items-center justify-center gap-1 transition-all shrink-0 active:scale-95 flex-1"
+              className="h-8 px-3 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 hover:border-orange-500 font-bold rounded-xl text-xs flex items-center justify-center gap-1 transition-all shrink-0 active:scale-95 flex-1"
               title="Edit Match"
             >
-              <Pencil className="w-3.5 h-3.5 text-[#19D89A]" />
+              <Pencil className="w-3.5 h-3.5 text-orange-500" />
               <span>Edit</span>
             </button>
           )}
@@ -497,7 +497,7 @@ export default function MatchCard({
                 e.stopPropagation();
                 onDelete();
               }}
-              className="h-8 px-3 bg-[#E5232F]/10 hover:bg-[#E5232F]/20 text-[#E5232F] border border-[#E5232F]/30 font-bold rounded-xl text-xs flex items-center justify-center gap-1 transition-all shrink-0 active:scale-95 flex-1"
+              className="h-8 px-3 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-bold rounded-xl text-xs flex items-center justify-center gap-1 transition-all shrink-0 active:scale-95 flex-1"
               title="Delete Match"
             >
               <Trash2 className="w-3.5 h-3.5" />

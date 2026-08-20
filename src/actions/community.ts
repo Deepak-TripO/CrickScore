@@ -24,21 +24,38 @@ export async function getPublicCommunities() {
   }
 
   try {
-    const { data: list, error } = await db
-      .from('communities')
-      .select('*')
-      .order('created_at', { ascending: false });
+    const [commsRes, membersRes] = await Promise.all([
+      db.from('communities').select('*').order('created_at', { ascending: false }),
+      db.from('community_members').select('community_id')
+    ]);
 
-    if (!error && Array.isArray(list)) {
-      return list.map((c: any) => ({
-        id: c.id,
-        ownerId: c.owner_id,
-        name: c.name,
-        bio: c.bio,
-        profileImage: c.profile_image || c.logo_url || 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&w=300&q=80',
-        coverImage: c.cover_image || c.banner_url || 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?auto=format&fit=crop&w=1200&q=80',
-        createdAt: c.created_at || new Date().toISOString()
-      }));
+    const list = commsRes.data;
+    const membersData = membersRes.data || [];
+
+    const memberCounts: Record<string, number> = {};
+    if (Array.isArray(membersData)) {
+      membersData.forEach((m: any) => {
+        if (m.community_id) {
+          memberCounts[m.community_id] = (memberCounts[m.community_id] || 0) + 1;
+        }
+      });
+    }
+
+    if (!commsRes.error && Array.isArray(list)) {
+      return list.map((c: any) => {
+        const count = memberCounts[c.id] || 0;
+        return {
+          id: c.id,
+          ownerId: c.owner_id,
+          name: c.name,
+          bio: c.bio,
+          profileImage: c.profile_image || c.logo_url || 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&w=300&q=80',
+          coverImage: c.cover_image || c.banner_url || 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?auto=format&fit=crop&w=1200&q=80',
+          memberCount: count,
+          members: `Members: ${count}`,
+          createdAt: c.created_at || new Date().toISOString()
+        };
+      });
     }
   } catch {}
 

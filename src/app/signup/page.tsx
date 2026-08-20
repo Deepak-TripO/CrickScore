@@ -4,7 +4,8 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { signupUser } from '@/actions/auth';
-import { Trophy, Mail, Lock, ArrowRight, AlertCircle, CheckCircle2, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, ArrowRight, AlertCircle, CheckCircle2, Eye, EyeOff } from 'lucide-react';
+import Logo from '@/components/common/Logo';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -35,78 +36,69 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center p-3 sm:p-4">
-      <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-5 sm:p-8 space-y-5 sm:space-y-6 shadow-2xl overflow-hidden">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex items-center justify-center p-3 sm:p-4 font-sans">
+      <div className="w-full max-w-md bg-white border border-slate-200 rounded-3xl p-5 sm:p-8 space-y-5 sm:space-y-6 shadow-sm overflow-hidden">
         
-        <div className="text-center space-y-2">
-          <Link href="/" className="inline-flex items-center gap-2 group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 p-0.5 shadow-lg shadow-emerald-500/20">
-              <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
-                <Trophy className="w-5 h-5 text-emerald-400" />
-              </div>
-            </div>
-            <span className="font-extrabold text-2xl tracking-tight bg-gradient-to-r from-white to-emerald-400 bg-clip-text text-transparent">
-              BatScore
-            </span>
-          </Link>
-          <h2 className="text-xl font-bold text-white">Create Your Account</h2>
-          <p className="text-xs text-slate-400">Join the cricket scoring community.</p>
+        <div className="text-center space-y-2 flex flex-col items-center">
+          <Logo size="lg" href="/" />
+          <h2 className="text-xl font-bold text-slate-900">Create Your Account</h2>
+          <p className="text-xs text-slate-500">Join the cricket scoring community.</p>
         </div>
 
         {errorMsg && (
-          <div className="p-3 bg-red-950/80 border border-red-500/40 rounded-xl text-red-200 text-xs flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
+          <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs flex items-center gap-2 font-bold">
+            <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
             <span>{errorMsg}</span>
           </div>
         )}
 
         {successMsg && (
-          <div className="p-3 bg-emerald-950/80 border border-emerald-500/40 rounded-xl text-emerald-200 text-xs flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+          <div className="p-3 bg-orange-50 border border-orange-200 rounded-xl text-orange-700 text-xs flex items-center gap-2 font-bold">
+            <CheckCircle2 className="w-4 h-4 text-orange-600 shrink-0" />
             <span>{successMsg}</span>
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
-            <label className="text-xs font-semibold text-slate-300 block mb-1">Username</label>
+            <label className="text-xs font-semibold text-slate-700 block mb-1">Username</label>
             <input 
               type="text" 
               name="username" 
               placeholder="virat_cricket"
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500"
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-orange-500"
             />
           </div>
 
           <div>
-            <label className="text-xs font-semibold text-slate-300 block mb-1">Email Address</label>
+            <label className="text-xs font-semibold text-slate-700 block mb-1">Email Address</label>
             <div className="relative">
-              <Mail className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" />
+              <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
               <input 
                 type="email" 
                 name="email" 
                 required 
                 placeholder="virat@example.com"
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-orange-500"
               />
             </div>
           </div>
 
           <div>
-            <label className="text-xs font-semibold text-slate-300 block mb-1">Password</label>
+            <label className="text-xs font-semibold text-slate-700 block mb-1">Password</label>
             <div className="relative">
-              <Lock className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" />
+              <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
               <input 
                 type={showPassword ? 'text' : 'password'} 
                 name="password" 
                 required 
                 placeholder="••••••••"
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-10 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-10 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-orange-500"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-2.5 text-slate-500 hover:text-slate-300 transition-colors p-0.5"
+                className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 transition-colors p-0.5"
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -115,20 +107,20 @@ export default function SignupPage() {
           </div>
 
           <div>
-            <label className="text-xs font-semibold text-slate-300 block mb-1">Confirm Password</label>
+            <label className="text-xs font-semibold text-slate-700 block mb-1">Confirm Password</label>
             <div className="relative">
-              <Lock className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" />
+              <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
               <input 
                 type={showConfirmPassword ? 'text' : 'password'} 
                 name="confirmPassword" 
                 required 
                 placeholder="••••••••"
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-10 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-10 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-orange-500"
               />
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 top-2.5 text-slate-500 hover:text-slate-300 transition-colors p-0.5"
+                className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 transition-colors p-0.5"
                 aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
               >
                 {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -140,7 +132,7 @@ export default function SignupPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-extrabold rounded-xl text-xs hover:brightness-110 shadow-lg shadow-emerald-500/20 transition-all flex items-center justify-center gap-2"
+              className="w-full py-3 bg-orange-500 hover:bg-orange-600 text-white font-extrabold rounded-xl text-xs shadow-sm transition-all flex items-center justify-center gap-2"
             >
               {loading ? 'Creating Account...' : 'Sign Up as User'}
               <ArrowRight className="w-4 h-4" />
@@ -148,9 +140,9 @@ export default function SignupPage() {
           </div>
         </form>
 
-        <div className="text-center text-xs text-slate-400">
+        <div className="text-center text-xs text-slate-500">
           Already have an account?{' '}
-          <Link href="/login" className="font-bold text-emerald-400 hover:underline">
+          <Link href="/login" className="font-bold text-orange-600 hover:underline">
             Sign In
           </Link>
         </div>

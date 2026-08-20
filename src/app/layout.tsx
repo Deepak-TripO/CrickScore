@@ -9,15 +9,15 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'CrickScore — Local Cricket Match Organizer & Live Scores',
+  title: 'BatScore — Local Cricket Match Organizer & Live Scores',
   description: 'Organize local cricket matches, manage tournaments, track team statistics, and follow live ball-by-ball scorecards in real time.',
   icons: {
-    icon: '/favicon.ico',
-    shortcut: '/favicon.ico',
-    apple: '/favicon.ico',
+    icon: '/logo.png',
+    shortcut: '/logo.png',
+    apple: '/logo.png',
   },
   openGraph: {
-    title: 'CrickScore — Local Cricket Platform',
+    title: 'BatScore — Local Cricket Platform',
     description: 'Live scores, tournament management, and team statistics for local cricket.',
     type: 'website',
   },

@@ -515,6 +515,7 @@ export async function getMatchDetailsForEdit(matchId: string) {
         if (rUpper.includes('WICKET') || rUpper === 'WK' || rUpper.includes('KEEPER')) type = 'WK';
         else if (rUpper.includes('BOWLER') || rUpper === 'BOWL') type = 'Bowler';
         else if (rUpper.includes('ALL') || rUpper === 'AR' || rUpper.includes('ROUND')) type = 'Allrounder';
+        else type = 'Batsman';
 
         allFoundPlayers.push({
           id: p.id || `p_${nameKey}`,
@@ -527,47 +528,78 @@ export async function getMatchDetailsForEdit(matchId: string) {
     };
 
     // 1. Direct JSON arrays on match record
-    const jsonPlayers = isTeam1
+    let jsonPlayers = isTeam1
       ? (match.your_team_players || match.team1_players || match.team_1_players || match.players_a)
       : (match.opposite_team_players || match.team2_players || match.team_2_players || match.players_b);
+
+    if (typeof jsonPlayers === 'string') {
+      try { jsonPlayers = JSON.parse(jsonPlayers); } catch {}
+    }
 
     if (Array.isArray(jsonPlayers)) {
       jsonPlayers.forEach(addPlayer);
     }
 
-    // 2. Query match_players table for this match with players(*) join
+    // 2. Query match_players table for this specific match ID
     try {
-      let query = db.from('match_players').select('*, players(*)').eq('match_id', matchId);
-      if (teamId) {
-        query = query.eq('team_id', teamId);
-      }
-      const { data: mpRows } = await query;
-      if (mpRows && mpRows.length > 0) {
-        for (const row of mpRows) {
-          const pRec = row.players || {};
-          const pName = row.player_name || row.name || pRec.full_name || pRec.display_name || pRec.name;
-          if (pName) {
-            addPlayer({
-              id: row.player_id || pRec.id || row.id,
-              name: pName,
-              role: row.role || pRec.role || row.player_type || 'BATSMAN',
-              avatar_url: row.avatar_url || pRec.photo_url || pRec.avatar_url || ''
-            });
-          } else if (row.player_id) {
-            const { data: pRecDirect } = await db.from('players').select('*').eq('id', row.player_id).maybeSingle();
-            if (pRecDirect) {
-              addPlayer({
-                ...pRecDirect,
-                name: pRecDirect.name || pRecDirect.full_name || pRecDirect.display_name
-              });
+      const { data: mpRows, error: mpErr } = await db
+        .from('match_players')
+        .select('*')
+        .eq('match_id', matchId);
+
+      if (!mpErr && mpRows && mpRows.length > 0) {
+        // Filter rows belonging to this team
+        const teamMpRows = mpRows.filter((r: any) => {
+          if (teamId && r.team_id) {
+            return String(r.team_id).toLowerCase() === String(teamId).toLowerCase();
+          }
+          if (!r.team_id) {
+            const half = Math.ceil(mpRows.length / 2);
+            const idx = mpRows.indexOf(r);
+            return isTeam1 ? idx < half : idx >= half;
+          }
+          return true;
+        });
+
+        const playerIds = teamMpRows.map((r: any) => r.player_id).filter(Boolean);
+
+        if (playerIds.length > 0) {
+          const { data: pList } = await db
+            .from('players')
+            .select('*')
+            .in('id', playerIds);
+
+          if (pList && pList.length > 0) {
+            const playerMap = new Map<string, any>();
+            pList.forEach((pRec: any) => playerMap.set(String(pRec.id), pRec));
+
+            for (const r of teamMpRows) {
+              const pRec = playerMap.get(String(r.player_id));
+              if (pRec) {
+                addPlayer({
+                  id: pRec.id,
+                  name: pRec.full_name || pRec.display_name || pRec.name,
+                  role: pRec.role || r.role || 'BATSMAN',
+                  avatar_url: pRec.photo_url || pRec.avatar_url || ''
+                });
+              } else if (r.player_name || r.name) {
+                addPlayer({
+                  id: r.player_id || r.id,
+                  name: r.player_name || r.name,
+                  role: r.role || 'BATSMAN',
+                  avatar_url: r.avatar_url || ''
+                });
+              }
             }
           }
         }
       }
-    } catch {}
+    } catch (e: any) {
+      console.warn('[EDIT FETCH MATCH PLAYERS CATCH]', e?.message);
+    }
 
-    // 3. Query team_players join table
-    if (teamId) {
+    // 3. Fallback: Query team_players join table ONLY if fewer than 11 players found
+    if (allFoundPlayers.length < 11 && teamId) {
       try {
         const { data: tp } = await db.from('team_players').select('player_id').eq('team_id', teamId);
         if (tp && tp.length > 0) {
@@ -584,16 +616,18 @@ export async function getMatchDetailsForEdit(matchId: string) {
         }
       } catch {}
 
-      // 4. Query players table directly by team_id
-      try {
-        const { data: directPlayers } = await db.from('players').select('*').eq('team_id', teamId);
-        if (directPlayers && directPlayers.length > 0) {
-          directPlayers.forEach((p: any) => addPlayer({
-            ...p,
-            name: p.name || p.full_name || p.display_name
-          }));
-        }
-      } catch {}
+      // 4. Fallback: Query players table directly by team_id ONLY if fewer than 11 players found
+      if (allFoundPlayers.length < 11) {
+        try {
+          const { data: directPlayers } = await db.from('players').select('*').eq('team_id', teamId);
+          if (directPlayers && directPlayers.length > 0) {
+            directPlayers.forEach((p: any) => addPlayer({
+              ...p,
+              name: p.name || p.full_name || p.display_name
+            }));
+          }
+        } catch {}
+      }
     }
 
     return allFoundPlayers;

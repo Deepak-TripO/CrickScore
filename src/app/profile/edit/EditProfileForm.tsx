@@ -114,37 +114,37 @@ export default function EditProfileForm({ profile }: { profile: any }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-[#0D1528] border border-[#173541] rounded-2xl p-6 sm:p-8 space-y-6 shadow-xl font-sans">
+    <form onSubmit={handleSubmit} className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 space-y-6 shadow-sm font-sans text-slate-900">
       {errorMsg && (
-        <div className="p-3.5 bg-[#E5232F]/10 border border-[#E5232F]/40 rounded-xl text-[#E5232F] text-xs flex items-center gap-2.5 font-bold">
-          <AlertCircle className="w-4 h-4 shrink-0" />
+        <div className="p-3.5 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs flex items-center gap-2.5 font-bold">
+          <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
           <span>{errorMsg}</span>
         </div>
       )}
 
       {/* AVATAR SELECTION & PREVIEW */}
-      <div className="flex flex-col items-center justify-center space-y-3 pb-4 border-b border-[#173541]">
-        <label className="text-xs font-bold text-[#AAB5CC]">Profile Picture</label>
+      <div className="flex flex-col items-center justify-center space-y-3 pb-4 border-b border-slate-100">
+        <label className="text-xs font-bold text-slate-700">Profile Picture</label>
         
         <div 
           onClick={() => fileInputRef.current?.click()}
-          className="relative group cursor-pointer w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-[#111A2D] border-2 border-[#19D89A]/50 p-1 shadow-lg hover:scale-105 transition-transform"
+          className="relative group cursor-pointer w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-slate-50 border-2 border-orange-500 p-1 shadow-sm hover:scale-105 transition-transform"
         >
-          <div className="w-full h-full bg-[#050A1A] rounded-xl overflow-hidden relative flex items-center justify-center">
+          <div className="w-full h-full bg-slate-100 rounded-xl overflow-hidden relative flex items-center justify-center">
             {previewUrl ? (
               <img src={previewUrl} alt="Avatar Preview" className="w-full h-full object-cover" />
             ) : (
-              <User className="w-10 h-10 text-[#19D89A]" />
+              <User className="w-10 h-10 text-orange-500" />
             )}
             
             {/* OVERLAY ON HOVER */}
-            <div className="absolute inset-0 bg-[#050A1A]/80 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-opacity text-white text-[10px] font-bold gap-1">
-              <Camera className="w-5 h-5 text-[#19D89A]" />
+            <div className="absolute inset-0 bg-slate-900/80 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-opacity text-white text-[10px] font-bold gap-1">
+              <Camera className="w-5 h-5 text-orange-400" />
               <span>Change</span>
             </div>
 
             {uploadingImage && (
-              <div className="absolute inset-0 bg-[#050A1A]/90 flex flex-col items-center justify-center text-[#19D89A] text-[10px] font-bold gap-1">
+              <div className="absolute inset-0 bg-white/90 flex flex-col items-center justify-center text-orange-600 text-[10px] font-bold gap-1">
                 <Loader2 className="w-5 h-5 animate-spin" />
                 <span>Saving...</span>
               </div>
@@ -164,9 +164,9 @@ export default function EditProfileForm({ profile }: { profile: any }) {
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="px-3.5 py-1.5 bg-[#111A2D] hover:bg-[#173541] text-[#AAB5CC] hover:text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border border-[#173541]"
+            className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border border-slate-200"
           >
-            <Upload className="w-3.5 h-3.5 text-[#19D89A]" />
+            <Upload className="w-3.5 h-3.5 text-orange-500" />
             <span>Select New Image</span>
           </button>
 
@@ -174,7 +174,7 @@ export default function EditProfileForm({ profile }: { profile: any }) {
             <button
               type="button"
               onClick={handleRemoveImage}
-              className="px-3 py-1.5 bg-[#E5232F]/10 hover:bg-[#E5232F]/20 text-[#E5232F] rounded-xl text-xs font-bold transition-all flex items-center gap-1 border border-[#E5232F]/30"
+              className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-xs font-bold transition-all flex items-center gap-1 border border-red-200"
               title="Remove Profile Image"
             >
               <Trash2 className="w-3.5 h-3.5" />
@@ -182,40 +182,40 @@ export default function EditProfileForm({ profile }: { profile: any }) {
             </button>
           )}
         </div>
-        <p className="text-[10px] text-[#71809A]">Allowed formats: JPG, JPEG, PNG, WEBP (Max 5MB)</p>
+        <p className="text-[10px] text-slate-500">Allowed formats: JPG, JPEG, PNG, WEBP (Max 5MB)</p>
       </div>
 
       <div>
-        <label className="text-xs font-bold text-[#AAB5CC] block mb-1">Full Name *</label>
-        <input type="text" name="fullName" defaultValue={profile?.full_name || ''} required className="w-full bg-[#071022] border border-[#173541] rounded-xl px-4 py-2.5 text-xs text-white focus:border-[#19D89A] focus:outline-none transition-colors" />
+        <label className="text-xs font-bold text-slate-700 block mb-1">Full Name *</label>
+        <input type="text" name="fullName" defaultValue={profile?.full_name || ''} required className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-900 focus:border-orange-500 focus:outline-none transition-colors" />
       </div>
 
       <div>
-        <label className="text-xs font-bold text-[#AAB5CC] block mb-1">Username</label>
-        <input type="text" name="username" defaultValue={profile?.username || ''} className="w-full bg-[#071022] border border-[#173541] rounded-xl px-4 py-2.5 text-xs text-white focus:border-[#19D89A] focus:outline-none transition-colors" />
+        <label className="text-xs font-bold text-slate-700 block mb-1">Username</label>
+        <input type="text" name="username" defaultValue={profile?.username || ''} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-900 focus:border-orange-500 focus:outline-none transition-colors" />
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="text-xs font-bold text-[#AAB5CC] block mb-1">City</label>
-          <input type="text" name="city" defaultValue={profile?.city || ''} className="w-full bg-[#071022] border border-[#173541] rounded-xl px-4 py-2.5 text-xs text-white focus:border-[#19D89A] focus:outline-none transition-colors" />
+          <label className="text-xs font-bold text-slate-700 block mb-1">City</label>
+          <input type="text" name="city" defaultValue={profile?.city || ''} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-900 focus:border-orange-500 focus:outline-none transition-colors" />
         </div>
 
         <div>
-          <label className="text-xs font-bold text-[#AAB5CC] block mb-1">State</label>
-          <input type="text" name="state" defaultValue={profile?.state || ''} className="w-full bg-[#071022] border border-[#173541] rounded-xl px-4 py-2.5 text-xs text-white focus:border-[#19D89A] focus:outline-none transition-colors" />
+          <label className="text-xs font-bold text-slate-700 block mb-1">State</label>
+          <input type="text" name="state" defaultValue={profile?.state || ''} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-900 focus:border-orange-500 focus:outline-none transition-colors" />
         </div>
       </div>
 
       <div>
-        <label className="text-xs font-bold text-[#AAB5CC] block mb-1">Bio</label>
-        <textarea name="bio" rows={3} defaultValue={profile?.bio || ''} placeholder="Cricket enthusiast, opening batter..." className="w-full bg-[#071022] border border-[#173541] rounded-xl px-4 py-2.5 text-xs text-white focus:border-[#19D89A] focus:outline-none transition-colors" />
+        <label className="text-xs font-bold text-slate-700 block mb-1">Bio</label>
+        <textarea name="bio" rows={3} defaultValue={profile?.bio || ''} placeholder="Cricket enthusiast, opening batter..." className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-900 focus:border-orange-500 focus:outline-none transition-colors" />
       </div>
 
       <button
         type="submit"
         disabled={loading || uploadingImage}
-        className="w-full py-3 bg-[#19D89A] hover:bg-emerald-400 text-[#050A1A] font-black rounded-xl text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 disabled:opacity-50"
+        className="w-full py-3 bg-orange-500 hover:bg-orange-600 text-white font-black rounded-xl text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-sm disabled:opacity-50"
       >
         {loading ? 'Saving Changes...' : 'Save Profile Changes'}
         <ArrowRight className="w-4 h-4" />

@@ -233,16 +233,15 @@ export default function PublicMatchView({
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-6 space-y-6 font-sans">
-      
-      {/* HEADER MATCH BANNER - EXACT REFERENCE IMAGE 2 DESIGN */}
-      <div className="bg-[#0A1224] border border-[#172D42] rounded-2xl p-4 sm:p-5 shadow-2xl text-white space-y-3">
+           {/* HEADER MATCH BANNER - EXACT REFERENCE IMAGE 2 DESIGN */}
+      <div className="bg-white border border-orange-200 rounded-2xl p-4 sm:p-5 shadow-sm text-slate-900 space-y-3">
         {/* TOP ROW: CATEGORY NAME ON LEFT | DATE ON RIGHT */}
-        <div className="flex items-center justify-between pb-3 border-b border-[#172D42]/70">
-          <span className="text-[#19D89A] font-extrabold text-sm sm:text-base tracking-wider uppercase">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+          <span className="text-orange-600 font-extrabold text-sm sm:text-base tracking-wider uppercase">
             {(match.category || 'TOURNAMENT').toUpperCase()}
           </span>
-          <div className="flex items-center gap-1.5 text-[#AAB5CC] text-xs sm:text-sm font-semibold">
-            <Calendar className="w-4 h-4 text-[#19D89A]" />
+          <div className="flex items-center gap-1.5 text-slate-500 text-xs sm:text-sm font-semibold">
+            <Calendar className="w-4 h-4 text-orange-500" />
             <span suppressHydrationWarning>
               {match.scheduled_start || match.scheduled_at || match.scheduled_date || match.created_at
                 ? new Date(match.scheduled_start || match.scheduled_at || match.scheduled_date || match.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
@@ -257,7 +256,7 @@ export default function PublicMatchView({
           {/* LEFT TEAM (TEAM 1) */}
           <div className="space-y-1.5">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-[#050A1A] border border-[#172D42] p-1 flex items-center justify-center overflow-hidden shrink-0">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-slate-50 border border-slate-200 p-1 flex items-center justify-center overflow-hidden shrink-0">
                 {match.team1?.logo_url ? (
                   <img 
                     src={match.team1.logo_url.includes('/storage/v1/object/') && !match.team1.logo_url.includes('/storage/v1/object/public/') ? match.team1.logo_url.replace('/storage/v1/object/', '/storage/v1/object/public/') : match.team1.logo_url} 
@@ -266,19 +265,19 @@ export default function PublicMatchView({
                     onError={(e) => { (e.currentTarget as HTMLElement).style.display = 'none'; }}
                   />
                 ) : (
-                  <span className="font-black text-sm text-[#19D89A] font-mono">{match.team1?.short_name || 'T1'}</span>
+                  <span className="font-black text-sm text-orange-600 font-mono">{match.team1?.short_name || 'T1'}</span>
                 )}
               </div>
-              <span className="text-2xl sm:text-3xl font-black text-white font-mono tracking-tight">
+              <span className="text-2xl sm:text-3xl font-black text-slate-900 font-mono tracking-tight">
                 {team1ScoreStr}
               </span>
             </div>
 
             <div className="flex items-center gap-2 pl-0.5 text-xs sm:text-sm">
-              <span className="font-extrabold text-white truncate max-w-[100px] sm:max-w-[160px]">
+              <span className="font-extrabold text-slate-900 truncate max-w-[100px] sm:max-w-[160px]">
                 {match.team1?.name || match.team1?.short_name || 'Team 1'}
               </span>
-              <span className="text-[#AAB5CC] font-mono font-medium text-xs sm:text-sm">
+              <span className="text-slate-500 font-mono font-medium text-xs sm:text-sm">
                 ({team1OversStr})
               </span>
             </div>
@@ -287,10 +286,10 @@ export default function PublicMatchView({
           {/* RIGHT TEAM (TEAM 2) */}
           <div className="space-y-1.5 text-right">
             <div className="flex items-center justify-end gap-3">
-              <span className="text-2xl sm:text-3xl font-black text-white font-mono tracking-tight">
+              <span className="text-2xl sm:text-3xl font-black text-slate-900 font-mono tracking-tight">
                 {team2ScoreStr}
               </span>
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-[#050A1A] border border-[#172D42] p-1 flex items-center justify-center overflow-hidden shrink-0">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-slate-50 border border-slate-200 p-1 flex items-center justify-center overflow-hidden shrink-0">
                 {match.team2?.logo_url ? (
                   <img 
                     src={match.team2.logo_url.includes('/storage/v1/object/') && !match.team2.logo_url.includes('/storage/v1/object/public/') ? match.team2.logo_url.replace('/storage/v1/object/', '/storage/v1/object/public/') : match.team2.logo_url} 
@@ -299,16 +298,16 @@ export default function PublicMatchView({
                     onError={(e) => { (e.currentTarget as HTMLElement).style.display = 'none'; }}
                   />
                 ) : (
-                  <span className="font-black text-sm text-[#19D89A] font-mono">{match.team2?.short_name || 'T2'}</span>
+                  <span className="font-black text-sm text-orange-600 font-mono">{match.team2?.short_name || 'T2'}</span>
                 )}
               </div>
             </div>
 
             <div className="flex items-center justify-end gap-2 pr-0.5 text-xs sm:text-sm">
-              <span className="text-[#AAB5CC] font-mono font-medium text-xs sm:text-sm">
+              <span className="text-slate-500 font-mono font-medium text-xs sm:text-sm">
                 ({team2OversStr})
               </span>
-              <span className="font-extrabold text-white truncate max-w-[100px] sm:max-w-[160px]">
+              <span className="font-extrabold text-slate-900 truncate max-w-[100px] sm:max-w-[160px]">
                 {match.team2?.name || match.team2?.short_name || 'Team 2'}
               </span>
             </div>
@@ -318,14 +317,14 @@ export default function PublicMatchView({
 
         {/* SUMMARY / TARGET BADGE IF APPLICABLE */}
         {match.result_summary ? (
-          <div className="text-center pt-2 border-t border-[#172D42]/40">
-            <span className="px-4 py-1.5 rounded-full bg-[#19D89A]/10 border border-[#19D89A]/30 text-[#19D89A] font-bold text-xs">
+          <div className="text-center pt-2 border-t border-slate-100">
+            <span className="px-4 py-1.5 rounded-full bg-orange-50 border border-orange-200 text-orange-700 font-bold text-xs">
               🏆 {match.result_summary}
             </span>
           </div>
         ) : match.target ? (
-          <div className="text-center pt-2 border-t border-[#172D42]/40">
-            <span className="px-4 py-1 rounded-full bg-[#050A1A] border border-[#172D42] text-[#19D89A] font-bold text-xs">
+          <div className="text-center pt-2 border-t border-slate-100">
+            <span className="px-4 py-1 rounded-full bg-slate-50 border border-slate-200 text-orange-600 font-bold text-xs">
               Target: {match.target} ({match.target - (liveState?.totalRuns || 0)} runs needed off {match.overs * 6 - (liveState?.legalBalls || 0)} balls)
             </span>
           </div>
@@ -333,7 +332,7 @@ export default function PublicMatchView({
       </div>
 
       {/* STREAMLINED TABS NAVIGATION (LIVE, SCORECARD, TEAMS) */}
-      <div className="flex gap-2 bg-slate-900 p-1.5 rounded-2xl border border-slate-800">
+      <div className="flex gap-2 bg-white p-1.5 rounded-2xl border border-slate-200 shadow-sm">
         {[
           { id: 'LIVE', label: 'LIVE' },
           { id: 'SCORECARD', label: 'SCORECARD' },
@@ -346,8 +345,8 @@ export default function PublicMatchView({
               onClick={() => setActiveTab(tab.id as any)}
               className={`flex-1 flex items-center justify-center py-2.5 rounded-xl font-extrabold text-xs transition-all uppercase tracking-wider ${
                 isActive
-                  ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                  ? 'bg-orange-500 text-white shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
               }`}
             >
               <span>{tab.label}</span>
@@ -361,8 +360,8 @@ export default function PublicMatchView({
         <div className="space-y-4">
           
           {/* CURRENT OVER BALLS */}
-          <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800 flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Over {liveState.currentOverNumber + 1}</span>
+          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Over {liveState.currentOverNumber + 1}</span>
             <div className="flex items-center gap-2">
               {currentOverDeliveries.map((d: any, idx: number) => (
                 <span
@@ -371,10 +370,10 @@ export default function PublicMatchView({
                     d.wicket 
                       ? 'bg-red-600 text-white border-red-500' 
                       : d.runs_batter === 4 || d.runs_batter === 6 
-                      ? 'bg-purple-600 text-white border-purple-500'
+                      ? 'bg-orange-500 text-white border-orange-400'
                       : d.extra_type !== 'NONE'
-                      ? 'bg-amber-500 text-slate-950 border-amber-400'
-                      : 'bg-slate-800 text-slate-200 border-slate-700'
+                      ? 'bg-amber-500 text-white border-amber-400'
+                      : 'bg-slate-100 text-slate-700 border-slate-200'
                   }`}
                 >
                   {d.wicket ? 'W' : d.extra_type !== 'NONE' ? d.extra_type[0] : d.runs_batter}
@@ -384,12 +383,12 @@ export default function PublicMatchView({
           </div>
 
           {/* ACTIVE BATSMEN TABLE */}
-          <div className="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden">
-            <div className="px-4 py-3 bg-slate-950/60 border-b border-slate-800 text-xs font-bold text-slate-400 uppercase tracking-wider">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden text-slate-900">
+            <div className="px-4 py-3 bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider">
               Batting
             </div>
             <table className="w-full text-left text-xs table-fixed">
-              <thead className="bg-slate-950/40 text-slate-500 font-semibold border-b border-slate-800/60">
+              <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200">
                 <tr>
                   <th className="p-2 sm:p-3 w-[38%]">Name</th>
                   <th className="p-2 sm:p-3 text-right w-[12%]">R</th>
@@ -399,18 +398,18 @@ export default function PublicMatchView({
                   <th className="p-2 sm:p-3 text-right w-[14%]">SR</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/50">
+              <tbody className="divide-y divide-slate-100">
                 {[liveState.strikerId, liveState.nonStrikerId].map((id, index) => {
                   const b = liveState.batters[id];
                   const playerInfo = [...team1Players, ...team2Players].find(p => p.id === id);
                   const isStriker = index === 0;
                   return (
-                    <tr key={id || index} className={isStriker ? 'bg-emerald-950/20 font-bold text-white' : 'text-slate-300'}>
+                    <tr key={id || index} className={isStriker ? 'bg-orange-50/50 font-bold text-slate-900' : 'text-slate-700'}>
                       <td className="p-2 sm:p-3 flex items-center gap-2 truncate w-[38%]">
                         <span className="truncate">{playerInfo?.full_name || playerInfo?.display_name || 'Batter'}</span>
-                        {isStriker && <span className="text-emerald-400 font-bold shrink-0">🏏 *</span>}
+                        {isStriker && <span className="text-orange-600 font-bold shrink-0">🏏 *</span>}
                       </td>
-                      <td className="p-2 sm:p-3 text-right font-mono text-emerald-400 font-bold w-[12%]">{b?.runs || 0}</td>
+                      <td className="p-2 sm:p-3 text-right font-mono text-orange-600 font-bold w-[12%]">{b?.runs || 0}</td>
                       <td className="p-2 sm:p-3 text-right font-mono w-[12%]">{b?.balls || 0}</td>
                       <td className="p-2 sm:p-3 text-right font-mono w-[12%]">{b?.fours || 0}</td>
                       <td className="p-2 sm:p-3 text-right font-mono w-[12%]">{b?.sixes || 0}</td>
@@ -423,12 +422,12 @@ export default function PublicMatchView({
           </div>
 
           {/* ACTIVE BOWLER TABLE */}
-          <div className="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden">
-            <div className="px-4 py-3 bg-slate-950/60 border-b border-slate-800 text-xs font-bold text-slate-400 uppercase tracking-wider">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden text-slate-900">
+            <div className="px-4 py-3 bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider">
               Bowling
             </div>
             <table className="w-full text-left text-xs">
-              <thead className="bg-slate-950/40 text-slate-500 font-semibold border-b border-slate-800/60">
+              <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200">
                 <tr>
                   <th className="p-3">Bowler</th>
                   <th className="p-3 text-right">O</th>
@@ -443,15 +442,15 @@ export default function PublicMatchView({
                   const bw = liveState.bowlers[liveState.currentBowlerId];
                   const playerInfo = [...team1Players, ...team2Players].find(p => p.id === liveState.currentBowlerId);
                   return (
-                    <tr className="text-white font-semibold">
+                    <tr className="text-slate-900 font-semibold">
                       <td className="p-3 flex items-center gap-2">
                         <span>{playerInfo?.full_name || playerInfo?.display_name || 'Bowler'}</span>
-                        <span className="text-teal-400 font-bold">⚾</span>
+                        <span className="text-orange-500 font-bold">⚾</span>
                       </td>
                       <td className="p-3 text-right font-mono">{bw?.oversFormatted || '0.0'}</td>
                       <td className="p-3 text-right font-mono">{bw?.maidens || 0}</td>
                       <td className="p-3 text-right font-mono">{bw?.runsConceded || 0}</td>
-                      <td className="p-3 text-right font-mono text-emerald-400 font-bold">{bw?.wickets || 0}</td>
+                      <td className="p-3 text-right font-mono text-orange-600 font-bold">{bw?.wickets || 0}</td>
                       <td className="p-3 text-right font-mono">{bw?.economy || 0}</td>
                     </tr>
                   );
@@ -465,16 +464,16 @@ export default function PublicMatchView({
 
       {/* TAB 2: SCORECARD */}
       {activeTab === 'SCORECARD' && (
-        <div className="bg-slate-900 rounded-2xl border border-slate-800 p-4 space-y-4 shadow-xl">
+        <div className="bg-white rounded-2xl border border-slate-200 p-4 space-y-4 shadow-sm text-slate-900">
           {/* SEGMENTED TEAM TOGGLE BUTTON */}
-          <div className="flex items-center justify-center bg-slate-950 border border-slate-800 rounded-xl p-1 shadow-md">
+          <div className="flex items-center justify-center bg-slate-50 border border-slate-200 rounded-xl p-1 shadow-sm">
             <button
               type="button"
               onClick={() => setSelectedScorecardTeam('TEAM1')}
               className={`flex-1 py-2 px-4 rounded-lg text-xs font-black tracking-wider uppercase transition-all duration-200 truncate ${
                 selectedScorecardTeam === 'TEAM1'
-                  ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                  ? 'bg-orange-500 text-white shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
               }`}
             >
               {match.team1?.name || 'TEAM A'}
@@ -484,8 +483,8 @@ export default function PublicMatchView({
               onClick={() => setSelectedScorecardTeam('TEAM2')}
               className={`flex-1 py-2 px-4 rounded-lg text-xs font-black tracking-wider uppercase transition-all duration-200 truncate ${
                 selectedScorecardTeam === 'TEAM2'
-                  ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                  ? 'bg-orange-500 text-white shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
               }`}
             >
               {match.team2?.name || 'TEAM B'}
@@ -493,9 +492,9 @@ export default function PublicMatchView({
           </div>
 
           {/* BATTING SCORECARD TABLE FOR SELECTED TEAM - NO HORIZONTAL SCROLL ON MOBILE */}
-          <div className="w-full rounded-xl border border-slate-800/80 overflow-hidden">
+          <div className="w-full rounded-xl border border-slate-200 overflow-hidden">
             <table className="w-full text-left text-[11px] sm:text-xs table-fixed">
-              <thead className="bg-slate-950/60 text-slate-400 font-extrabold border-b border-slate-800 uppercase tracking-wider">
+              <thead className="bg-slate-50 text-slate-500 font-extrabold border-b border-slate-200 uppercase tracking-wider">
                 <tr>
                   <th className="p-2 sm:p-3 w-[38%]">Name</th>
                   <th className="p-2 sm:p-3 text-right w-[12%]">R</th>
@@ -505,26 +504,26 @@ export default function PublicMatchView({
                   <th className="p-2 sm:p-3 text-right w-[14%]">SR</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60">
+              <tbody className="divide-y divide-slate-100">
                 {activeScorecardBatters.length > 0 ? (
                   activeScorecardBatters.map((b: any) => {
                     const playerInfo = [...team1Players, ...team2Players].find(p => p.id === b.playerId);
                     const sr = b.balls > 0 ? ((b.runs / b.balls) * 100).toFixed(1) : '0.0';
                     return (
-                      <tr key={b.playerId} className="hover:bg-slate-800/30 transition-colors">
+                      <tr key={b.playerId} className="hover:bg-slate-50 transition-colors">
                         <td className="p-2 sm:p-3 w-[38%] truncate">
-                          <div className="font-extrabold text-white truncate">
+                          <div className="font-extrabold text-slate-900 truncate">
                             {playerInfo?.full_name || playerInfo?.display_name || 'Batter'}
                           </div>
-                          <div className="text-[10px] text-slate-400 font-medium mt-0.5 truncate">
-                            {b.isOut ? `b ${b.dismissalInfo || 'out'}` : <span className="text-emerald-400 font-bold">not out</span>}
+                          <div className="text-[10px] text-slate-500 font-medium mt-0.5 truncate">
+                            {b.isOut ? `b ${b.dismissalInfo || 'out'}` : <span className="text-orange-600 font-bold">not out</span>}
                           </div>
                         </td>
-                        <td className="p-2 sm:p-3 text-right font-mono font-black text-emerald-400 text-xs sm:text-sm w-[12%]">{b.runs}</td>
-                        <td className="p-2 sm:p-3 text-right font-mono text-slate-300 font-semibold w-[12%]">{b.balls}</td>
-                        <td className="p-2 sm:p-3 text-right font-mono text-slate-300 font-semibold w-[12%]">{b.fours}</td>
-                        <td className="p-2 sm:p-3 text-right font-mono text-slate-300 font-semibold w-[12%]">{b.sixes}</td>
-                        <td className="p-2 sm:p-3 text-right font-mono text-slate-300 font-semibold w-[14%]">{sr}</td>
+                        <td className="p-2 sm:p-3 text-right font-mono font-black text-orange-600 text-xs sm:text-sm w-[12%]">{b.runs}</td>
+                        <td className="p-2 sm:p-3 text-right font-mono text-slate-600 font-semibold w-[12%]">{b.balls}</td>
+                        <td className="p-2 sm:p-3 text-right font-mono text-slate-600 font-semibold w-[12%]">{b.fours}</td>
+                        <td className="p-2 sm:p-3 text-right font-mono text-slate-600 font-semibold w-[12%]">{b.sixes}</td>
+                        <td className="p-2 sm:p-3 text-right font-mono text-slate-600 font-semibold w-[14%]">{sr}</td>
                       </tr>
                     );
                   })
@@ -545,19 +544,19 @@ export default function PublicMatchView({
       {activeTab === 'TEAMS' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* TEAM 1 PLAYING XI */}
-          <div className="bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800 space-y-4 shadow-xl">
-            <h4 className="font-extrabold text-sm text-emerald-400 flex items-center justify-between border-b border-slate-800 pb-2">
+          <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 space-y-4 shadow-sm text-slate-900">
+            <h4 className="font-extrabold text-sm text-orange-600 flex items-center justify-between border-b border-slate-100 pb-2">
               <span>{match.team1?.name} Playing XI</span>
               <span className="text-xs text-slate-500 font-mono">({team1Players.length} Players)</span>
             </h4>
-            <div className="divide-y divide-slate-800/60 text-xs">
+            <div className="divide-y divide-slate-100 text-xs">
               {team1Players.map((p, idx) => (
                 <div key={p.id || idx} className="py-2.5 flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="text-slate-500 font-mono text-[10px] w-4">{idx + 1}.</span>
-                    <span className="font-extrabold text-slate-200">{p.full_name || p.display_name}</span>
+                    <span className="text-slate-400 font-mono text-[10px] w-4">{idx + 1}.</span>
+                    <span className="font-extrabold text-slate-800">{p.full_name || p.display_name}</span>
                   </div>
-                  <span className="text-emerald-400/90 font-mono text-[11px] bg-slate-950 px-2 py-0.5 rounded border border-slate-800 font-semibold">
+                  <span className="text-orange-600 font-mono text-[11px] bg-orange-50 px-2 py-0.5 rounded border border-orange-200 font-semibold">
                     {p.role || p.player_role || p.position || 'Player'}
                   </span>
                 </div>
@@ -566,19 +565,19 @@ export default function PublicMatchView({
           </div>
 
           {/* TEAM 2 PLAYING XI */}
-          <div className="bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800 space-y-4 shadow-xl">
-            <h4 className="font-extrabold text-sm text-emerald-400 flex items-center justify-between border-b border-slate-800 pb-2">
+          <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 space-y-4 shadow-sm text-slate-900">
+            <h4 className="font-extrabold text-sm text-orange-600 flex items-center justify-between border-b border-slate-100 pb-2">
               <span>{match.team2?.name} Playing XI</span>
               <span className="text-xs text-slate-500 font-mono">({team2Players.length} Players)</span>
             </h4>
-            <div className="divide-y divide-slate-800/60 text-xs">
+            <div className="divide-y divide-slate-100 text-xs">
               {team2Players.map((p, idx) => (
                 <div key={p.id || idx} className="py-2.5 flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="text-slate-500 font-mono text-[10px] w-4">{idx + 1}.</span>
-                    <span className="font-extrabold text-slate-200">{p.full_name || p.display_name}</span>
+                    <span className="text-slate-400 font-mono text-[10px] w-4">{idx + 1}.</span>
+                    <span className="font-extrabold text-slate-800">{p.full_name || p.display_name}</span>
                   </div>
-                  <span className="text-emerald-400/90 font-mono text-[11px] bg-slate-950 px-2 py-0.5 rounded border border-slate-800 font-semibold">
+                  <span className="text-orange-600 font-mono text-[11px] bg-orange-50 px-2 py-0.5 rounded border border-orange-200 font-semibold">
                     {p.role || p.player_role || p.position || 'Player'}
                   </span>
                 </div>

@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import Logo from '@/components/common/Logo';
 import { 
   LayoutDashboard, 
   FileCheck, 
@@ -67,23 +68,8 @@ export default function AdminSidebar({ user }: AdminSidebarProps) {
       {/* DESKTOP SIDEBAR CONTAINER (UNCHANGED DESKTOP VIEW) */}
       <aside className="hidden lg:flex sticky top-0 left-0 z-30 h-screen w-64 bg-slate-950 border-r border-slate-800 flex-col justify-between shrink-0">
         
-        {/* BRAND HEADER */}
         <div className="p-6 border-b border-slate-800/80 flex items-center justify-between">
-          <Link href="/admin/dashboard" className="flex items-center gap-2.5 group">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-purple-600 via-indigo-500 to-emerald-400 p-0.5 shadow-lg shadow-purple-600/20 group-hover:scale-105 transition-transform">
-              <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
-                <ShieldCheck className="w-5 h-5 text-purple-400" />
-              </div>
-            </div>
-            <div className="flex flex-col">
-              <span className="font-extrabold text-lg tracking-tight bg-gradient-to-r from-white via-slate-200 to-purple-400 bg-clip-text text-transparent">
-                BatScore
-              </span>
-              <span className="text-[10px] text-purple-400 font-bold tracking-widest uppercase -mt-1">
-                Admin Console
-              </span>
-            </div>
-          </Link>
+          <Logo size="md" href="/admin/dashboard" />
         </div>
 
         {/* FULL NAVIGATION LINKS CONTAINER */}

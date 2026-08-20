@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, Suspense } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import Logo from '@/components/common/Logo';
 import { 
   Trophy, 
   Search, 
@@ -55,20 +56,20 @@ function NavSearchControl() {
 
   if (searchOpen) {
     return (
-      <div className="hidden md:flex items-center gap-2 bg-[#0D1528] border border-[#19D89A] rounded-xl px-3 py-1.5 transition-all duration-200 w-44 sm:w-60 shadow-lg">
-        <Search className="w-3.5 h-3.5 text-[#19D89A] shrink-0" />
+      <div className="hidden md:flex items-center gap-2 bg-white border border-orange-500 rounded-xl px-3 py-1.5 transition-all duration-200 w-44 sm:w-60 shadow-md">
+        <Search className="w-3.5 h-3.5 text-orange-500 shrink-0" />
         <input
           type="text"
           autoFocus
           value={searchValue}
           onChange={(e) => handleSearchChange(e.target.value)}
           placeholder="Search team name..."
-          className="w-full bg-transparent text-white text-xs outline-none placeholder-[#71809A] font-medium"
+          className="w-full bg-transparent text-slate-900 text-xs outline-none placeholder-slate-400 font-medium"
         />
         <button
           type="button"
           onClick={handleCloseSearch}
-          className="p-0.5 text-[#AAB5CC] hover:text-white rounded transition-colors shrink-0"
+          className="p-0.5 text-slate-400 hover:text-slate-700 rounded transition-colors shrink-0"
           title="Close search"
         >
           <X className="w-3.5 h-3.5" />
@@ -81,7 +82,7 @@ function NavSearchControl() {
     <button 
       type="button"
       onClick={() => setSearchOpen(true)}
-      className="hidden md:flex p-2 rounded-xl text-[#AAB5CC] hover:text-white hover:bg-[#0D1528] transition-colors" 
+      className="hidden md:flex p-2 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors" 
       title="Search by Team Name"
       aria-label="Search by Team Name"
     >
@@ -135,21 +136,21 @@ function MobileNavSearch() {
       <button 
         type="button"
         onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
-        className="md:hidden p-2 rounded-xl text-[#AAB5CC] hover:text-white hover:bg-[#0D1528] transition-colors" 
+        className="md:hidden p-2 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors" 
         title="Search by Team Name"
         aria-label="Search by Team Name"
       >
-        {mobileSearchOpen ? <X className="w-4 h-4 text-[#19D89A]" /> : <Search className="w-4 h-4" />}
+        {mobileSearchOpen ? <X className="w-4 h-4 text-orange-500" /> : <Search className="w-4 h-4" />}
       </button>
 
       {/* DEDICATED MOBILE SEARCH VIEW (APPEARS DIRECTLY BELOW TOP NAV ONLY ON MOBILE) */}
       {mobileSearchOpen && (
-        <div className="md:hidden border-t border-[#173541] bg-[#0A1224] px-4 py-3 shadow-2xl animate-in slide-in-from-top-2">
-          <div className="flex items-center gap-2 bg-[#0D1528] border border-[#19D89A] rounded-xl px-3 py-2 w-full shadow-inner">
+        <div className="md:hidden border-t border-slate-200 bg-slate-50 px-4 py-3 shadow-lg animate-in slide-in-from-top-2">
+          <div className="flex items-center gap-2 bg-white border border-orange-500 rounded-xl px-3 py-2 w-full shadow-inner">
             <button
               type="button"
               onClick={handleCloseSearch}
-              className="p-1 text-[#19D89A] hover:text-white rounded-lg transition-colors shrink-0"
+              className="p-1 text-orange-500 hover:text-orange-600 rounded-lg transition-colors shrink-0"
               title="Return to Home"
             >
               <ArrowLeft className="w-4 h-4" />
@@ -160,25 +161,25 @@ function MobileNavSearch() {
               value={searchValue}
               onChange={(e) => handleSearchChange(e.target.value)}
               placeholder="Search team name..."
-              className="w-full bg-transparent text-white text-xs outline-none placeholder-[#71809A] font-medium"
+              className="w-full bg-transparent text-slate-900 text-xs outline-none placeholder-slate-400 font-medium"
             />
             {searchValue && (
               <button
                 type="button"
                 onClick={handleClearInput}
-                className="p-1 text-[#AAB5CC] hover:text-white rounded transition-colors shrink-0"
+                className="p-1 text-slate-400 hover:text-slate-600 rounded transition-colors shrink-0"
                 title="Clear input"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
             )}
           </div>
-          <div className="flex items-center justify-between text-[11px] text-[#71809A] px-1">
+          <div className="flex items-center justify-between text-[11px] text-slate-500 px-1 mt-1">
             <span>{searchValue ? `Searching team: "${searchValue}"` : 'Type team name to filter matches'}</span>
             <button 
               type="button"
               onClick={() => setMobileSearchOpen(false)}
-              className="text-[#19D89A] font-bold text-[11px]"
+              className="text-orange-600 font-bold text-[11px]"
             >
               Done
             </button>
@@ -214,27 +215,20 @@ export default function Navbar({ user, userRole = 'USER' }: NavbarProps) {
 
   return (
     <header className={`sticky top-0 z-50 transition-all duration-200 ${
-      scrolled ? 'bg-[#050A1A]/95 backdrop-blur-md border-b border-[#173541] shadow-xl' : 'bg-[#050A1A] border-b border-[#173541]'
+      scrolled ? 'bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm' : 'bg-white border-b border-slate-200 shadow-[0_2px_8px_rgba(0,0,0,0.03)]'
     }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           
-          {/* 1. APPROVED BATSCORE LOGO & WEBSITE NAME (FIXED & UNCHANGED) */}
-          <Link href="/" className="flex items-center gap-2 group shrink-0">
-            <div className="w-9 h-9 rounded-xl bg-[#19D89A] p-0.5 shadow-md shadow-[#19D89A]/20 group-hover:scale-105 transition-transform flex items-center justify-center">
-              <Trophy className="w-5 h-5 text-[#050A1A]" />
-            </div>
-            <span className="font-extrabold text-xl tracking-tight text-white group-hover:text-[#19D89A] transition-colors">
-              BatScore
-            </span>
-          </Link>
+          {/* 1. APPROVED BATSCORE LOGO */}
+          <Logo size="md" href="/" />
 
           {/* 2. DESKTOP NAVIGATION LINKS */}
-          <nav className="hidden md:flex items-center gap-1 bg-[#0D1528] p-1.5 rounded-full border border-[#173541]">
+          <nav className="hidden md:flex items-center gap-1 bg-slate-100 p-1.5 rounded-full border border-slate-200">
             <Link 
               href="/" 
               className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
-                pathname === '/' ? 'bg-[#19D89A] text-[#050A1A] font-extrabold shadow-md' : 'text-[#AAB5CC] hover:text-white hover:bg-[#111A2D]'
+                pathname === '/' ? 'bg-orange-500 text-white font-extrabold shadow-sm' : 'text-slate-600 hover:text-slate-900 hover:bg-white'
               }`}
             >
               Home
@@ -243,7 +237,7 @@ export default function Navbar({ user, userRole = 'USER' }: NavbarProps) {
             <Link 
               href="/community" 
               className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
-                pathname.startsWith('/community') ? 'bg-[#19D89A] text-[#050A1A] font-extrabold shadow-md' : 'text-[#AAB5CC] hover:text-white hover:bg-[#111A2D]'
+                pathname.startsWith('/community') ? 'bg-orange-500 text-white font-extrabold shadow-sm' : 'text-slate-600 hover:text-slate-900 hover:bg-white'
               }`}
             >
               Community
@@ -252,7 +246,7 @@ export default function Navbar({ user, userRole = 'USER' }: NavbarProps) {
             <Link 
               href={masterHref} 
               className={`px-4 py-1.5 rounded-full text-xs font-bold flex items-center gap-1 transition-all ${
-                pathname.startsWith('/master') || pathname === '/apply-master' ? 'bg-[#19D89A] text-[#050A1A] font-extrabold shadow-md' : 'text-[#19D89A] hover:bg-[#111A2D]'
+                pathname.startsWith('/master') || pathname === '/apply-master' ? 'bg-orange-500 text-white font-extrabold shadow-sm' : 'text-orange-600 hover:bg-white'
               }`}
             >
               <Star className="w-3.5 h-3.5" />
@@ -263,10 +257,10 @@ export default function Navbar({ user, userRole = 'USER' }: NavbarProps) {
               <Link 
                 href="/admin/dashboard" 
                 className={`px-4 py-1.5 rounded-full text-xs font-bold flex items-center gap-1 transition-all ${
-                  pathname.startsWith('/admin') ? 'bg-[#D927A8] text-white font-extrabold' : 'text-[#D927A8] hover:bg-[#111A2D]'
+                  pathname.startsWith('/admin') ? 'bg-slate-900 text-white font-extrabold' : 'text-slate-700 hover:bg-white'
                 }`}
               >
-                <ShieldAlert className="w-3.5 h-3.5" />
+                <ShieldAlert className="w-3.5 h-3.5 text-orange-500" />
                 Admin
               </Link>
             )}
@@ -276,9 +270,9 @@ export default function Navbar({ user, userRole = 'USER' }: NavbarProps) {
           <div className="flex items-center gap-2 sm:gap-3">
             
             {/* NOTIFICATION BELL BUTTON */}
-            <button className="p-2 rounded-xl text-[#AAB5CC] hover:text-white hover:bg-[#0D1528] transition-colors relative" title="Notification">
+            <button className="p-2 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors relative" title="Notification">
               <Bell className="w-4 h-4" />
-              <span className="w-1.5 h-1.5 rounded-full bg-[#19D89A] absolute top-2 right-2 animate-ping" />
+              <span className="w-1.5 h-1.5 rounded-full bg-orange-500 absolute top-2 right-2 animate-ping" />
             </button>
 
             {/* LOGOUT BUTTON / AUTH BUTTONS */}
@@ -286,7 +280,7 @@ export default function Navbar({ user, userRole = 'USER' }: NavbarProps) {
               <form action={logoutUser}>
                 <button 
                   type="submit"
-                  className="p-2 text-[#AAB5CC] hover:text-[#E5232F] hover:bg-[#0D1528] rounded-xl transition-colors"
+                  className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors"
                   title="Sign Out"
                 >
                   <LogOut className="w-4 h-4" />
@@ -296,13 +290,13 @@ export default function Navbar({ user, userRole = 'USER' }: NavbarProps) {
               <div className="flex items-center gap-2">
                 <Link 
                   href="/login" 
-                  className="px-3.5 py-1.5 text-xs font-bold text-[#AAB5CC] hover:text-white transition-colors"
+                  className="px-3.5 py-1.5 text-xs font-bold text-slate-600 hover:text-slate-900 transition-colors"
                 >
                   Log in
                 </Link>
                 <Link 
                   href="/signup" 
-                  className="px-3.5 py-1.5 text-xs font-black text-[#050A1A] bg-[#19D89A] hover:bg-emerald-400 rounded-xl transition-colors shadow-md"
+                  className="px-3.5 py-1.5 text-xs font-black text-white bg-orange-500 hover:bg-orange-600 rounded-xl transition-colors shadow-sm"
                 >
                   Sign up
                 </Link>

@@ -139,7 +139,7 @@ export default async function MasterScoringPage({ params }: { params: { matchId:
   }
 
   return (
-    <div className="min-h-screen bg-[#050A1A] text-white font-sans">
+    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
       <MobileScoringUI 
         match={match}
         activeInnings={activeInnings}

@@ -18,7 +18,7 @@ export const ScorecardComponent: React.FC<ScorecardProps> = ({
       <div>
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-black text-slate-900 flex items-center gap-2">
-            🏏 Batting — <span className="text-emerald-600">{battingTeamName}</span>
+            🏏 Batting — <span className="text-orange-600">{battingTeamName}</span>
           </h3>
           <span className="text-xs font-bold bg-slate-100 text-slate-600 px-3 py-1 rounded-full">
             CRR: {scorecard.runRate}
@@ -70,7 +70,7 @@ export const ScorecardComponent: React.FC<ScorecardProps> = ({
       <div>
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-black text-slate-900 flex items-center gap-2">
-            🎯 Bowling — <span className="text-emerald-600">{bowlingTeamName}</span>
+            🎯 Bowling — <span className="text-orange-600">{bowlingTeamName}</span>
           </h3>
         </div>
 

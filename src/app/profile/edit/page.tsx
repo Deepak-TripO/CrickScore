@@ -11,11 +11,11 @@ export default async function EditProfilePage() {
   const profile = await getCurrentUserProfile(user);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex flex-col">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col">
       <Navbar user={user} userRole={userRole} />
 
       <div className="flex-1 max-w-xl w-full mx-auto px-4 py-8 space-y-6">
-        <h1 className="text-2xl font-extrabold tracking-tight text-center">Edit Profile</h1>
+        <h1 className="text-2xl font-black tracking-tight text-center text-slate-900">Edit Profile</h1>
         <EditProfileForm profile={profile} />
       </div>
     </div>
