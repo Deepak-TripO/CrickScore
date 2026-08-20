@@ -409,31 +409,46 @@ export async function createFullTwoStepMatch(payload: {
     return { error: matchError?.message || 'Failed to create match.' };
   }
 
-  const matchPlayersToInsert = [
-    ...payload.yourTeamPlayers.map((p, idx) => ({
-      match_id: match.id,
-      team_id: team1.id,
-      player_id: team1PlayerIds[idx] || null,
-      player_name: p.name,
-      name: p.name,
-      role: p.type,
-      is_playing: true
-    })),
-    ...payload.oppositeTeamPlayers.map((p, idx) => ({
-      match_id: match.id,
-      team_id: team2.id,
-      player_id: team2PlayerIds[idx] || null,
-      player_name: p.name,
-      name: p.name,
-      role: p.type,
-      is_playing: true
-    }))
-  ];
+  const matchPlayersToInsert: any[] = [];
+
+  team1PlayerIds.forEach((pid, idx) => {
+    if (pid) {
+      matchPlayersToInsert.push({
+        match_id: match.id,
+        team_id: team1.id,
+        player_id: pid,
+        is_playing: true
+      });
+    }
+  });
+
+  team2PlayerIds.forEach((pid, idx) => {
+    if (pid) {
+      matchPlayersToInsert.push({
+        match_id: match.id,
+        team_id: team2.id,
+        player_id: pid,
+        is_playing: true
+      });
+    }
+  });
 
   if (matchPlayersToInsert.length > 0) {
     try {
-      await db.from('match_players').insert(matchPlayersToInsert);
-    } catch {}
+      const { error: mpErr } = await db.from('match_players').upsert(matchPlayersToInsert, { onConflict: 'match_id,player_id' });
+      if (mpErr) {
+        console.warn('[CREATE MATCH PLAYERS UPSERT WARNING]', mpErr.message);
+        for (const row of matchPlayersToInsert) {
+          try {
+            await db.from('match_players').insert(row);
+          } catch (rErr: any) {
+            console.warn('[CREATE MATCH PLAYERS ROW INSERT WARNING]', rErr.message);
+          }
+        }
+      }
+    } catch (e: any) {
+      console.warn('[CREATE MATCH PLAYERS CATCH]', e.message);
+    }
   }
 
   try {
@@ -520,29 +535,30 @@ export async function getMatchDetailsForEdit(matchId: string) {
       jsonPlayers.forEach(addPlayer);
     }
 
-    // 2. Query match_players table for this match
+    // 2. Query match_players table for this match with players(*) join
     try {
-      let query = db.from('match_players').select('*').eq('match_id', matchId);
+      let query = db.from('match_players').select('*, players(*)').eq('match_id', matchId);
       if (teamId) {
         query = query.eq('team_id', teamId);
       }
       const { data: mpRows } = await query;
       if (mpRows && mpRows.length > 0) {
         for (const row of mpRows) {
-          const pName = row.player_name || row.name || row.full_name || row.display_name;
+          const pRec = row.players || {};
+          const pName = row.player_name || row.name || pRec.full_name || pRec.display_name || pRec.name;
           if (pName) {
             addPlayer({
-              id: row.player_id || row.id,
+              id: row.player_id || pRec.id || row.id,
               name: pName,
-              role: row.role || row.player_type || 'BATSMAN',
-              avatar_url: row.avatar_url || row.image_url || ''
+              role: row.role || pRec.role || row.player_type || 'BATSMAN',
+              avatar_url: row.avatar_url || pRec.photo_url || pRec.avatar_url || ''
             });
           } else if (row.player_id) {
-            const { data: pRec } = await db.from('players').select('*').eq('id', row.player_id).maybeSingle();
-            if (pRec) {
+            const { data: pRecDirect } = await db.from('players').select('*').eq('id', row.player_id).maybeSingle();
+            if (pRecDirect) {
               addPlayer({
-                ...pRec,
-                name: pRec.name || pRec.full_name || pRec.display_name
+                ...pRecDirect,
+                name: pRecDirect.name || pRecDirect.full_name || pRecDirect.display_name
               });
             }
           }
@@ -748,37 +764,47 @@ export async function updateFullMatch(payload: {
   for (const p of payload.yourTeamPlayers) {
     if (p.name.trim()) {
       const pid = await insertOrUpdatePlayer(p, match.team1_id);
-      matchPlayersToInsert.push({
-        match_id: payload.matchId,
-        team_id: match.team1_id,
-        player_id: pid || null,
-        player_name: p.name,
-        name: p.name,
-        role: p.type,
-        is_playing: true
-      });
+      if (pid) {
+        matchPlayersToInsert.push({
+          match_id: payload.matchId,
+          team_id: match.team1_id,
+          player_id: pid,
+          is_playing: true
+        });
+      }
     }
   }
 
   for (const p of payload.oppositeTeamPlayers) {
     if (p.name.trim()) {
       const pid = await insertOrUpdatePlayer(p, match.team2_id);
-      matchPlayersToInsert.push({
-        match_id: payload.matchId,
-        team_id: match.team2_id,
-        player_id: pid || null,
-        player_name: p.name,
-        name: p.name,
-        role: p.type,
-        is_playing: true
-      });
+      if (pid) {
+        matchPlayersToInsert.push({
+          match_id: payload.matchId,
+          team_id: match.team2_id,
+          player_id: pid,
+          is_playing: true
+        });
+      }
     }
   }
 
   if (matchPlayersToInsert.length > 0) {
     try {
-      await db.from('match_players').insert(matchPlayersToInsert);
-    } catch {}
+      const { error: mpUpdateErr } = await db.from('match_players').upsert(matchPlayersToInsert, { onConflict: 'match_id,player_id' });
+      if (mpUpdateErr) {
+        console.warn('[UPDATE MATCH PLAYERS UPSERT WARNING]', mpUpdateErr.message);
+        for (const row of matchPlayersToInsert) {
+          try {
+            await db.from('match_players').insert(row);
+          } catch (rErr: any) {
+            console.warn('[UPDATE MATCH PLAYERS ROW INSERT WARNING]', rErr.message);
+          }
+        }
+      }
+    } catch (e: any) {
+      console.warn('[UPDATE MATCH PLAYERS CATCH]', e.message);
+    }
   }
 
   revalidatePath('/master/dashboard');
