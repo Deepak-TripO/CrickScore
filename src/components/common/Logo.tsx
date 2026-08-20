@@ -9,11 +9,11 @@ interface LogoProps {
 
 export default function Logo({ size = 'md', className = '', href = '/' }: LogoProps) {
   const heightClass = {
-    sm: 'h-8',
-    md: 'h-10',
-    lg: 'h-14',
-    xl: 'h-20'
-  }[size] || 'h-10';
+    sm: 'h-10 sm:h-12',
+    md: 'h-12 sm:h-14',
+    lg: 'h-16 sm:h-20',
+    xl: 'h-24 sm:h-28'
+  }[size] || 'h-12 sm:h-14';
 
   const content = (
     <div className={`inline-flex items-center gap-2 group shrink-0 ${className}`}>

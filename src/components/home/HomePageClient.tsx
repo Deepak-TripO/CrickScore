@@ -85,10 +85,10 @@ function HomePageContent({
   return (
     <div className="space-y-6 font-sans">
       
-      {/* HOME PAGE MOBILE SEARCH BAR (LIGHTWEIGHT, SIMPLE, FIT FOR MOBILE) */}
-      <div className="md:hidden w-full space-y-2">
-        <div className="flex items-center gap-2 bg-white border border-slate-200 focus-within:border-orange-500 rounded-xl px-3 py-2.5 transition-colors shadow-sm">
-          <Search className="w-4 h-4 text-orange-500 shrink-0" />
+      {/* COMPACT & MINIMAL SEARCH CONTROL */}
+      <div className="w-full flex items-center justify-end">
+        <div className="flex items-center gap-1.5 bg-white border border-slate-200 focus-within:border-orange-500 rounded-xl px-2.5 py-1 w-44 sm:w-56 transition-all shadow-sm">
+          <Search className="w-3.5 h-3.5 text-orange-500 shrink-0" />
           <input
             type="text"
             value={searchQuery}
@@ -102,17 +102,17 @@ function HomePageContent({
               }
               router.replace(`/${params.toString() ? `?${params.toString()}` : ''}`, { scroll: false });
             }}
-            placeholder="Search team name..."
+            placeholder="Search team..."
             className="w-full bg-transparent text-slate-900 text-xs outline-none placeholder-slate-400 font-medium"
           />
           {searchQuery && (
             <button
               type="button"
               onClick={handleClearSearch}
-              className="p-1 text-slate-400 hover:text-slate-600 rounded transition-colors shrink-0"
+              className="p-0.5 text-slate-400 hover:text-slate-600 rounded transition-colors shrink-0"
               title="Clear search"
             >
-              <X className="w-3.5 h-3.5" />
+              <X className="w-3 h-3" />
             </button>
           )}
         </div>

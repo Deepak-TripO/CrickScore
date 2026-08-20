@@ -56,14 +56,14 @@ function NavSearchControl() {
 
   if (searchOpen) {
     return (
-      <div className="hidden md:flex items-center gap-2 bg-white border border-orange-500 rounded-xl px-3 py-1.5 transition-all duration-200 w-44 sm:w-60 shadow-md">
+      <div className="hidden md:flex items-center gap-1.5 bg-white border border-orange-500 rounded-xl px-2.5 py-1 transition-all duration-200 w-36 sm:w-48 shadow-sm">
         <Search className="w-3.5 h-3.5 text-orange-500 shrink-0" />
         <input
           type="text"
           autoFocus
           value={searchValue}
           onChange={(e) => handleSearchChange(e.target.value)}
-          placeholder="Search team name..."
+          placeholder="Search team..."
           className="w-full bg-transparent text-slate-900 text-xs outline-none placeholder-slate-400 font-medium"
         />
         <button
@@ -72,7 +72,7 @@ function NavSearchControl() {
           className="p-0.5 text-slate-400 hover:text-slate-700 rounded transition-colors shrink-0"
           title="Close search"
         >
-          <X className="w-3.5 h-3.5" />
+          <X className="w-3 h-3" />
         </button>
       </div>
     );
