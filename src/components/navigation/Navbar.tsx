@@ -22,17 +22,14 @@ interface NavbarProps {
   userProfile?: any;
 }
 
-function NavSearchControl() {
+function TopNavSearchBar() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const currentSearch = searchParams?.get('search') || '';
-
-  const [searchOpen, setSearchOpen] = useState(!!currentSearch);
   const [searchValue, setSearchValue] = useState(currentSearch);
 
   useEffect(() => {
     setSearchValue(currentSearch);
-    if (currentSearch) setSearchOpen(true);
   }, [currentSearch]);
 
   const handleSearchChange = (val: string) => {
@@ -46,48 +43,34 @@ function NavSearchControl() {
     router.replace(`/${params.toString() ? `?${params.toString()}` : ''}`, { scroll: false });
   };
 
-  const handleCloseSearch = () => {
+  const handleClear = () => {
     setSearchValue('');
-    setSearchOpen(false);
     const params = new URLSearchParams(searchParams?.toString() || '');
     params.delete('search');
     router.replace(`/${params.toString() ? `?${params.toString()}` : ''}`, { scroll: false });
   };
 
-  if (searchOpen) {
-    return (
-      <div className="hidden md:flex items-center gap-1.5 bg-white border border-orange-500 rounded-xl px-2.5 py-1 transition-all duration-200 w-36 sm:w-48 shadow-sm">
-        <Search className="w-3.5 h-3.5 text-orange-500 shrink-0" />
-        <input
-          type="text"
-          autoFocus
-          value={searchValue}
-          onChange={(e) => handleSearchChange(e.target.value)}
-          placeholder="Search team..."
-          className="w-full bg-transparent text-slate-900 text-xs outline-none placeholder-slate-400 font-medium"
-        />
+  return (
+    <div className="w-full flex items-center gap-1.5 bg-white border border-slate-200 focus-within:border-orange-500 rounded-xl px-2.5 py-1.5 transition-all shadow-sm">
+      <Search className="w-3.5 h-3.5 text-orange-500 shrink-0" />
+      <input
+        type="text"
+        value={searchValue}
+        onChange={(e) => handleSearchChange(e.target.value)}
+        placeholder="Search team..."
+        className="w-full bg-transparent text-slate-900 text-xs outline-none placeholder-slate-400 font-medium"
+      />
+      {searchValue && (
         <button
           type="button"
-          onClick={handleCloseSearch}
-          className="p-0.5 text-slate-400 hover:text-slate-700 rounded transition-colors shrink-0"
-          title="Close search"
+          onClick={handleClear}
+          className="p-0.5 text-slate-400 hover:text-slate-600 rounded transition-colors shrink-0"
+          title="Clear search"
         >
           <X className="w-3 h-3" />
         </button>
-      </div>
-    );
-  }
-
-  return (
-    <button 
-      type="button"
-      onClick={() => setSearchOpen(true)}
-      className="hidden md:flex p-2 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors" 
-      title="Search by Team Name"
-      aria-label="Search by Team Name"
-    >
-      <Search className="w-4 h-4" />
-    </button>
+      )}
+    </div>
   );
 }
 
@@ -218,13 +201,20 @@ export default function Navbar({ user, userRole = 'USER' }: NavbarProps) {
       scrolled ? 'bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm' : 'bg-white border-b border-slate-200 shadow-[0_2px_8px_rgba(0,0,0,0.03)]'
     }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-16 gap-2 sm:gap-4">
           
           {/* 1. APPROVED BATSCORE LOGO */}
           <Logo size="md" href="/" />
 
-          {/* 2. DESKTOP NAVIGATION LINKS */}
-          <nav className="hidden md:flex items-center gap-1 bg-slate-100 p-1.5 rounded-full border border-slate-200">
+          {/* 2. SEARCH BAR IN TOP NAVIGATION */}
+          <div className="flex-1 max-w-xs sm:max-w-sm mx-2 sm:mx-4">
+            <Suspense fallback={null}>
+              <TopNavSearchBar />
+            </Suspense>
+          </div>
+
+          {/* 3. DESKTOP NAVIGATION LINKS */}
+          <nav className="hidden md:flex items-center gap-1 bg-slate-100 p-1.5 rounded-full border border-slate-200 shrink-0">
             <Link 
               href="/" 
               className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
