@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import CommunityCard from './CommunityCard';
 import { ArrowLeft, UserCheck, Users, Loader2, LogOut } from 'lucide-react';
 import { getCommunityMembersAction, leaveCommunityAction, CommunityMemberItem } from '@/actions/community';
@@ -16,6 +16,25 @@ export default function PublicCommunityClient({ communities: initialCommunities 
   const [memberCount, setMemberCount] = useState<number>(0);
   const [loadingMembers, setLoadingMembers] = useState<boolean>(false);
   const [isLeaving, setIsLeaving] = useState<boolean>(false);
+
+  // Sync state when server props update (account switching or page revalidation)
+  useEffect(() => {
+    setCommunityList(initialCommunities);
+  }, [initialCommunities]);
+
+  const handleJoinChange = (communityId: string, isJoined: boolean, newCount: number) => {
+    setCommunityList(prev => prev.map(c => {
+      if (c.id === communityId) {
+        return {
+          ...c,
+          isJoined,
+          memberCount: newCount,
+          members: `Members: ${newCount}`
+        };
+      }
+      return c;
+    }));
+  };
 
   const handleSelectCommunity = async (comm: any) => {
     // Access Control: Only open member page for joined communities
@@ -47,9 +66,15 @@ export default function PublicCommunityClient({ communities: initialCommunities 
     try {
       const res = await leaveCommunityAction(selectedCommunity.id);
       if (res.success) {
+        const remainingCount = res.membersCount !== undefined ? res.membersCount : Math.max(0, (selectedCommunity.memberCount || 1) - 1);
         setCommunityList(prev => prev.map(c => {
           if (c.id === selectedCommunity.id) {
-            return { ...c, isJoined: false };
+            return { 
+              ...c, 
+              isJoined: false, 
+              memberCount: remainingCount,
+              members: `Members: ${remainingCount}`
+            };
           }
           return c;
         }));
@@ -74,21 +99,21 @@ export default function PublicCommunityClient({ communities: initialCommunities 
           <button
             type="button"
             onClick={handleCloseMemberPage}
-            className="px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 font-extrabold text-xs rounded-xl border border-slate-200 flex items-center gap-2 transition-all shadow-sm active:scale-95"
+            className="px-3.5 py-2 sm:px-4 sm:py-2 bg-white hover:bg-slate-50 text-slate-700 font-extrabold text-xs rounded-xl border border-slate-200 flex items-center gap-2 transition-all shadow-sm active:scale-95"
           >
             <ArrowLeft className="w-4 h-4 text-orange-500" />
-            <span>Back</span>
+            <span className="hidden sm:inline">Back</span>
           </button>
 
           <button
             type="button"
             onClick={handleLeaveCommunity}
             disabled={isLeaving}
-            className="px-4 py-2 bg-white hover:bg-red-50 text-red-600 font-extrabold text-xs rounded-xl border border-red-200 flex items-center gap-2 transition-all shadow-sm active:scale-95"
+            className="px-4 py-2 bg-white hover:bg-red-50 text-red-600 border border-red-200 font-extrabold text-xs rounded-xl flex items-center gap-2 transition-all shadow-sm active:scale-95"
           >
             {isLeaving ? (
               <>
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-red-600" />
                 <span>Leaving...</span>
               </>
             ) : (
@@ -125,7 +150,7 @@ export default function PublicCommunityClient({ communities: initialCommunities 
                 />
               </div>
 
-              <span className="px-3 py-1 rounded-full text-xs font-black bg-orange-50 text-orange-600 border border-orange-200">
+              <span className="hidden sm:inline-block px-3 py-1 rounded-full text-xs font-black bg-orange-50 text-orange-600 border border-orange-200">
                 Active Community
               </span>
             </div>
@@ -221,6 +246,7 @@ export default function PublicCommunityClient({ communities: initialCommunities 
             key={c.id} 
             community={c} 
             onSelect={() => handleSelectCommunity(c)}
+            onJoinChange={handleJoinChange}
           />
         ))}
       </div>

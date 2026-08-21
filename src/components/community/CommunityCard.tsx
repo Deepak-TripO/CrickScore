@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { joinCommunityAction } from '@/actions/community';
 import { Check, Loader2 } from 'lucide-react';
 
@@ -20,9 +20,10 @@ interface CommunityCardProps {
     isJoined?: boolean;
   };
   onSelect?: () => void;
+  onJoinChange?: (communityId: string, isJoined: boolean, newCount: number) => void;
 }
 
-export default function CommunityCard({ community, onSelect }: CommunityCardProps) {
+export default function CommunityCard({ community, onSelect, onJoinChange }: CommunityCardProps) {
   // Use original uploaded images directly from database as single source of truth
   const initialCover = community.coverImage || DEFAULT_COVER;
   const initialProfile = community.profileImage || DEFAULT_PROFILE;
@@ -31,14 +32,23 @@ export default function CommunityCard({ community, onSelect }: CommunityCardProp
   const [profileSrc, setProfileSrc] = useState<string>(initialProfile);
   const [isJoinedState, setIsJoinedState] = useState<boolean>(!!community.isJoined);
   const [isJoining, setIsJoining] = useState<boolean>(false);
+  const [localCount, setLocalCount] = useState<number | null>(null);
+
+  // Sync state when props change (vital for account switching and revalidation)
+  useEffect(() => {
+    setIsJoinedState(!!community.isJoined);
+    setCoverSrc(community.coverImage || DEFAULT_COVER);
+    setProfileSrc(community.profileImage || DEFAULT_PROFILE);
+    setLocalCount(null);
+  }, [community.id, community.isJoined, community.coverImage, community.profileImage]);
 
   const baseCount = typeof community.memberCount === 'number'
     ? community.memberCount
     : (community.members ? parseInt(community.members.replace(/[^0-9]/g, ''), 10) || 0 : 0);
 
-  const displayCount = (isJoinedState && !community.isJoined)
-    ? baseCount + 1
-    : baseCount;
+  const displayCount = localCount !== null
+    ? localCount
+    : ((isJoinedState && !community.isJoined) ? baseCount + 1 : baseCount);
 
   const handleJoinClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -49,6 +59,9 @@ export default function CommunityCard({ community, onSelect }: CommunityCardProp
       const res = await joinCommunityAction(community.id);
       if (res.success || res.isJoined) {
         setIsJoinedState(true);
+        const newCount = res.membersCount !== undefined ? res.membersCount : baseCount + 1;
+        setLocalCount(newCount);
+        onJoinChange?.(community.id, true, newCount);
       } else if (res.error) {
         alert(res.error);
       }

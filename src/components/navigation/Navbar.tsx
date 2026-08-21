@@ -92,6 +92,15 @@ export default function Navbar({ user, userRole = 'USER' }: NavbarProps) {
                 Admin
               </Link>
             )}
+
+            <Link 
+              href="/profile" 
+              className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
+                pathname.startsWith('/profile') ? 'bg-orange-500 text-white font-extrabold shadow-sm' : 'text-slate-600 hover:text-slate-900 hover:bg-white'
+              }`}
+            >
+              Profile
+            </Link>
           </nav>
 
           {/* 3. RIGHT HEADER ACTIONS: [ NOTIFICATION 🔔 ] [ LOGOUT 🚪 ] */}

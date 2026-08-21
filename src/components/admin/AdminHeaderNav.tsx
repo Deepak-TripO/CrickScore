@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { 
   ShieldCheck, 
   User, 
+  Home,
   LogOut, 
   LayoutDashboard, 
   FileCheck, 
@@ -91,15 +92,26 @@ export default function AdminHeaderNav({ user }: AdminHeaderNavProps) {
           </div>
         </Link>
 
-        {/* RIGHT: ADMIN PROFILE ICON | SIGN OUT ICON */}
+        {/* RIGHT: ADMIN PROFILE ICON (DESKTOP) | HOME ICON (MOBILE) | SIGN OUT ICON */}
         <div className="flex items-center gap-2 shrink-0">
+          {/* DESKTOP VIEW: PROFILE OPTION */}
           <Link
             href="/profile"
             title="Admin Profile"
             aria-label="Admin Profile"
-            className="p-2 bg-slate-900 border border-slate-800 hover:border-purple-500/50 hover:bg-purple-950/30 rounded-xl text-slate-200 hover:text-purple-300 transition-all shadow-sm group"
+            className="hidden sm:flex p-2 bg-slate-900 border border-slate-800 hover:border-purple-500/50 hover:bg-purple-950/30 rounded-xl text-slate-200 hover:text-purple-300 transition-all shadow-sm group"
           >
             <User className="w-4 h-4 text-purple-400 group-hover:scale-110 transition-transform" />
+          </Link>
+
+          {/* MOBILE VIEW ONLY: PROFILE -> HOME REPLACEMENT */}
+          <Link
+            href="/"
+            title="Home Page"
+            aria-label="Home Page"
+            className="flex sm:hidden p-2 bg-slate-900 border border-slate-800 hover:border-purple-500/50 hover:bg-purple-950/30 rounded-xl text-slate-200 hover:text-purple-300 transition-all shadow-sm group"
+          >
+            <Home className="w-4 h-4 text-purple-400 group-hover:scale-110 transition-transform" />
           </Link>
 
           <form action={logoutUser} title="Sign Out">

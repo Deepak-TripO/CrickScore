@@ -4,7 +4,7 @@ import Navbar from '@/components/navigation/Navbar';
 import MobileNav from '@/components/navigation/MobileNav';
 import Link from 'next/link';
 import { getUserAndProfile } from '@/lib/auth';
-import { User, Edit, Mail, MapPin, Settings, HelpCircle, Info, ChevronRight } from 'lucide-react';
+import { User, Edit, Mail, MapPin, Settings, HelpCircle, Info, ChevronRight, ShieldAlert } from 'lucide-react';
 import { isValidImageUrl, sanitizeImageUrl } from '@/lib/imageUtils';
 
 export default async function ProfilePage() {
@@ -98,6 +98,21 @@ export default async function ProfilePage() {
           </h2>
 
           <div className="space-y-1.5">
+            {userRole === 'ADMIN' && (
+              <Link
+                href="/admin/dashboard"
+                className="flex md:hidden items-center justify-between p-3 rounded-2xl bg-purple-50/60 hover:bg-purple-100/60 border border-purple-200 text-purple-900 transition-all group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-white border border-purple-200 flex items-center justify-center text-purple-600 group-hover:border-purple-300 transition-colors">
+                    <ShieldAlert className="w-4 h-4 text-orange-500" />
+                  </div>
+                  <span className="text-xs font-bold text-slate-800 group-hover:text-purple-600">Admin Dashboard</span>
+                </div>
+                <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-purple-500" />
+              </Link>
+            )}
+
             <Link
               href="/settings"
               className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 hover:bg-orange-50/60 border border-slate-200 hover:border-orange-200 text-slate-900 transition-all group"

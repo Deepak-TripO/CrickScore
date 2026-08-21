@@ -24,26 +24,24 @@ export async function getPublicCommunities() {
   }
 
   try {
-    const [commsRes, membersRes] = await Promise.all([
-      db.from('communities').select('*').order('created_at', { ascending: false }),
-      db.from('community_members').select('community_id')
-    ]);
+    const { data: list, error } = await db
+      .from('communities')
+      .select('*, community_members(count)')
+      .order('created_at', { ascending: false });
 
-    const list = commsRes.data;
-    const membersData = membersRes.data || [];
-
-    const memberCounts: Record<string, number> = {};
-    if (Array.isArray(membersData)) {
-      membersData.forEach((m: any) => {
-        if (m.community_id) {
-          memberCounts[m.community_id] = (memberCounts[m.community_id] || 0) + 1;
-        }
-      });
-    }
-
-    if (!commsRes.error && Array.isArray(list)) {
+    if (!error && Array.isArray(list)) {
       return list.map((c: any) => {
-        const count = memberCounts[c.id] || 0;
+        let count = 0;
+        if (Array.isArray(c.community_members)) {
+          if (c.community_members.length > 0 && typeof c.community_members[0] === 'object' && 'count' in c.community_members[0]) {
+            count = c.community_members[0].count;
+          } else {
+            count = c.community_members.length;
+          }
+        } else if (typeof c.community_members === 'object' && c.community_members?.count !== undefined) {
+          count = c.community_members.count;
+        }
+
         return {
           id: c.id,
           ownerId: c.owner_id,
@@ -508,10 +506,20 @@ export async function leaveCommunityAction(communityId: string) {
       console.warn('[LEAVE COMMUNITY DB DELETE WARNING]', deleteError.message);
     }
 
+    // Get updated member count
+    const { count } = await db
+      .from('community_members')
+      .select('*', { count: 'exact', head: true })
+      .eq('community_id', communityId);
+
     revalidatePath('/community');
     revalidatePath('/master/dashboard');
 
-    return { success: true, isJoined: false };
+    return { 
+      success: true, 
+      isJoined: false, 
+      membersCount: (count !== null && count !== undefined) ? count : 0 
+    };
   } catch (err: any) {
     console.warn('[LEAVE COMMUNITY CATCH]', err.message);
     return { error: err.message || 'Failed to leave community.' };

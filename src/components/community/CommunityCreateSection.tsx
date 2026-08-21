@@ -418,7 +418,7 @@ export default function CommunityCreateSection() {
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="px-3 py-1 rounded-full text-xs font-black bg-orange-500 text-white shadow-sm">
+                <span className="hidden sm:inline-block px-3 py-1 rounded-full text-xs font-black bg-orange-500 text-white shadow-sm">
                   Active Community
                 </span>
               </div>

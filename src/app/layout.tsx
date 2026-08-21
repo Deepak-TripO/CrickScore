@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
+import AutoRefresh from '@/components/common/AutoRefresh';
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -31,6 +32,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full bg-slate-950">
       <body className="flex flex-col min-h-screen">
+        <AutoRefresh />
         <main className="flex-1">{children}</main>
       </body>
     </html>
