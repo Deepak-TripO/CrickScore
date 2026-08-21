@@ -48,8 +48,7 @@ export async function submitMasterApplication(formData: FormData) {
         const now = Date.now();
         const diffHours = (now - rejectionTime) / (1000 * 60 * 60);
         if (diffHours < 24) {
-          const remainingHours = Math.ceil(24 - diffHours);
-          return { error: `Your previous application was rejected. Please wait ${remainingHours} hour(s) before re-applying.` };
+          return { error: 'Your master application is rejected. Please try again after 24 hours.' };
         }
       }
     }

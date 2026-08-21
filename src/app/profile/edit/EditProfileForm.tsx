@@ -182,7 +182,6 @@ export default function EditProfileForm({ profile }: { profile: any }) {
             </button>
           )}
         </div>
-        <p className="text-[10px] text-slate-500">Allowed formats: JPG, JPEG, PNG, WEBP (Max 5MB)</p>
       </div>
 
       <div>
@@ -217,7 +216,7 @@ export default function EditProfileForm({ profile }: { profile: any }) {
         disabled={loading || uploadingImage}
         className="w-full py-3 bg-orange-500 hover:bg-orange-600 text-white font-black rounded-xl text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-sm disabled:opacity-50"
       >
-        {loading ? 'Saving Changes...' : 'Save Profile Changes'}
+        {loading ? 'Saving...' : 'Save Profile'}
         <ArrowRight className="w-4 h-4" />
       </button>
     </form>

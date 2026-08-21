@@ -3,21 +3,19 @@ import { redirect } from 'next/navigation';
 import Navbar from '@/components/navigation/Navbar';
 import MobileNav from '@/components/navigation/MobileNav';
 import Link from 'next/link';
-import { getUserAndRole, getCurrentUserProfile } from '@/lib/auth';
+import { getUserAndProfile } from '@/lib/auth';
 import { User, Edit, Mail, MapPin, Settings, HelpCircle, Info, ChevronRight } from 'lucide-react';
 import { isValidImageUrl, sanitizeImageUrl } from '@/lib/imageUtils';
 
 export default async function ProfilePage() {
-  const { user, role: userRole } = await getUserAndRole();
+  const { user, role: userRole, profile } = await getUserAndProfile();
   if (!user) redirect('/login');
-
-  const profile = await getCurrentUserProfile(user);
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans pb-24 md:pb-0">
       <Navbar user={user} userRole={userRole} userProfile={profile} />
 
-      <main className="flex-1 max-w-xl w-full mx-auto px-4 py-6 sm:py-8 space-y-4">
+      <main className="flex-1 max-w-xl w-full mx-auto px-4 pt-3 pb-6 sm:pt-4 sm:pb-8 space-y-4">
         
         {/* CLEAN & COMPACT PROFILE MODULE */}
         <div className="bg-white border border-slate-200 rounded-3xl p-5 sm:p-6 space-y-5 shadow-sm">
@@ -29,7 +27,7 @@ export default async function ProfilePage() {
                   <img 
                     src={sanitizeImageUrl(profile?.avatar_url)} 
                     alt={profile?.full_name || 'Profile'} 
-                    loading="lazy"
+                    loading="eager"
                     decoding="async"
                     className="w-full h-full object-cover" 
                   />
@@ -45,14 +43,16 @@ export default async function ProfilePage() {
                 <div className="flex flex-wrap items-center gap-1.5 pt-1">
                   {profile?.roles?.map((role: string) => (
                     role === 'MASTER' ? (
-                      <span key={role} className="inline-flex items-center gap-1 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded-full" title="Master User">
+                      <span key={role} className="inline-flex items-center shrink-0" title="Master User">
                         <img 
                           src="/master-badge.png" 
                           alt="Master User Icon" 
-                          className="h-4 w-4 object-contain shrink-0" 
+                          loading="eager"
+                          decoding="async"
+                          className="h-6 w-6 object-contain shrink-0" 
                         />
                       </span>
-                    ) : (
+                    ) : role !== 'USER' ? (
                       <span 
                         key={role}
                         className={`px-2.5 py-0.5 rounded-full font-extrabold text-[10px] uppercase border ${
@@ -63,7 +63,7 @@ export default async function ProfilePage() {
                       >
                         {role}
                       </span>
-                    )
+                    ) : null
                   ))}
                 </div>
               </div>

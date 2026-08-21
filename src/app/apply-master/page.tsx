@@ -75,14 +75,11 @@ export default async function ApplyMasterPage() {
               )}
 
               {existingApp.status === 'REJECTED' && (
-                <div className="flex flex-col items-center gap-2 px-4 py-3 rounded-2xl bg-red-50 text-red-700 border border-red-200 font-bold text-xs">
-                  <div className="flex items-center gap-2">
+                <div className="flex flex-col items-center gap-2 px-4 py-3.5 rounded-2xl bg-red-50 text-red-700 border border-red-200 font-bold text-xs text-center">
+                  <div className="flex items-center justify-center gap-2">
                     <XCircle className="w-4 h-4 text-red-600 shrink-0" />
-                    <span>Application Rejected: {existingApp.rejection_reason || 'Criteria not met.'}</span>
+                    <span>Your master application is rejected. Please try again after 24 hours.</span>
                   </div>
-                  <span className="text-[11px] text-red-600 font-extrabold bg-red-100/60 px-3 py-1 rounded-full">
-                    ⏳ You can re-apply in {remainingHours} hour(s)
-                  </span>
                 </div>
               )}
             </div>
