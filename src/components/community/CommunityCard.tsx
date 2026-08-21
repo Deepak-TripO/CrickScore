@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { joinCommunityAction } from '@/actions/community';
-import { Check, Loader2, Users } from 'lucide-react';
+import { Check, Loader2 } from 'lucide-react';
 
 const DEFAULT_COVER = 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?auto=format&fit=crop&w=1200&q=80';
 const DEFAULT_PROFILE = 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&w=300&q=80';
@@ -90,11 +90,6 @@ export default function CommunityCard({ community, onSelect }: CommunityCardProp
                 onError={() => setProfileSrc(DEFAULT_PROFILE)}
                 className="w-full h-full object-cover"
               />
-            </div>
-
-            <div className="px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-full flex items-center gap-1.5 text-[11px] font-black text-slate-700 shadow-sm shrink-0">
-              <Users className="w-3.5 h-3.5 text-orange-500" />
-              <span>👥 {displayCount} Members</span>
             </div>
           </div>
 

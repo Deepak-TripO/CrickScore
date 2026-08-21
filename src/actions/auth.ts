@@ -180,7 +180,7 @@ async function determineUserRedirect(userId: string, email: string) {
 
 export async function logoutUser() {
   const supabase = createClient();
-  await supabase.auth.signOut();
+  await supabase.auth.signOut({ scope: 'local' });
   revalidatePath('/');
   redirect('/login');
 }
