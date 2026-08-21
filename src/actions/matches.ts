@@ -299,33 +299,61 @@ export async function createFullTwoStepMatch(payload: {
     const roleMapping = p.type === 'WK' ? 'WICKETKEEPER' : p.type === 'Batsman' ? 'BATSMAN' : p.type === 'Bowler' ? 'BOWLER' : 'ALL_ROUNDER';
 
     // 1. Reuse existing player record for this owner/user if present
+    // Search by BOTH 'name' and 'full_name' columns since the DB has both
     try {
-      const { data: existing } = await db
+      let existing = null;
+      // Try full_name first
+      const { data: byFullName } = await db
         .from('players')
         .select('*')
         .eq('full_name', pName)
         .eq('owner_id', user.id)
         .maybeSingle();
+      existing = byFullName;
+
+      // Fallback: try 'name' column
+      if (!existing) {
+        const { data: byName } = await db
+          .from('players')
+          .select('*')
+          .eq('name', pName)
+          .eq('owner_id', user.id)
+          .maybeSingle();
+        existing = byName;
+      }
 
       if (existing) {
+        // Ensure both name columns are populated for this existing record
+        try {
+          await db.from('players').update({
+            name: pName,
+            full_name: pName,
+            display_name: pName,
+            role: roleMapping,
+            ...(teamId ? { team_id: teamId } : {})
+          }).eq('id', existing.id);
+        } catch {}
         if (teamId) {
           try { await db.from('team_players').upsert({ team_id: teamId, player_id: existing.id }); } catch {}
-          try { await db.from('players').update({ team_id: teamId }).eq('id', existing.id); } catch {}
         }
         return existing;
       }
     } catch {}
 
+    // 2. Insert new player — write to BOTH 'name' AND 'full_name' columns
     let { data, error } = await db.from('players').insert({
       owner_id: user.id,
+      name: pName,
       full_name: pName,
       display_name: pName,
       role: roleMapping,
-      photo_url: p.avatarUrl || null
+      avatar_url: p.avatarUrl || null
     }).select().single();
 
     if (error || !data) {
+      // Fallback: try without owner_id and avatar_url
       const res2 = await db.from('players').insert({
+        name: pName,
         full_name: pName,
         display_name: pName,
         role: roleMapping
@@ -504,6 +532,7 @@ export async function getMatchDetailsForEdit(matchId: string) {
 
     const addPlayer = (p: any) => {
       if (!p) return;
+      // Prioritize 'name' column since that's where existing data lives in the DB
       const pName = p.name || p.full_name || p.display_name || p.player_name || (typeof p === 'string' ? p : '');
       if (!pName || !pName.trim()) return;
 
@@ -576,17 +605,18 @@ export async function getMatchDetailsForEdit(matchId: string) {
             for (const r of teamMpRows) {
               const pRec = playerMap.get(String(r.player_id));
               if (pRec) {
+                // Prioritize 'name' column since that's where existing player data lives
                 addPlayer({
                   id: pRec.id,
-                  name: pRec.full_name || pRec.display_name || pRec.name,
-                  role: pRec.role || r.role || 'BATSMAN',
-                  avatar_url: pRec.photo_url || pRec.avatar_url || ''
+                  name: pRec.name || pRec.full_name || pRec.display_name,
+                  role: pRec.role || r.role || r.playing_role || 'BATSMAN',
+                  avatar_url: pRec.avatar_url || pRec.photo_url || ''
                 });
               } else if (r.player_name || r.name) {
                 addPlayer({
                   id: r.player_id || r.id,
                   name: r.player_name || r.name,
-                  role: r.role || 'BATSMAN',
+                  role: r.role || r.playing_role || 'BATSMAN',
                   avatar_url: r.avatar_url || ''
                 });
               }
@@ -609,7 +639,8 @@ export async function getMatchDetailsForEdit(matchId: string) {
             if (pList && pList.length > 0) {
               pList.forEach((p: any) => addPlayer({
                 ...p,
-                name: p.name || p.full_name || p.display_name
+                name: p.name || p.full_name || p.display_name,
+                avatar_url: p.avatar_url || p.photo_url || ''
               }));
             }
           }
@@ -623,7 +654,8 @@ export async function getMatchDetailsForEdit(matchId: string) {
           if (directPlayers && directPlayers.length > 0) {
             directPlayers.forEach((p: any) => addPlayer({
               ...p,
-              name: p.name || p.full_name || p.display_name
+              name: p.name || p.full_name || p.display_name,
+              avatar_url: p.avatar_url || p.photo_url || ''
             }));
           }
         } catch {}
@@ -744,28 +776,33 @@ export async function updateFullMatch(payload: {
   const insertOrUpdatePlayer = async (p: { id?: string; name: string; type: string; avatarUrl?: string }, teamId: string) => {
     const roleMapping = p.type === 'WK' ? 'WICKETKEEPER' : p.type === 'Batsman' ? 'BATSMAN' : p.type === 'Bowler' ? 'BOWLER' : 'ALL_ROUNDER';
 
+    // If we have a real DB id (not a temp frontend id), update the existing record
     if (p.id && !p.id.startsWith('y_') && !p.id.startsWith('o_') && !p.id.startsWith('p_') && !p.id.includes('pad')) {
       try {
         await db.from('players').update({
+          name: p.name,
           full_name: p.name,
           display_name: p.name,
           role: roleMapping,
-          photo_url: p.avatarUrl || null
+          avatar_url: p.avatarUrl || null
         }).eq('id', p.id);
         return p.id;
       } catch {}
     }
 
+    // Insert new player — write to BOTH 'name' AND 'full_name' columns
     let { data, error } = await db.from('players').insert({
       owner_id: user.id,
+      name: p.name,
       full_name: p.name,
       display_name: p.name,
       role: roleMapping,
-      photo_url: p.avatarUrl || null
+      avatar_url: p.avatarUrl || null
     }).select().single();
 
     if (error || !data) {
       const resFallback = await db.from('players').insert({
+        name: p.name,
         full_name: p.name,
         display_name: p.name,
         role: roleMapping
