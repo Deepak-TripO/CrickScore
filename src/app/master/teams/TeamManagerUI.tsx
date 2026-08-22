@@ -104,7 +104,7 @@ export default function TeamManagerUI({ teams }: { teams: any[] }) {
                     #{p.jersey_number || '0'}
                   </div>
                   <div className="space-y-0.5 overflow-hidden">
-                    <h4 className="font-bold text-xs text-white truncate">{p.full_name || p.display_name}</h4>
+                    <h4 className="font-bold text-xs text-white truncate">{p.name || p.full_name || p.display_name}</h4>
                     <p className="text-[10px] text-emerald-400 font-semibold">{p.role}</p>
                     <p className="text-[10px] text-slate-500 truncate">{p.batting_style} • {p.bowling_style}</p>
                   </div>

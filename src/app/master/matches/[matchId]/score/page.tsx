@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { notFound, redirect } from 'next/navigation';
 import MobileScoringUI from '@/components/master/MobileScoringUI';
+import { getMatchDetailsForEdit } from '@/actions/matches';
 
 export default async function MasterScoringPage({ params }: { params: { matchId: string } }) {
   const supabase = createClient();
@@ -115,28 +116,10 @@ export default async function MasterScoringPage({ params }: { params: { matchId:
     };
   }
 
-  // 4. Fetch Team 1 & Team 2 Players
-  let team1Players: any[] = [];
-  if (team1Id) {
-    const { data: tp1 } = await dbClient.from('team_players').select('players(*)').eq('team_id', team1Id);
-    if (tp1 && tp1.length > 0) {
-      team1Players = tp1.map((x: any) => x.players).filter(Boolean);
-    } else {
-      const { data: p1 } = await dbClient.from('players').select('*').eq('team_id', team1Id);
-      team1Players = p1 || [];
-    }
-  }
-
-  let team2Players: any[] = [];
-  if (team2Id) {
-    const { data: tp2 } = await dbClient.from('team_players').select('players(*)').eq('team_id', team2Id);
-    if (tp2 && tp2.length > 0) {
-      team2Players = tp2.map((x: any) => x.players).filter(Boolean);
-    } else {
-      const { data: p2 } = await dbClient.from('players').select('*').eq('team_id', team2Id);
-      team2Players = p2 || [];
-    }
-  }
+  // 4. Fetch Team 1 & Team 2 Players comprehensively
+  const fullDetails = await getMatchDetailsForEdit(cleanMatchId);
+  const team1Players: any[] = fullDetails?.team1Players || [];
+  const team2Players: any[] = fullDetails?.team2Players || [];
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">

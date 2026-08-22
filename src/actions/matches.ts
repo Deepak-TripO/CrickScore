@@ -529,6 +529,7 @@ export async function getMatchDetailsForEdit(matchId: string) {
   const fetchPlayersForTeam = async (teamId: string, isTeam1: boolean): Promise<any[]> => {
     const allFoundPlayers: any[] = [];
     const seenNames = new Set<string>();
+    const seenIds = new Set<string>();
 
     const addPlayer = (p: any) => {
       if (!p) return;
@@ -537,39 +538,31 @@ export async function getMatchDetailsForEdit(matchId: string) {
       if (!pName || !pName.trim()) return;
 
       const nameKey = pName.trim().toLowerCase();
-      if (!seenNames.has(nameKey)) {
-        seenNames.add(nameKey);
-        let type: string = p.type || p.role || p.player_type || 'Batsman';
-        const rUpper = String(type).toUpperCase();
-        if (rUpper.includes('WICKET') || rUpper === 'WK' || rUpper.includes('KEEPER')) type = 'WK';
-        else if (rUpper.includes('BOWLER') || rUpper === 'BOWL') type = 'Bowler';
-        else if (rUpper.includes('ALL') || rUpper === 'AR' || rUpper.includes('ROUND')) type = 'Allrounder';
-        else type = 'Batsman';
+      const idKey = p.id ? String(p.id) : '';
 
-        allFoundPlayers.push({
-          id: p.id || `p_${nameKey}`,
-          name: pName.trim(),
-          type,
-          role: type,
-          avatar_url: p.avatar_url || p.image_url || p.profile_image || p.avatarUrl || p.photo_url || ''
-        });
-      }
+      // Skip if we already have this player by name or ID
+      if (seenNames.has(nameKey) || (idKey && seenIds.has(idKey))) return;
+
+      seenNames.add(nameKey);
+      if (idKey) seenIds.add(idKey);
+
+      let type: string = p.type || p.role || p.player_type || 'Batsman';
+      const rUpper = String(type).toUpperCase();
+      if (rUpper.includes('WICKET') || rUpper === 'WK' || rUpper.includes('KEEPER')) type = 'WK';
+      else if (rUpper.includes('BOWLER') || rUpper === 'BOWL') type = 'Bowler';
+      else if (rUpper.includes('ALL') || rUpper === 'AR' || rUpper.includes('ROUND')) type = 'Allrounder';
+      else type = 'Batsman';
+
+      allFoundPlayers.push({
+        id: p.id || `p_${nameKey}`,
+        name: pName.trim(),
+        type,
+        role: type,
+        avatar_url: p.avatar_url || p.image_url || p.profile_image || p.avatarUrl || p.photo_url || ''
+      });
     };
 
-    // 1. Direct JSON arrays on match record
-    let jsonPlayers = isTeam1
-      ? (match.your_team_players || match.team1_players || match.team_1_players || match.players_a)
-      : (match.opposite_team_players || match.team2_players || match.team_2_players || match.players_b);
-
-    if (typeof jsonPlayers === 'string') {
-      try { jsonPlayers = JSON.parse(jsonPlayers); } catch {}
-    }
-
-    if (Array.isArray(jsonPlayers)) {
-      jsonPlayers.forEach(addPlayer);
-    }
-
-    // 2. Query match_players table for this specific match ID
+    // 1. FIRST: Query match_players table for this specific match ID (has real UUIDs matching delivery records)
     try {
       const { data: mpRows, error: mpErr } = await db
         .from('match_players')
@@ -626,6 +619,19 @@ export async function getMatchDetailsForEdit(matchId: string) {
       }
     } catch (e: any) {
       console.warn('[EDIT FETCH MATCH PLAYERS CATCH]', e?.message);
+    }
+
+    // 2. SECOND: Fallback — JSON arrays on match record (only adds players not already found by database query)
+    let jsonPlayers = isTeam1
+      ? (match.your_team_players || match.team1_players || match.team_1_players || match.players_a)
+      : (match.opposite_team_players || match.team2_players || match.team_2_players || match.players_b);
+
+    if (typeof jsonPlayers === 'string') {
+      try { jsonPlayers = JSON.parse(jsonPlayers); } catch {}
+    }
+
+    if (Array.isArray(jsonPlayers)) {
+      jsonPlayers.forEach(addPlayer);
     }
 
     // 3. Fallback: Query team_players join table ONLY if fewer than 11 players found

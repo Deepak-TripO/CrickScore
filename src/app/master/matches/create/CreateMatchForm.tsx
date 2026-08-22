@@ -58,6 +58,8 @@ const mapPlayersToInput = (rawPlayers: any, prefix: string): PlayerInput[] => {
   }
   if (!Array.isArray(parsed) || parsed.length === 0) return defaults;
 
+  const seenIds = new Set<string>();
+
   const mapped: PlayerInput[] = parsed.map((p: any, idx: number) => {
     let type: PlayerRoleType = 'Batsman';
     const role = (p.role || p.type || p.player_type || p.roleMapping || '').toUpperCase();
@@ -80,8 +82,14 @@ const mapPlayersToInput = (rawPlayers: any, prefix: string): PlayerInput[] => {
       p.players?.full_name || 
       (typeof p === 'string' ? p : '');
 
+    let id = String(p.id || `${prefix}_p_${idx}_${Date.now()}`);
+    if (seenIds.has(id)) {
+      id = `${id}_dup_${idx}_${Math.random().toString(36).substring(2, 6)}`;
+    }
+    seenIds.add(id);
+
     return {
-      id: p.id || `${prefix}_p_${idx}_${Date.now()}`,
+      id,
       name: String(pName || '').trim(),
       type,
       imageFile: null,
@@ -90,14 +98,21 @@ const mapPlayersToInput = (rawPlayers: any, prefix: string): PlayerInput[] => {
   });
 
   while (mapped.length < 11) {
-    const defaultItem = defaults[mapped.length] || {
-      id: `${prefix}_pad_${mapped.length}_${Date.now()}`,
+    const padIdx = mapped.length;
+    const defaultRole = defaults[padIdx]?.type || 'Batsman';
+    let padId = `${prefix}_pad_${padIdx}_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+    while (seenIds.has(padId)) {
+      padId = `${prefix}_pad_${padIdx}_${Math.random().toString(36).substring(2, 8)}`;
+    }
+    seenIds.add(padId);
+
+    mapped.push({
+      id: padId,
       name: '',
-      type: 'Batsman',
+      type: defaultRole,
       imageFile: null,
       previewUrl: ''
-    };
-    mapped.push(defaultItem);
+    });
   }
 
   return mapped.slice(0, 11);

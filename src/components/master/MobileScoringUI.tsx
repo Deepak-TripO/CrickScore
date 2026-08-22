@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { scoreBall, undoLastBall, setBattingTeam, completeMatch } from '@/actions/scoring';
 import { ExtraType, WicketType, InningsState } from '@/lib/cricket/engine';
@@ -8,6 +8,7 @@ import { ArrowLeft, RotateCcw, AlertTriangle, ChevronRight, RefreshCw, X, MoreHo
 import Link from 'next/link';
 import Logo from '@/components/common/Logo';
 import { isValidImageUrl, sanitizeImageUrl } from '@/lib/imageUtils';
+import { cleanPlayerName, getOrderedBatters, getFilteredBowlers } from '@/lib/cricket/playerUtils';
 
 interface MobileScoringUIProps {
   match: any;
@@ -42,8 +43,11 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
   const isFirstBattingTeam = selectedBattingTeamId === firstBattingTeamId;
 
   const isBattingTeam1 = selectedBattingTeamId === team1Id;
-  const battingPlayers = isBattingTeam1 ? team1Players : team2Players;
-  const bowlingPlayers = isBattingTeam1 ? team2Players : team1Players;
+  const rawBattingPlayers = isBattingTeam1 ? team1Players : team2Players;
+  const rawBowlingPlayers = isBattingTeam1 ? team2Players : team1Players;
+
+  const battingPlayers = useMemo(() => getOrderedBatters(rawBattingPlayers), [rawBattingPlayers]);
+  const bowlingPlayers = useMemo(() => getFilteredBowlers(rawBowlingPlayers), [rawBowlingPlayers]);
 
   const battingTeamName = isBattingTeam1 ? team1Name : team2Name;
   const battingTeamLogo = isBattingTeam1 ? team1Logo : team2Logo;
@@ -626,7 +630,7 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
                   {/* STRIKER ROW */}
                   <tr className="hover:bg-slate-50 transition-colors">
                     <td className="py-2 px-2 font-bold text-orange-600 truncate max-w-[120px]">
-                      {strikerPlayer?.full_name || strikerPlayer?.display_name || 'Striker'}*
+                      {cleanPlayerName(strikerPlayer?.name || strikerPlayer?.full_name || strikerPlayer?.display_name)}*
                     </td>
                     <td className="py-2 px-2 text-right font-black text-slate-900 font-mono">{strikerRuns}</td>
                     <td className="py-2 px-2 text-right text-slate-600 font-mono">{strikerBalls}</td>
@@ -638,7 +642,7 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
                   {/* NON-STRIKER ROW */}
                   <tr className="hover:bg-slate-50 transition-colors">
                     <td className="py-2 px-2 font-bold text-orange-600 truncate max-w-[120px]">
-                      {nonStrikerPlayer?.full_name || nonStrikerPlayer?.display_name || 'Non-Striker'}
+                      {cleanPlayerName(nonStrikerPlayer?.name || nonStrikerPlayer?.full_name || nonStrikerPlayer?.display_name)}
                     </td>
                     <td className="py-2 px-2 text-right font-black text-slate-900 font-mono">{nonStrikerRuns}</td>
                     <td className="py-2 px-2 text-right text-slate-600 font-mono">{nonStrikerBalls}</td>
@@ -670,7 +674,7 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
                     className="w-full bg-slate-50 border border-slate-200 text-xs text-slate-900 rounded-lg p-1.5"
                   >
                     {battingPlayers.map(p => (
-                      <option key={p.id} value={p.id}>{p.full_name || p.display_name}</option>
+                      <option key={p.id} value={p.id}>{cleanPlayerName(p.name || p.full_name || p.display_name)}</option>
                     ))}
                   </select>
                 </div>
@@ -682,7 +686,7 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
                     className="w-full bg-slate-50 border border-slate-200 text-xs text-slate-900 rounded-lg p-1.5"
                   >
                     {battingPlayers.map(p => (
-                      <option key={p.id} value={p.id}>{p.full_name || p.display_name}</option>
+                      <option key={p.id} value={p.id}>{cleanPlayerName(p.name || p.full_name || p.display_name)}</option>
                     ))}
                   </select>
                 </div>
@@ -700,7 +704,7 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
                 className="bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 rounded-lg px-2 py-1 mt-0.5 max-w-full truncate focus:outline-none focus:border-orange-500"
               >
                 {bowlingPlayers.map(p => (
-                  <option key={p.id} value={p.id}>{p.full_name || p.display_name || 'Bowler'}</option>
+                  <option key={p.id} value={p.id}>{cleanPlayerName(p.name || p.full_name || p.display_name)}</option>
                 ))}
               </select>
             </div>
@@ -927,8 +931,8 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
                 onChange={(e) => setDismissedPlayerId(e.target.value)}
                 className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-900 font-bold"
               >
-                <option value={strikerId}>Striker: {strikerPlayer?.full_name || 'Striker'}</option>
-                <option value={nonStrikerId}>Non-Striker: {nonStrikerPlayer?.full_name || 'Non-Striker'}</option>
+                <option value={strikerId}>Striker: {cleanPlayerName(strikerPlayer?.name || strikerPlayer?.full_name || strikerPlayer?.display_name)}</option>
+                <option value={nonStrikerId}>Non-Striker: {cleanPlayerName(nonStrikerPlayer?.name || nonStrikerPlayer?.full_name || nonStrikerPlayer?.display_name)}</option>
               </select>
             </div>
 
@@ -956,7 +960,7 @@ export default function MobileScoringUI({ match, activeInnings, team1Players, te
                 {battingPlayers
                   .filter(p => p.id !== strikerId && p.id !== nonStrikerId)
                   .map(p => (
-                    <option key={p.id} value={p.id}>{p.full_name || p.display_name}</option>
+                    <option key={p.id} value={p.id}>{cleanPlayerName(p.name || p.full_name || p.display_name)}</option>
                   ))}
               </select>
             </div>

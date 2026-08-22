@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { processInningsDeliveries, DeliveryInput } from '@/lib/cricket/engine';
 import { Eye, MapPin, Trophy, Calendar, Users, Activity, ListOrdered } from 'lucide-react';
+import { cleanPlayerName, formatRoleForDisplay } from '@/lib/cricket/playerUtils';
 
 interface PublicMatchViewProps {
   initialMatch: any;
@@ -27,7 +28,11 @@ export default function PublicMatchView({
   const [deliveries, setDeliveries] = useState<any[]>(initialDeliveries);
   const [commentary, setCommentary] = useState<any[]>(initialCommentary);
   const [viewerCount, setViewerCount] = useState<number>(1);
-  const [activeTab, setActiveTab] = useState<'LIVE' | 'SCORECARD' | 'TEAMS'>('LIVE');
+  const isMatchCompleted = (() => {
+    const s = (initialMatch.status || '').toString().toUpperCase();
+    return s === 'COMPLETED' || s === 'FINISHED';
+  })();
+  const [activeTab, setActiveTab] = useState<'LIVE' | 'SCORECARD' | 'TEAMS'>(isMatchCompleted ? 'SCORECARD' : 'LIVE');
   const [selectedScorecardTeam, setSelectedScorecardTeam] = useState<'TEAM1' | 'TEAM2'>('TEAM1');
 
   // Stable Supabase client — created once, not on every render
@@ -83,7 +88,116 @@ export default function PublicMatchView({
 
   // Determine dynamic match status: ONLY "LIVE" or "COMPLETED" (no "UPCOMING")
   const rawStatus = (match.status || '').toString().toUpperCase();
-  const displayStatus = (rawStatus === 'COMPLETED' || rawStatus === 'FINISHED') ? 'COMPLETED' : 'LIVE';
+  const isCompleted = rawStatus === 'COMPLETED' || rawStatus === 'FINISHED';
+  const displayStatus = isCompleted ? 'COMPLETED' : 'LIVE';
+
+  // Build a comprehensive player name map from all available sources
+  const playerNameMap = useMemo(() => {
+    const map = new Map<string, string>();
+
+    const parseJsonArray = (val: any) => {
+      if (!val) return [];
+      if (Array.isArray(val)) return val;
+      if (typeof val === 'string') {
+        try { return JSON.parse(val); } catch { return []; }
+      }
+      return [];
+    };
+
+    const addToMap = (p: any) => {
+      if (!p) return;
+      const rawName = typeof p === 'string'
+        ? p
+        : (p.name || p.full_name || p.display_name || p.player_name || '');
+
+      if (!rawName || !rawName.trim()) return;
+
+      const cleanedName = cleanPlayerName(rawName.trim());
+      if (!cleanedName || cleanedName === 'Player') return;
+
+      const rawId = p.id ? String(p.id).trim() : '';
+
+      if (rawId) {
+        map.set(rawId, cleanedName);
+        map.set(rawId.toLowerCase(), cleanedName);
+        if (rawId.startsWith('p_')) {
+          map.set(rawId.slice(2), cleanedName);
+        }
+      }
+
+      const lowerName = cleanedName.toLowerCase();
+      map.set(lowerName, cleanedName);
+      map.set(`p_${lowerName}`, cleanedName);
+      map.set(`p_${lowerName.replace(/\s+/g, '_')}`, cleanedName);
+      map.set(lowerName.replace(/\s+/g, '_'), cleanedName);
+      map.set(rawName.trim().toLowerCase(), cleanedName);
+    };
+
+    (team1Players || []).forEach(addToMap);
+    (team2Players || []).forEach(addToMap);
+
+    parseJsonArray(match.your_team_players).forEach(addToMap);
+    parseJsonArray(match.opposite_team_players).forEach(addToMap);
+    parseJsonArray(match.team1_players).forEach(addToMap);
+    parseJsonArray(match.team2_players).forEach(addToMap);
+    parseJsonArray(match.players_a).forEach(addToMap);
+    parseJsonArray(match.players_b).forEach(addToMap);
+
+    return map;
+  }, [team1Players, team2Players, match]);
+
+  // Helper to resolve a player name from ID with optional index/squad fallback
+  const resolvePlayerName = (playerId: string, index?: number, squad?: any[]): string => {
+    if (!playerId || playerId === 'UNKNOWN_BATTER' || playerId === 'UNKNOWN_BOWLER') {
+      if (squad && typeof index === 'number' && squad[index]) {
+        const fallbackName = squad[index].name || squad[index].full_name || squad[index].display_name;
+        if (fallbackName) return cleanPlayerName(fallbackName);
+      }
+      return 'Player';
+    }
+
+    const pidStr = String(playerId).trim();
+
+    // 1. Direct map lookups
+    const exactMatch = playerNameMap.get(pidStr);
+    if (exactMatch) return exactMatch;
+
+    const lowerMatch = playerNameMap.get(pidStr.toLowerCase());
+    if (lowerMatch) return lowerMatch;
+
+    if (pidStr.toLowerCase().startsWith('p_')) {
+      const strippedMatch = playerNameMap.get(pidStr.toLowerCase().slice(2));
+      if (strippedMatch) return strippedMatch;
+    }
+
+    // 2. Direct array search across team1Players and team2Players
+    const foundInArrays = [...(team1Players || []), ...(team2Players || [])].find((p: any) => {
+      if (!p) return false;
+      const idStr = String(p.id || '').toLowerCase();
+      const nStr = String(p.name || p.full_name || p.display_name || '').toLowerCase();
+      const searchKey = pidStr.toLowerCase();
+      return idStr === searchKey || nStr === searchKey || `p_${nStr}` === searchKey || `p_${nStr.replace(/\s+/g, '_')}` === searchKey;
+    });
+
+    if (foundInArrays) {
+      const resolved = foundInArrays.name || foundInArrays.full_name || foundInArrays.display_name;
+      if (resolved) return cleanPlayerName(resolved);
+    }
+
+    // 3. Fallback to squad by index if provided
+    if (squad && typeof index === 'number' && squad[index]) {
+      const fallbackName = squad[index].name || squad[index].full_name || squad[index].display_name;
+      if (fallbackName) return cleanPlayerName(fallbackName);
+    }
+
+    // 4. If playerId is already a human-readable name string (not a UUID)
+    const cleanedDirect = cleanPlayerName(pidStr);
+    if (cleanedDirect && cleanedDirect !== 'Player' && !/^[0-9a-f]{8}-[0-9a-f]{4}/i.test(pidStr)) {
+      return cleanedDirect;
+    }
+
+    return 'Player';
+  };
 
   // Compute live active innings record
   const activeInningsRecord = useMemo(
@@ -334,17 +448,17 @@ export default function PublicMatchView({
       {/* STREAMLINED TABS NAVIGATION (LIVE, SCORECARD, TEAMS) */}
       <div className="flex gap-2 bg-white p-1.5 rounded-2xl border border-slate-200 shadow-sm">
         {[
-          { id: 'LIVE', label: 'LIVE' },
+          ...(isCompleted ? [] : [{ id: 'LIVE', label: 'LIVE' }]),
           { id: 'SCORECARD', label: 'SCORECARD' },
           { id: 'TEAMS', label: 'TEAMS' },
         ].map((tab) => {
-          const isActive = activeTab === tab.id;
+          const isActiveTab = activeTab === tab.id;
           return (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
               className={`flex-1 flex items-center justify-center py-2.5 rounded-xl font-extrabold text-xs transition-all uppercase tracking-wider ${
-                isActive
+                isActiveTab
                   ? 'bg-orange-500 text-white shadow-sm'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
               }`}
@@ -401,12 +515,11 @@ export default function PublicMatchView({
               <tbody className="divide-y divide-slate-100">
                 {[liveState.strikerId, liveState.nonStrikerId].map((id, index) => {
                   const b = liveState.batters[id];
-                  const playerInfo = [...team1Players, ...team2Players].find(p => p.id === id);
                   const isStriker = index === 0;
                   return (
                     <tr key={id || index} className={isStriker ? 'bg-orange-50/50 font-bold text-slate-900' : 'text-slate-700'}>
                       <td className="p-2 sm:p-3 flex items-center gap-2 truncate w-[38%]">
-                        <span className="truncate">{playerInfo?.full_name || playerInfo?.display_name || 'Batter'}</span>
+                        <span className="truncate">{resolvePlayerName(id)}</span>
                         {isStriker && <span className="text-orange-600 font-bold shrink-0">🏏 *</span>}
                       </td>
                       <td className="p-2 sm:p-3 text-right font-mono text-orange-600 font-bold w-[12%]">{b?.runs || 0}</td>
@@ -440,11 +553,10 @@ export default function PublicMatchView({
               <tbody>
                 {(() => {
                   const bw = liveState.bowlers[liveState.currentBowlerId];
-                  const playerInfo = [...team1Players, ...team2Players].find(p => p.id === liveState.currentBowlerId);
                   return (
                     <tr className="text-slate-900 font-semibold">
                       <td className="p-3 flex items-center gap-2">
-                        <span>{playerInfo?.full_name || playerInfo?.display_name || 'Bowler'}</span>
+                        <span>{resolvePlayerName(liveState.currentBowlerId)}</span>
                         <span className="text-orange-500 font-bold">⚾</span>
                       </td>
                       <td className="p-3 text-right font-mono">{bw?.oversFormatted || '0.0'}</td>
@@ -464,7 +576,7 @@ export default function PublicMatchView({
 
       {/* TAB 2: SCORECARD */}
       {activeTab === 'SCORECARD' && (
-        <div className="bg-white rounded-2xl border border-slate-200 p-4 space-y-4 shadow-sm text-slate-900">
+        <div className="bg-white rounded-2xl border border-slate-200 p-4 space-y-5 shadow-sm text-slate-900">
           {/* SEGMENTED TEAM TOGGLE BUTTON */}
           <div className="flex items-center justify-center bg-slate-50 border border-slate-200 rounded-xl p-1 shadow-sm">
             <button
@@ -476,7 +588,7 @@ export default function PublicMatchView({
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
               }`}
             >
-              {match.team1?.name || 'TEAM A'}
+              {match.team1?.name || 'TEAM 1'} Innings
             </button>
             <button
               type="button"
@@ -487,66 +599,122 @@ export default function PublicMatchView({
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
               }`}
             >
-              {match.team2?.name || 'TEAM B'}
+              {match.team2?.name || 'TEAM 2'} Innings
             </button>
           </div>
 
-          {/* BATTING SCORECARD TABLE FOR SELECTED TEAM - NO HORIZONTAL SCROLL ON MOBILE */}
-          <div className="w-full rounded-xl border border-slate-200 overflow-hidden">
-            <table className="w-full text-left text-[11px] sm:text-xs table-fixed">
-              <thead className="bg-slate-50 text-slate-500 font-extrabold border-b border-slate-200 uppercase tracking-wider">
-                <tr>
-                  <th className="p-2 sm:p-3 w-[38%]">Name</th>
-                  <th className="p-2 sm:p-3 text-right w-[12%]">R</th>
-                  <th className="p-2 sm:p-3 text-right w-[12%]">B</th>
-                  <th className="p-2 sm:p-3 text-right w-[12%]">4s</th>
-                  <th className="p-2 sm:p-3 text-right w-[12%]">6s</th>
-                  <th className="p-2 sm:p-3 text-right w-[14%]">SR</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {activeScorecardBatters.length > 0 ? (
-                  activeScorecardBatters.map((b: any) => {
-                    const playerInfo = [...team1Players, ...team2Players].find(p => p.id === b.playerId);
-                    const sr = b.balls > 0 ? ((b.runs / b.balls) * 100).toFixed(1) : '0.0';
-                    return (
-                      <tr key={b.playerId} className="hover:bg-slate-50 transition-colors">
-                        <td className="p-2 sm:p-3 w-[38%] truncate">
-                          <div className="font-extrabold text-slate-900 truncate">
-                            {playerInfo?.full_name || playerInfo?.display_name || 'Batter'}
-                          </div>
-                          <div className="text-[10px] text-slate-500 font-medium mt-0.5 truncate">
-                            {b.isOut ? `b ${b.dismissalInfo || 'out'}` : <span className="text-orange-600 font-bold">not out</span>}
-                          </div>
-                        </td>
-                        <td className="p-2 sm:p-3 text-right font-mono font-black text-orange-600 text-xs sm:text-sm w-[12%]">{b.runs}</td>
-                        <td className="p-2 sm:p-3 text-right font-mono text-slate-600 font-semibold w-[12%]">{b.balls}</td>
-                        <td className="p-2 sm:p-3 text-right font-mono text-slate-600 font-semibold w-[12%]">{b.fours}</td>
-                        <td className="p-2 sm:p-3 text-right font-mono text-slate-600 font-semibold w-[12%]">{b.sixes}</td>
-                        <td className="p-2 sm:p-3 text-right font-mono text-slate-600 font-semibold w-[14%]">{sr}</td>
-                      </tr>
-                    );
-                  })
-                ) : (
+          {/* 1. BATTING SCORECARD TABLE FOR SELECTED TEAM */}
+          <div className="space-y-2">
+            <h4 className="text-xs font-extrabold uppercase text-slate-500 tracking-wider flex items-center justify-between">
+              <span>🏏 Batting — {selectedScorecardTeam === 'TEAM1' ? (match.team1?.name || 'Team 1') : (match.team2?.name || 'Team 2')}</span>
+              <span className="font-mono text-orange-600">
+                {selectedScorecardTeam === 'TEAM1' ? team1ScoreStr : team2ScoreStr} ({selectedScorecardTeam === 'TEAM1' ? team1OversStr : team2OversStr} Ov)
+              </span>
+            </h4>
+
+            <div className="w-full rounded-xl border border-slate-200 overflow-hidden">
+              <table className="w-full text-left text-[11px] sm:text-xs table-fixed">
+                <thead className="bg-slate-50 text-slate-500 font-extrabold border-b border-slate-200 uppercase tracking-wider">
                   <tr>
-                    <td colSpan={6} className="py-8 text-center text-xs text-slate-500 italic">
-                      No batters have faced a ball yet in this innings.
-                    </td>
+                    <th className="p-2 sm:p-3 w-[38%]">Batter</th>
+                    <th className="p-2 sm:p-3 text-right w-[12%]">R</th>
+                    <th className="p-2 sm:p-3 text-right w-[12%]">B</th>
+                    <th className="p-2 sm:p-3 text-right w-[12%]">4s</th>
+                    <th className="p-2 sm:p-3 text-right w-[12%]">6s</th>
+                    <th className="p-2 sm:p-3 text-right w-[14%]">SR</th>
                   </tr>
-                )}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {activeScorecardBatters.length > 0 ? (
+                    activeScorecardBatters.map((b: any, idx: number) => {
+                      const currentBattingSquad = selectedScorecardTeam === 'TEAM1' ? team1Players : team2Players;
+                      const sr = b.balls > 0 ? ((b.runs / b.balls) * 100).toFixed(1) : '0.0';
+                      return (
+                        <tr key={b.playerId || idx} className="hover:bg-slate-50 transition-colors">
+                          <td className="p-2 sm:p-3 w-[38%] truncate">
+                            <div className="font-extrabold text-slate-900 truncate">
+                              {resolvePlayerName(b.playerId, idx, currentBattingSquad)}
+                            </div>
+                            <div className="text-[10px] text-slate-500 font-medium mt-0.5 truncate">
+                              {b.isOut ? `b ${b.dismissalInfo || 'out'}` : <span className="text-orange-600 font-bold">not out</span>}
+                            </div>
+                          </td>
+                          <td className="p-2 sm:p-3 text-right font-mono font-black text-orange-600 text-xs sm:text-sm w-[12%]">{b.runs}</td>
+                          <td className="p-2 sm:p-3 text-right font-mono text-slate-600 font-semibold w-[12%]">{b.balls}</td>
+                          <td className="p-2 sm:p-3 text-right font-mono text-slate-600 font-semibold w-[12%]">{b.fours}</td>
+                          <td className="p-2 sm:p-3 text-right font-mono text-slate-600 font-semibold w-[12%]">{b.sixes}</td>
+                          <td className="p-2 sm:p-3 text-right font-mono text-slate-600 font-semibold w-[14%]">{sr}</td>
+                        </tr>
+                      );
+                    })
+                  ) : (
+                    <tr>
+                      <td colSpan={6} className="py-8 text-center text-xs text-slate-500 italic">
+                        No batters have faced a ball yet in this innings.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* 2. BOWLING SCORECARD TABLE FOR OPPOSITE TEAM */}
+          <div className="space-y-2 pt-2 border-t border-slate-100">
+            <h4 className="text-xs font-extrabold uppercase text-slate-500 tracking-wider">
+              🎯 Bowling — {selectedScorecardTeam === 'TEAM1' ? (match.team2?.name || 'Team 2') : (match.team1?.name || 'Team 1')}
+            </h4>
+
+            <div className="w-full rounded-xl border border-slate-200 overflow-hidden">
+              <table className="w-full text-left text-[11px] sm:text-xs table-fixed">
+                <thead className="bg-slate-50 text-slate-500 font-extrabold border-b border-slate-200 uppercase tracking-wider">
+                  <tr>
+                    <th className="p-2 sm:p-3 w-[38%]">Bowler</th>
+                    <th className="p-2 sm:p-3 text-right w-[12%]">O</th>
+                    <th className="p-2 sm:p-3 text-right w-[12%]">M</th>
+                    <th className="p-2 sm:p-3 text-right w-[12%]">R</th>
+                    <th className="p-2 sm:p-3 text-right w-[12%]">W</th>
+                    <th className="p-2 sm:p-3 text-right w-[14%]">ECO</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {targetScorecardState && targetScorecardState.bowlers && Object.values(targetScorecardState.bowlers).length > 0 ? (
+                    Object.values(targetScorecardState.bowlers).map((bw: any, idx: number) => {
+                      const currentBowlingSquad = selectedScorecardTeam === 'TEAM1' ? team2Players : team1Players;
+                      return (
+                        <tr key={bw.playerId || idx} className="hover:bg-slate-50 transition-colors font-medium">
+                          <td className="p-2 sm:p-3 w-[38%] truncate font-extrabold text-slate-900">
+                            {resolvePlayerName(bw.playerId, idx, currentBowlingSquad)}
+                          </td>
+                          <td className="p-2 sm:p-3 text-right font-mono text-slate-700 w-[12%]">{bw.oversFormatted || '0.0'}</td>
+                          <td className="p-2 sm:p-3 text-right font-mono text-slate-500 w-[12%]">{bw.maidens || 0}</td>
+                          <td className="p-2 sm:p-3 text-right font-mono text-slate-900 font-bold w-[12%]">{bw.runsConceded || 0}</td>
+                          <td className="p-2 sm:p-3 text-right font-mono text-orange-600 font-black text-xs sm:text-sm w-[12%]">{bw.wickets || 0}</td>
+                          <td className="p-2 sm:p-3 text-right font-mono text-slate-600 w-[14%]">{bw.economy || '0.00'}</td>
+                        </tr>
+                      );
+                    })
+                  ) : (
+                    <tr>
+                      <td colSpan={6} className="py-6 text-center text-xs text-slate-500 italic">
+                        No bowling figures recorded yet for this innings.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
 
-      {/* TAB 3: TEAMS (ALL 11 PLAYERS FOR BOTH TEAMS) */}
+      {/* TAB 3: TEAMS (ALL PLAYERS FOR BOTH TEAMS) */}
       {activeTab === 'TEAMS' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* TEAM 1 PLAYING XI */}
           <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 space-y-4 shadow-sm text-slate-900">
             <h4 className="font-extrabold text-sm text-orange-600 flex items-center justify-between border-b border-slate-100 pb-2">
-              <span>{match.team1?.name} Playing XI</span>
+              <span>{match.team1?.name || 'Team 1'} Playing XI</span>
               <span className="text-xs text-slate-500 font-mono">({team1Players.length} Players)</span>
             </h4>
             <div className="divide-y divide-slate-100 text-xs">
@@ -554,11 +722,10 @@ export default function PublicMatchView({
                 <div key={p.id || idx} className="py-2.5 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="text-slate-400 font-mono text-[10px] w-4">{idx + 1}.</span>
-                    <span className="font-extrabold text-slate-800">{p.full_name || p.display_name}</span>
+                    <span className="font-extrabold text-slate-800">
+                      {cleanPlayerName(p.name || p.full_name || p.display_name)} — <span className="text-orange-600 font-semibold">{formatRoleForDisplay(p.role || p.player_role || p.type || p.position)}</span>
+                    </span>
                   </div>
-                  <span className="text-orange-600 font-mono text-[11px] bg-orange-50 px-2 py-0.5 rounded border border-orange-200 font-semibold">
-                    {p.role || p.player_role || p.position || 'Player'}
-                  </span>
                 </div>
               ))}
             </div>
@@ -567,7 +734,7 @@ export default function PublicMatchView({
           {/* TEAM 2 PLAYING XI */}
           <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 space-y-4 shadow-sm text-slate-900">
             <h4 className="font-extrabold text-sm text-orange-600 flex items-center justify-between border-b border-slate-100 pb-2">
-              <span>{match.team2?.name} Playing XI</span>
+              <span>{match.team2?.name || 'Team 2'} Playing XI</span>
               <span className="text-xs text-slate-500 font-mono">({team2Players.length} Players)</span>
             </h4>
             <div className="divide-y divide-slate-100 text-xs">
@@ -575,11 +742,10 @@ export default function PublicMatchView({
                 <div key={p.id || idx} className="py-2.5 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="text-slate-400 font-mono text-[10px] w-4">{idx + 1}.</span>
-                    <span className="font-extrabold text-slate-800">{p.full_name || p.display_name}</span>
+                    <span className="font-extrabold text-slate-800">
+                      {cleanPlayerName(p.name || p.full_name || p.display_name)} — <span className="text-orange-600 font-semibold">{formatRoleForDisplay(p.role || p.player_role || p.type || p.position)}</span>
+                    </span>
                   </div>
-                  <span className="text-orange-600 font-mono text-[11px] bg-orange-50 px-2 py-0.5 rounded border border-orange-200 font-semibold">
-                    {p.role || p.player_role || p.position || 'Player'}
-                  </span>
                 </div>
               ))}
             </div>

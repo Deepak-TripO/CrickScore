@@ -244,11 +244,33 @@ export async function scoreBall(payload: {
   const nextOverNumber = currentInningsState.currentOverNumber;
   const nextBallNumber = currentInningsState.currentBallInOver + 1;
 
-  // Sanitize player IDs for foreign key safety
-  const safeStrikerId = (payload.strikerId && payload.strikerId.length > 20) ? payload.strikerId : null;
-  const safeNonStrikerId = (payload.nonStrikerId && payload.nonStrikerId.length > 20) ? payload.nonStrikerId : null;
-  const safeBowlerId = (payload.bowlerId && payload.bowlerId.length > 20) ? payload.bowlerId : null;
-  const safeDismissedId = (payload.dismissedPlayerId && payload.dismissedPlayerId.length > 20) ? payload.dismissedPlayerId : null;
+  // Sanitize and resolve player IDs for foreign key safety
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const resolvePlayerUuid = async (pid?: string): Promise<string | null> => {
+    if (!pid) return null;
+    const trimmed = String(pid).trim();
+    if (uuidRegex.test(trimmed)) return trimmed;
+
+    try {
+      const cleanName = trimmed.replace(/^p_/, '').replace(/_/g, ' ').trim();
+      if (cleanName) {
+        const { data: pRec } = await db
+          .from('players')
+          .select('id')
+          .ilike('name', cleanName)
+          .maybeSingle();
+
+        if (pRec?.id) return pRec.id;
+      }
+    } catch {}
+
+    return null;
+  };
+
+  const safeStrikerId = await resolvePlayerUuid(payload.strikerId);
+  const safeNonStrikerId = await resolvePlayerUuid(payload.nonStrikerId);
+  const safeBowlerId = await resolvePlayerUuid(payload.bowlerId);
+  const safeDismissedId = await resolvePlayerUuid(payload.dismissedPlayerId);
 
   // Insert delivery safely with verified actualInningsId
   const deliveryPayload = {

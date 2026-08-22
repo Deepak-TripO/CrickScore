@@ -49,8 +49,9 @@ export default function MatchCard({
 }: MatchCardProps) {
   const router = useRouter();
 
-  const isLive = match.status === 'LIVE';
-  const isCompleted = match.status === 'COMPLETED';
+  const matchStatusUpper = String(match.status || '').toUpperCase();
+  const isLive = matchStatusUpper === 'LIVE' || matchStatusUpper === 'IN_PROGRESS';
+  const isCompleted = matchStatusUpper === 'COMPLETED' || matchStatusUpper === 'FINISHED';
 
   const t1 = Array.isArray(match.team1) ? match.team1[0] : match.team1;
   const t2 = Array.isArray(match.team2) ? match.team2[0] : match.team2;
@@ -308,13 +309,22 @@ export default function MatchCard({
 
         {/* Action Bar */}
         <div className="p-4 bg-slate-50 border-t border-slate-100 flex items-center gap-2.5">
-          <Link 
-            href={`/master/matches/${match.id}/score`}
-            className="flex-1 py-3 px-4 bg-orange-500 hover:bg-orange-600 text-white font-black rounded-xl text-xs text-center flex items-center justify-center gap-2 transition-all shadow-md active:scale-95 uppercase tracking-wider"
-          >
-            <Play className="w-4 h-4 fill-current text-white" />
-            <span>Live Scoring</span>
-          </Link>
+          {isCompleted ? (
+            <Link 
+              href={`/matches/${match.id}`}
+              className="flex-1 py-3 px-4 bg-orange-500 hover:bg-orange-600 text-white font-black rounded-xl text-xs text-center flex items-center justify-center gap-2 transition-all shadow-md active:scale-95 uppercase tracking-wider"
+            >
+              <span>Scorecard</span>
+            </Link>
+          ) : (
+            <Link 
+              href={`/master/matches/${match.id}/score`}
+              className="flex-1 py-3 px-4 bg-orange-500 hover:bg-orange-600 text-white font-black rounded-xl text-xs text-center flex items-center justify-center gap-2 transition-all shadow-md active:scale-95 uppercase tracking-wider"
+            >
+              <Play className="w-4 h-4 fill-current text-white" />
+              <span>Live Scoring</span>
+            </Link>
+          )}
 
           {onEdit && (
             <button
@@ -463,7 +473,7 @@ export default function MatchCard({
       {/* 3. ACTION BAR (RENDERED IF LIVE SCORING OR EDIT/DELETE BUTTONS ARE PRESENT) */}
       {(!isHistoryView || onEdit || onDelete) && (
         <div className="p-2.5 bg-slate-50 border-t border-slate-100 flex items-center gap-2">
-          {!isHistoryView && (
+          {!isHistoryView && !isCompleted && (
             /* OVERVIEW LATEST MATCH ACTION: LIVE SCORING PANEL */
             <Link 
               href={`/master/matches/${match.id}/score`}
@@ -472,6 +482,16 @@ export default function MatchCard({
             >
               <Play className="w-3.5 h-3.5 fill-current text-white" />
               <span>Live Scoring</span>
+            </Link>
+          )}
+
+          {(!isHistoryView && isCompleted) && (
+            <Link 
+              href={`/matches/${match.id}`}
+              onClick={(e) => e.stopPropagation()}
+              className="flex-1 py-2 px-3 bg-orange-500 hover:bg-orange-600 text-white font-black rounded-xl text-xs text-center flex items-center justify-center gap-1.5 transition-all shadow-sm uppercase tracking-wider"
+            >
+              <span>Scorecard</span>
             </Link>
           )}
 

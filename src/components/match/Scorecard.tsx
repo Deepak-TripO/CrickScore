@@ -1,5 +1,6 @@
 import React from 'react';
 import { ScorecardView } from '@/lib/cricket/innings';
+import { cleanPlayerName } from '@/lib/cricket/playerUtils';
 
 interface ScorecardProps {
   scorecard: ScorecardView;
@@ -42,7 +43,7 @@ export const ScorecardComponent: React.FC<ScorecardProps> = ({
               {scorecard.batting.map((batter) => (
                 <tr key={batter.id} className="hover:bg-slate-50/60 transition-colors">
                   <td className="py-3 px-4 font-bold text-slate-900">
-                    {batter.name} {batter.isOnStrike ? '*' : ''}
+                    {cleanPlayerName(batter.name)} {batter.isOnStrike ? '*' : ''}
                   </td>
                   <td className="py-3 px-4 text-xs font-medium text-slate-500">
                     {batter.dismissal}
@@ -89,7 +90,7 @@ export const ScorecardComponent: React.FC<ScorecardProps> = ({
             <tbody className="divide-y divide-slate-100 text-sm">
               {scorecard.bowling.map((bowler) => (
                 <tr key={bowler.id} className="hover:bg-slate-50/60 transition-colors">
-                  <td className="py-3 px-4 font-bold text-slate-900">{bowler.name}</td>
+                  <td className="py-3 px-4 font-bold text-slate-900">{cleanPlayerName(bowler.name)}</td>
                   <td className="py-3 px-3 text-right text-slate-700">{bowler.overs}</td>
                   <td className="py-3 px-3 text-right text-slate-500">{bowler.maidens}</td>
                   <td className="py-3 px-3 text-right font-bold text-slate-900">{bowler.runs}</td>

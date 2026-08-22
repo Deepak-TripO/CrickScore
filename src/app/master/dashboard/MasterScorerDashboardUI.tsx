@@ -155,27 +155,21 @@ export default function MasterScorerDashboardUI({
     setIsDeleteModalOpen(false);
     setDeletingMatch(null);
     setIsDeleting(false);
-  };  const [currentMatches, setCurrentMatches] = useState(matches);
-  const [latestCreatedMatchId, setLatestCreatedMatchId] = useState<string | null>(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('batscore_latest_created_match_id');
-    }
-    return null;
-  });
+  };
 
-  const [isLatestMatchDeleted, setIsLatestMatchDeleted] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('batscore_latest_match_deleted') === 'true';
-    }
-    return false;
-  });
+  const [currentMatches, setCurrentMatches] = useState(matches);
+  const [latestCreatedMatchId, setLatestCreatedMatchId] = useState<string | null>(null);
+  const [isLatestMatchDeleted, setIsLatestMatchDeleted] = useState<boolean>(false);
 
   React.useEffect(() => {
     setCurrentMatches(matches);
-    if (typeof window !== 'undefined' && Array.isArray(matches) && matches.length > 0) {
+    if (typeof window !== 'undefined') {
       const storedId = localStorage.getItem('batscore_latest_created_match_id');
       const deletedFlag = localStorage.getItem('batscore_latest_match_deleted');
-      if (!storedId && deletedFlag !== 'true') {
+      if (storedId) setLatestCreatedMatchId(storedId);
+      if (deletedFlag === 'true') setIsLatestMatchDeleted(true);
+
+      if (!storedId && deletedFlag !== 'true' && Array.isArray(matches) && matches.length > 0) {
         const sorted = [...matches].sort((a, b) => {
           const timeA = new Date(a.created_at || a.scheduled_start || a.scheduled_at || 0).getTime();
           const timeB = new Date(b.created_at || b.scheduled_start || b.scheduled_at || 0).getTime();
